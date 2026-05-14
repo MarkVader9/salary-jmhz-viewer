@@ -2259,7 +2259,27 @@ body {
 .info-modal-btn-close:hover {
     background-color: var(--border-strong, #d1d5db);
 }
-
+/* Styly pro běžící text */
+      .marquee-container {
+        width: 100%;
+        overflow: hidden;
+        white-space: nowrap;
+        display: flex;
+        align-items: center;
+        height: 100%;
+      }
+      .marquee-content {
+        display: inline-block;
+        padding-left: 100%; /* Text začíná mimo obrazovku vpravo */
+        animation: marquee linear infinite;
+        font-weight: 500;
+        color: #1976d2; /* Modrá barva (můžeš si přepsat např. na #d32f2f pro červenou) */
+        font-size: 0.95rem;
+      }
+      @keyframes marquee {
+        0%   { transform: translateX(0); }
+        100% { transform: translateX(-100%); }
+      }
 
     </style>
 </head>
@@ -3343,7 +3363,48 @@ if (fullPath) {
         ms.onerror = () => showError('Soubor <b>manifest.js</b> nebyl na serveru nalezen.<br>Ujistěte se, že leží ve stejném adresáři jako tento HTML soubor.');
         
         document.head.appendChild(ms);
-    })();
+		})(); // <-- TOTO JE ZÁSADNÍ: Zde musíme bezpečně uzavřít a spustit blok "4. ZAVADĚČ"
+// Asynchronní funkce pro nasazení běžícího textu
+      (async function initJmhzMarquee() {
+        try {
+          // 1. Stažení dat z JSONu (s pojistkou proti cachování při vývoji)
+          const res = await fetch('./data/zpravy.json?t=' + new Date().getTime());
+          const config = await res.json();
+          
+          if (!config || !config.zpravy || config.zpravy.length === 0) return;
+          
+          const speed = config.rychlost || 20;
+          const text = config.zpravy.join(config.oddelovac || ' | ');
+          
+          // 2. Příprava HTML šablony
+          const marqueeHtml = `
+            <div class="marquee-container">
+              <div class="marquee-content" style="animation-duration: ${speed}s;">
+                ${text}
+              </div>
+            </div>
+          `;
+
+          // 3. Sledování DOMu (MutationObserver)
+          // Tato logika detekuje chvíli, kdy SolidJS vykreslí hlavičku pro zobrazení XML
+          const observer = new MutationObserver(() => {
+            const tcElements = document.querySelectorAll('.toolbar-center');
+            tcElements.forEach(tc => {
+              // Pokud SolidJS vyčistil obsah (tzn. jsme na obrazovce XML) 
+              // a my jsme tam ještě marquee nepřidali:
+              if (tc.children.length === 0 && tc.textContent.trim() === '') {
+                tc.innerHTML = marqueeHtml;
+              }
+            });
+          });
+
+          // Spustíme sledování celého těla aplikace pro případné změny podstránek
+          observer.observe(document.body, { childList: true, subtree: true });
+
+        } catch (e) {
+          console.warn("JMHZ Marquee Info: Nepodařilo se načíst zpravy.json", e);
+        }
+      })();
 </script>
 </body>
 </html>
