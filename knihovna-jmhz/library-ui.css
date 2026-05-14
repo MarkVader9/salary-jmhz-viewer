@@ -1,0 +1,233 @@
+// library-ui.js
+document.addEventListener("DOMContentLoaded", () => {
+    const logoSvg = `<?xml version="1.0" encoding="UTF-8"?> <svg xmlns="http://www.w3.org/2000/svg" width="98" height="28" viewBox="0 0 166 48" fill="none"><defs><linearGradient id="fractalOrange1" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" stop-color="#FFB74D" /><stop offset="100%" stop-color="#F57C00" /></linearGradient><linearGradient id="fractalOrange2" x1="0%" y1="100%" x2="100%" y2="0%"><stop offset="0%" stop-color="#FF9800" /><stop offset="100%" stop-color="#E65100" /></linearGradient><linearGradient id="fractalOrange3" x1="100%" y1="50%" x2="0%" y2="50%"><stop offset="0%" stop-color="#FFB74D" /><stop offset="100%" stop-color="#FF5722" /></linearGradient></defs><g transform="translate(6, 2)"><polygon points="16,4 32,4 8,16" fill="url(#fractalOrange1)" /><polygon points="32,4 24,16 8,16" fill="url(#fractalOrange2)" /><polygon points="8,16 24,16 32,28" fill="url(#fractalOrange3)" /><polygon points="8,16 32,28 16,28" fill="url(#fractalOrange1)" /><polygon points="16,28 32,28 8,40" fill="url(#fractalOrange2)" /><polygon points="32,28 24,40 8,40" fill="url(#fractalOrange3)" /><polygon points="16,4 24,16 16,16" fill="#ffffff" opacity="0.3"/><polygon points="8,16 16,28 24,16" fill="#000000" opacity="0.15"/><polygon points="16,28 24,40 16,40" fill="#ffffff" opacity="0.3"/></g><text x="52" y="34" font-family="system-ui, -apple-system, sans-serif" font-weight="900" font-size="22" fill="currentColor" letter-spacing="1.5">SALARY</text></svg>`;
+
+    // Pojistka stylů: Pokud chybí CSS nebo se nepovede načíst, toto zaručí funkčnost
+    const style = document.createElement('style');
+    style.innerHTML = `
+        .drawer-backdrop { opacity: 0 !important; pointer-events: none !important; transition: opacity 0.3s ease; z-index: 1100 !important; }
+        .drawer-backdrop.show { opacity: 1 !important; pointer-events: auto !important; }
+        .drawer { transform: translateX(100%) !important; transition: transform 0.3s ease; animation: none !important; z-index: 1200 !important; }
+        .drawer.open { transform: translateX(0) !important; }
+        
+        /* Absolutní vynucení pozice pro Toolbar (Záhlaví) */
+        .toolbar { display: grid !important; grid-template-columns: auto minmax(0, 1fr) auto !important; align-items: center; width: 100%; box-sizing: border-box; }
+        .toolbar-right { display: flex !important; justify-content: flex-end !important; align-items: center !important; }
+    `;
+    document.head.appendChild(style);
+
+    // 1. Vytvoření záhlaví
+    const header = document.createElement('div');
+    header.className = 'toolbar';
+    header.innerHTML = `
+        <div class="toolbar-left">
+            <span class="brand-logo" aria-label="SALARY s.r.o.">${logoSvg}</span>
+            <span style="font-weight:600;font-size:0.875rem;color:var(--text-primary)">Knihovna Znalostí</span>
+        </div>
+        <div class="toolbar-center"></div>
+        <div class="toolbar-right">
+            <button class="drawer-toggle" id="menuToggle" aria-label="Možnosti" title="Možnosti">
+                <span class="drawer-toggle-icon" aria-hidden="true">☰</span>
+            </button>
+        </div>
+    `;
+    document.body.prepend(header);
+
+    // 2. Vytvoření Draweru (boční menu)
+    const backdrop = document.createElement('div');
+    backdrop.className = 'drawer-backdrop';
+    backdrop.id = 'menuBackdrop';
+    
+    const drawer = document.createElement('div');
+    drawer.className = 'drawer';
+    drawer.id = 'menuDrawer';
+    drawer.innerHTML = `
+        <div class="drawer-header">
+            <span style="font-weight:600;font-size:0.875rem">Možnosti</span>
+            <button class="drawer-close" id="menuClose" aria-label="Zavřít">✕</button>
+        </div>
+        <div class="drawer-body" id="drawerMenuContent"></div>
+    `;
+    document.body.appendChild(backdrop);
+    document.body.appendChild(drawer);
+
+    // 3. Naplnění menu položkami z konfigurace (z library-menu.js)
+    const menuContent = drawer.querySelector('#drawerMenuContent');
+    if (window.LIBRARY_MENU_CONFIG) {
+        window.LIBRARY_MENU_CONFIG.forEach(item => {
+            if (item.divider) {
+                const hr = document.createElement('hr');
+                hr.className = 'drawer-divider';
+                menuContent.appendChild(hr);
+                return;
+            }
+            const btn = document.createElement('button');
+            btn.textContent = item.label;
+            btn.onclick = () => {
+                if (item.action) item.action();
+                if (item.link) window.location.href = item.link;
+                drawer.classList.remove('open');
+                backdrop.classList.remove('show');
+            };
+            menuContent.appendChild(btn);
+        });
+    }
+
+    // 4. Extrémně spolehlivé globální zachytávání kliknutí (Event Delegation)
+    document.addEventListener("click", (e) => {
+        // Pokud jsme klikli na tlačítko "☰" (nebo na ikonku uvnitř něj)
+        if (e.target.closest('#menuToggle')) {
+            drawer.classList.add('open');
+            backdrop.classList.add('show');
+        } 
+        // Pokud jsme klikli na "křížek" nebo vedle menu na překryvný panel
+        else if (e.target.closest('#menuClose') || e.target.id === 'menuBackdrop') {
+            drawer.classList.remove('open');
+            backdrop.classList.remove('show');
+        }
+		
+		/* ==========================================================================
+   LMS ZÁLOŽKY (TABS) - Pod obsahem/médiem lekce
+   ========================================================================== */
+.lms-tabs-container {
+			margin-top: 50px; /* <--- ZDE SI NASTAVUJETE ODSTUP OD MÉDIA */
+            background: var(--bg-elevated);
+            border: 1px solid var(--border);
+            border-radius: var(--radius-lg);
+            box-shadow: 0 4px 12px color-mix(in oklch, var(--shadow-color) 5%, transparent);
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+        }
+
+/* Hlavička s tlačítky záložek */
+.lms-tabs-header {
+    display: flex;
+    overflow-x: auto;
+    background: var(--bg-surface, #f9fafb);
+    border-bottom: 1px solid var(--border, #e5e7eb);
+    scrollbar-width: none; /* Skrytí scrollbaru pro Firefox */
+}
+.lms-tabs-header::-webkit-scrollbar { display: none; } /* Skrytí scrollbaru pro Chrome/Safari */
+
+.lms-tab-btn {
+    padding: 16px 24px;
+    background: transparent;
+    border: none;
+    border-bottom: 2px solid transparent;
+    font-size: 0.9rem;
+    font-weight: 600;
+    color: var(--text-secondary, #4b5563);
+    cursor: pointer;
+    white-space: nowrap;
+    transition: all 0.2s ease;
+}
+.lms-tab-btn:hover {
+    color: var(--text-primary, #111827);
+    background: var(--bg-hover, #f3f4f6);
+}
+.lms-tab-btn.active {
+    color: var(--accent, #4f46e5);
+    border-bottom-color: var(--accent, #4f46e5);
+    background: var(--bg-elevated, #ffffff);
+}
+
+/* Obsah záložek */
+.lms-tabs-body {
+    padding: 24px;
+    min-height: 200px;
+}
+.lms-tab-pane {
+    display: none;
+    animation: fadeIn 0.3s ease;
+    color: var(--text-secondary, #374151);
+    line-height: 1.6;
+}
+.lms-tab-pane.active {
+    display: block;
+}
+
+/* Specifické styly pro Profil Lektora */
+.lms-instructor-profile {
+    display: flex;
+    gap: 24px;
+    align-items: flex-start;
+}
+.lms-instructor-thumb {
+    width: 100px;
+    height: 100px;
+    border-radius: 50%;
+    object-fit: cover;
+    border: 3px solid var(--border-subtle, #f3f4f6);
+    box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+    flex-shrink: 0;
+}
+.lms-instructor-info h3 {
+    margin: 0 0 8px 0;
+    color: var(--text-primary, #111827);
+    font-size: 1.25rem;
+}
+.lms-instructor-info .lms-instructor-role {
+    font-size: 0.85rem;
+    color: var(--accent, #4f46e5);
+    text-transform: uppercase;
+    font-weight: 700;
+    letter-spacing: 0.05em;
+    margin-bottom: 12px;
+    display: block;
+}
+
+/* Specifické styly pro Poznámky */
+.lms-notes-container {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    height: 100%;
+}
+.lms-notes-textarea {
+    width: 100%;
+    min-height: 250px;
+    padding: 16px;
+    border: 1px solid var(--border, #e5e7eb);
+    border-radius: var(--radius-md, 6px);
+    background: var(--bg-surface, #f9fafb);
+    color: var(--text-primary, #111827);
+    font-family: inherit;
+    font-size: 0.95rem;
+    line-height: 1.6;
+    resize: vertical;
+    transition: border-color 0.2s, box-shadow 0.2s;
+}
+.lms-notes-textarea:focus {
+    outline: none;
+    border-color: var(--accent, #4f46e5);
+    box-shadow: 0 0 0 3px var(--accent-focus, rgba(79, 70, 229, 0.15));
+    background: var(--bg-elevated, #ffffff);
+}
+.lms-notes-footer {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-size: 0.8rem;
+    color: var(--text-muted, #6b7280);
+}
+.lms-save-status {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-weight: 600;
+    opacity: 0;
+    transition: opacity 0.3s;
+}
+.lms-save-status.saved {
+    opacity: 1;
+    color: var(--success, #10b981);
+}
+@keyframes fadeIn { from { opacity: 0; transform: translateY(5px); } to { opacity: 1; transform: translateY(0); } }
+
+/* Mobilní responzivita */
+@media (max-width: 600px) {
+    .lms-instructor-profile { flex-direction: column; align-items: center; text-align: center; }
+}
+    });
+});

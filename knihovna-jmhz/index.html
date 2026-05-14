@@ -1,0 +1,243 @@
+<!DOCTYPE html>
+<html lang="cs" data-theme="light">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Knihovna znalostí - JMHZ</title>
+    
+    <script src="kb-core.js"></script>
+    <script src="library-menu.js"></script>
+    <script src="library-ui.js"></script>
+    <link rel="stylesheet" href="library-style.css">
+</head>
+<body>
+
+    <header class="header-section">
+        <h1 class="header-title">SALARY Knihovna Článků</h1>
+        <p class="header-subtitle">Znalostní báze pro metodiky a uživatele aplikace JMHZ</p>
+        
+        <div class="controls-container">
+            <div class="search-row">
+                <div class="search-box">
+                    <span class="search-icon">🔍</span>
+                    <input type="text" id="searchInput" class="search-input" placeholder="Hledat téma, klíčové slovo...">
+                </div>
+                <select id="sortSelect" class="sort-select">
+                    <option value="newest">Nejnovější články</option>
+                    <option value="relevance">Nejrelevantnější</option>
+                </select>
+            </div>
+            <div class="category-pills" id="categoryFilterContainer">
+                <button class="cat-pill active" data-id="all">Vše v Knihovně</button>
+            </div>
+        </div>
+    </header>
+
+    <main class="content-container">
+        <div id="loader" class="loader">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="animation: spin 1s linear infinite;"><path d="M21 12a9 9 0 1 1-6.219-8.56"/></svg>
+            <br><br>Načítám databázi...
+        </div>
+        <div id="articlesGrid" class="articles-grid"></div>
+    </main>
+
+<script>
+    let dbData = { categories: [], articles: [] };
+    let activeCategoryId = 'all';
+    let searchTimeout = null;
+
+    const UI = {
+        search: document.getElementById('searchInput'),
+        sort: document.getElementById('sortSelect'),
+        grid: document.getElementById('articlesGrid'),
+        loader: document.getElementById('loader'),
+        catContainer: document.getElementById('categoryFilterContainer')
+    };
+
+    async function init() {
+        try {
+            const res = await fetch("databaze-knihovny.json?t=" + Date.now());
+            if (!res.ok) throw new Error(`Nelze načíst databázi JSON (HTTP chyba: ${res.status})`);
+            
+            const rawDb = await res.json();
+            dbData.categories = rawDb.categories || [];
+            
+            // Sloučení "articles" a "lms" do jednoho pole pro jednotné vyhledávání
+            const articles = rawDb.articles || [];
+            const lmsCourses = (rawDb.lms || []).map(course => ({...course, isLms: true}));
+            
+            dbData.articles = [...articles, ...lmsCourses];
+            
+            renderCategoryFilters();
+            UI.loader.style.display = 'none';
+            applyFiltersAndRender();
+        } catch (e) {
+            console.error("Detailní chyba:", e);
+            UI.loader.innerHTML = `
+                <div style="color:var(--error); max-width: 600px; margin: 0 auto; text-align: center;">
+                    <p>⚠ Nepodařilo se inicializovat knihovnu dokumentů.</p>
+                    <div style="margin-top: 20px; padding: 15px; background: #fee2e2; border: 1px solid #ef4444; border-radius: 8px; color: #991b1b; font-size: 0.85rem; font-family: monospace; text-align: left;">
+                        <strong>Chyba:</strong> ${e.message}
+                    </div>
+                </div>
+            `;
+        }
+    }
+
+    function renderGrid(articles) {
+        UI.grid.innerHTML = '';
+        if (articles.length === 0) {
+            UI.grid.innerHTML = '<div class="empty-state"><h3>Žádné výsledky</h3><p style="color: var(--text-muted); font-size: 0.9rem;">Zkuste upravit filtry nebo hledaný výraz.</p></div>';
+            return;
+        }
+
+        articles.forEach(item => {
+            // Rozcestník - jde o kurz nebo obyčejný článek?
+            const url = item.isLms ? `lms.html?course=${item.id}` : `clanek.html?id=${item.id}`;
+            const fUrl = window.location.origin + window.location.pathname.replace('index.html', '') + url;
+            
+            const date = new Date(item.lastUpdated).toLocaleDateString('cs-CZ');
+            const tags = (item.tags || []).slice(0, 3).map(t => `<span class="tag-pill">${t}</span>`).join('');
+            
+            const typeBadge = item.isLms 
+                ? `<span style="color:var(--accent); font-weight:800; font-size:0.8rem;">🎓 INTERAKTIVNÍ KURZ</span>` 
+                : `<span>📅 ${date}</span>`;
+            
+            const excerpt = item.description || 'Klikněte pro zobrazení obsahu...';
+
+            const card = document.createElement('div');
+            card.className = 'article-card';
+            card.innerHTML = `
+                <div class="card-meta">${typeBadge} <span>⏱️ ${item.readingTimeMin || 1} min</span></div>
+                <h3 class="card-title"><a href="${url}">${item.title || 'Neznámý obsah'}</a></h3>
+                <div class="card-tags">${tags}</div>
+                <p class="card-excerpt">${excerpt}</p>
+                <div class="card-footer">
+                    <a href="${url}" class="btn primary">${item.isLms ? 'Spustit kurz →' : 'Přečíst článek →'}</a>
+                    <button class="btn" style="border:none; padding:4px 8px; font-size:1.1rem; background:transparent;" onclick="copyLink('${fUrl}')" title="Kopírovat odkaz">📋</button>
+                </div>
+            `;
+            UI.grid.appendChild(card);
+        });
+    }
+
+    function renderCategoryFilters() {
+        // 1. Zjistíme, do kterých kategorií fyzicky patří nějaké články
+        const categoriesInUse = new Set(dbData.articles.map(a => a.categoryId).filter(Boolean));
+        
+        // 2. Abychom nepřišli o "Hlavní kategorie", přidáme je do seznamu, i když mají články jen v podkategoriích
+        dbData.categories.forEach(cat => {
+            if (categoriesInUse.has(cat.id) && cat.parentId) {
+                categoriesInUse.add(cat.parentId);
+            }
+        });
+
+        // Tlačítko VŠE
+        const btnAll = document.createElement('button');
+        btnAll.className = 'cat-pill active';
+        btnAll.textContent = 'Vše v Knihovně';
+        btnAll.onclick = () => selectCategory(btnAll, 'all');
+        
+        UI.catContainer.innerHTML = '';
+        UI.catContainer.appendChild(btnAll);
+
+        // Rozdělení na hlavní a podkategorie
+        const mainCats = dbData.categories.filter(c => !c.parentId && categoriesInUse.has(c.id));
+        const subCats = dbData.categories.filter(c => c.parentId && categoriesInUse.has(c.id));
+
+        // Vykreslení
+        mainCats.forEach(mainCat => {
+            // Hlavní kategorie
+            const btn = document.createElement('button');
+            btn.className = 'cat-pill';
+            btn.textContent = mainCat.name;
+            btn.onclick = () => selectCategory(btn, mainCat.id);
+            UI.catContainer.appendChild(btn);
+
+            // Její podkategorie
+            const children = subCats.filter(c => c.parentId === mainCat.id);
+            children.forEach(subCat => {
+                const subBtn = document.createElement('button');
+                subBtn.className = 'cat-pill';
+                subBtn.innerHTML = `↳ ${subCat.name}`;
+                subBtn.style.opacity = "0.85"; // Mírné vizuální zapuštění
+                subBtn.onclick = () => selectCategory(subBtn, subCat.id);
+                UI.catContainer.appendChild(subBtn);
+            });
+        });
+    }
+
+    function selectCategory(btnElement, categoryId) {
+        document.querySelectorAll('.cat-pill').forEach(b => b.classList.remove('active'));
+        btnElement.classList.add('active');
+        activeCategoryId = categoryId;
+        applyFiltersAndRender();
+    }
+
+    function applyFiltersAndRender() {
+        const query = UI.search.value.toLowerCase().trim();
+        const sortBy = UI.sort.value;
+        let filtered = dbData.articles;
+
+        if (activeCategoryId !== 'all') {
+            // Najdeme všechny podkategorie, pokud uživatel klikl na Hlavní kategorii
+            const subCategoryIds = dbData.categories
+                .filter(c => c.parentId === activeCategoryId)
+                .map(c => c.id);
+            
+            // Povolíme články z vybrané kategorie A ZÁROVEŇ ze všech jejích podkategorií
+            const allowedCategoryIds = new Set([activeCategoryId, ...subCategoryIds]);
+
+            filtered = filtered.filter(a => allowedCategoryIds.has(a.categoryId));
+        }
+
+        if (query) {
+            if(sortBy === 'newest') UI.sort.value = 'relevance';
+            const kws = query.split(' ');
+            
+            filtered = filtered.map(art => {
+                let score = 0;
+                const title = (art.title || '').toLowerCase();
+                const tags = (art.tags || []).join(' ').toLowerCase();
+
+                kws.forEach(kw => {
+                    if (title.includes(kw)) score += 10;
+                    if (tags.includes(kw)) score += 5;
+                });
+                return { ...art, score };
+            }).filter(art => art.score > 0);
+        }
+
+        if (UI.sort.value === 'relevance' && query) {
+            filtered.sort((a, b) => b.score - a.score);
+        } else {
+            filtered.sort((a, b) => new Date(b.lastUpdated) - new Date(a.lastUpdated));
+        }
+
+        renderGrid(filtered);
+    }
+
+    UI.search.addEventListener('input', () => {
+        clearTimeout(searchTimeout);
+        searchTimeout = setTimeout(applyFiltersAndRender, 300);
+    });
+    UI.sort.addEventListener('change', applyFiltersAndRender);
+
+    function copyLink(url) {
+        navigator.clipboard.writeText(url).then(() => {
+            if(window.KB_Toaster) {
+               KB_Toaster.show('Zkopírováno', 'Odkaz na obsah byl zkopírován do schránky.', 'success');
+            } else {
+               alert('Zkopírováno: Odkaz byl zkopírován do schránky.');
+            }
+        });
+    }
+
+    const style = document.createElement('style');
+    style.innerHTML = `@keyframes spin { 100% { transform: rotate(360deg); } }`;
+    document.head.appendChild(style);
+
+    document.addEventListener('DOMContentLoaded', init);
+</script>
+</body>
+</html>

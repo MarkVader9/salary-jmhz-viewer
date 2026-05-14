@@ -1,0 +1,14 @@
+// library-menu.js
+window.LIBRARY_MENU_CONFIG = [
+    { label: "🏠 Domů (Knihovna)", link: "index.html" },
+    { label: "📄 Seznam dokumentů", link: "index.html#seznam" },
+    { label: "🔍 Vyhledávání", action: () => document.getElementById('searchInput')?.focus() },
+    { divider: true },
+    { label: "🖥️ Otevřít Prohlížeč JMHZ Formulářů", link: "../index.html", external: true },
+    { divider: true },
+    // ZMĚNA: Tlačítko nyní volá funkci pro zobrazení Pop-Up okna místo přímého odkazu
+    { label: "📧 Technická podpora", action: () => window.showSupportModal() }, 
+    
+    { label: "🌐 Web SALARY.cz", link: "https://www.salary.cz", external: true },
+	{ divider: true }
+];

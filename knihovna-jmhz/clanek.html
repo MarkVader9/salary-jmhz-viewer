@@ -1,0 +1,412 @@
+<!DOCTYPE html>
+<html lang="cs" data-theme="light">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Čtení článku - SALARY KB</title>
+    
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&family=Lora:ital,wght@0,400;0,600;1,400&family=Merriweather:ital,wght@0,400;0,700;1,400&family=Montserrat:wght@400;600;700&family=Open+Sans:ital,wght@0,400;0,600;1,400&family=Playfair+Display:ital,wght@0,400;0,700;1,400&family=Roboto:ital,wght@0,400;0,500;0,700;1,400&family=Ubuntu:ital,wght@0,400;0,500;1,400&display=swap" rel="stylesheet">
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/mammoth/1.4.21/mammoth.browser.min.js"></script>
+    <script src="kb-core.js"></script>
+    
+    <script src="library-menu.js"></script>
+    <script src="library-ui.js"></script>
+    <link rel="stylesheet" href="library-style.css">
+
+    <style>
+        /* ==========================================
+           TYPOGRAFIE A FORMÁTOVÁNÍ Z MS WORD
+           ========================================== */
+
+        .editor-content p { margin-bottom: 1.2em; line-height: 1.7; }
+
+        .editor-content h1, .editor-content h2, .editor-content h3, .editor-content h4 {
+            color: var(--text-primary); margin-top: 1.8em; margin-bottom: 0.8em; line-height: 1.3; font-weight: 700;
+        }
+        .editor-content h2 { font-size: 1.6rem; border-bottom: 1px solid var(--border-subtle); padding-bottom: 8px; }
+        .editor-content h3 { font-size: 1.3rem; }
+        .editor-content h4 { font-size: 1.1rem; }
+
+        .editor-content ul, .editor-content ol { margin-bottom: 1.5em; padding-left: 2.5em; }
+        .editor-content ul { list-style-type: disc; }
+        .editor-content ul ul { list-style-type: circle; margin-bottom: 0; }
+        .editor-content ol { list-style-type: decimal; }
+        .editor-content li { margin-bottom: 0.5em; line-height: 1.6; }
+
+        .editor-content blockquote {
+            border-left: 4px solid var(--accent); margin: 1.5em 0; padding: 1em 1.5em;
+            background: var(--bg-surface); color: var(--text-secondary); font-style: italic;
+            border-radius: 0 var(--radius-md) var(--radius-md) 0; box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+        }
+
+        /* Vylepšení obrázků - kurzor ukazuje možnost zvětšení */
+        .editor-content img {
+            max-width: 100%; height: auto; border-radius: var(--radius-md); margin: 1.5em auto;
+            display: block; box-shadow: 0 2px 8px color-mix(in oklch, var(--shadow-color) 10%, transparent);
+            cursor: zoom-in; transition: transform 0.2s ease;
+        }
+        .editor-content img:hover { transform: scale(1.02); }
+
+        .editor-content a {
+            color: var(--accent); text-decoration: underline; text-decoration-thickness: 1px;
+            text-underline-offset: 3px; font-weight: 500; transition: color 0.2s ease;
+        }
+        .editor-content a:hover { color: var(--accent-hover); text-decoration-thickness: 2px; }
+        .editor-content strong, .editor-content b { font-weight: 700; color: var(--text-primary); }
+        
+        /* Estetické tabulky generované z MS Word */
+        .editor-content table {
+            width: 100%; border-collapse: separate; border-spacing: 0; margin: 2em 0; font-size: 0.95rem;
+            background: var(--bg-elevated); border-radius: var(--radius-lg); overflow: hidden; 
+            box-shadow: 0 4px 6px color-mix(in oklch, var(--shadow-color) 5%, transparent); border: 1px solid var(--border);
+        }
+        .editor-content th, .editor-content tr:first-child td { background-color: var(--bg-hover); color: var(--text-primary); font-weight: 700; text-align: left; }
+        .editor-content th, .editor-content td { padding: 12px 16px; border-bottom: 1px solid var(--border-subtle); border-right: 1px solid var(--border-subtle); vertical-align: top; line-height: 1.5; }
+        .editor-content tr th:last-child, .editor-content tr td:last-child { border-right: none; }
+        .editor-content tr:last-child td { border-bottom: none; }
+        .editor-content tr:not(:first-child):hover td { background-color: var(--accent-subtle); }
+
+        /* Akordeony (FAQ) */
+        .faq-box { margin: 15px 0; border: 1px solid var(--border); border-radius: var(--radius-md); overflow: hidden; background: var(--bg-surface); }
+        .faq-question { padding: 15px; font-weight: 600; cursor: pointer; display: flex; justify-content: space-between; align-items: center; color: var(--text-primary); background: var(--bg-elevated); transition: 0.2s;}
+        .faq-question:hover { background: var(--bg-hover); }
+        .faq-answer { padding: 0 15px; max-height: 0; overflow: hidden; transition: max-height 0.3s ease, padding 0.3s ease; color: var(--text-secondary); font-size: 0.95rem; border-top: 1px solid transparent;}
+        .faq-box.open .faq-answer { padding: 15px; max-height: 500px; border-top-color: var(--border-subtle); overflow-y: auto;}
+        .faq-icon { transition: transform 0.3s ease; font-size: 0.8rem;}
+        .faq-box.open .faq-icon { transform: rotate(180deg); }
+        
+        .editor-content p:empty { min-height: 1.5em; margin: 0; }
+
+        /* ==========================================
+           LIGHTBOX PRO OBRÁZKY
+           ========================================== */
+        .kb-lightbox {
+            position: fixed; inset: 0; z-index: 99999; background: rgba(0,0,0,0.85);
+            display: flex; align-items: center; justify-content: center;
+            opacity: 0; pointer-events: none; transition: opacity 0.3s ease; backdrop-filter: blur(4px);
+        }
+        .kb-lightbox.active { opacity: 1; pointer-events: auto; }
+        .kb-lightbox img { max-width: 90%; max-height: 90vh; border-radius: 8px; box-shadow: 0 10px 25px rgba(0,0,0,0.5); transform: scale(0.95); transition: transform 0.3s ease;}
+        .kb-lightbox.active img { transform: scale(1); }
+        .kb-lightbox-close { position: absolute; top: 20px; right: 30px; color: white; font-size: 40px; cursor: pointer; line-height: 1; text-shadow: 0 2px 4px rgba(0,0,0,0.5); }
+        .kb-lightbox-close:hover { color: var(--error); }
+
+        /* ==========================================
+           TISKOVÉ STYLY (@media print)
+           ========================================== */
+        @media print {
+            body { background: white !important; color: black !important; }
+            /* Skrýt všechny rušivé elementy */
+            .jmhz-toolbar, .right-sidebar, .toc-aside, .progress-bar-container, 
+            .drawer-toggle-btn, .lms-tabs-container, .faq-box, button, 
+            .btn, .drawer-backdrop, .drawer { 
+                display: none !important; 
+            }
+            /* Roztažení článku na celou šířku papíru */
+            .layout { display: block !important; padding: 0 !important; margin: 0 !important; }
+            .article-card { border: none !important; box-shadow: none !important; padding: 0 !important; }
+            /* Optimalizace textu pro tisk */
+            .editor-content { font-size: 12pt !important; line-height: 1.5 !important; }
+            .editor-content h1, .editor-content h2 { page-break-after: avoid; }
+            .editor-content img, .editor-content table { page-break-inside: avoid; max-width: 100% !important; }
+            .editor-content a { text-decoration: none !important; color: black !important; }
+        }
+    </style>
+
+</head>
+<body>
+
+    <div id="kbLightbox" class="kb-lightbox" onclick="closeLightbox()">
+        <span class="kb-lightbox-close">&times;</span>
+        <img id="kbLightboxImg" src="" alt="Zvětšený obrázek">
+    </div>
+
+    <div class="progress-bar-container"><div class="progress-bar" id="progressBar"></div></div>
+
+    <div id="loader" style="text-align: center; padding: 100px; color: var(--text-muted);">
+        <h2 id="loaderText">Stahuji a konvertuji dokument...</h2>
+        <p style="font-size: 0.9rem;">To může trvat několik vteřin podle velikosti .docx souboru.</p>
+    </div>
+
+    <div class="layout" id="layoutContainer" style="display: none;">
+        <aside class="toc-aside">
+            <div class="toc-title">Obsah článku</div>
+            <nav id="tocList"></nav>
+        </aside>
+
+        <main style="min-width: 0;">
+            <article class="article-card article-detail">
+                <h1 class="article-detail-title" id="articleTitle"></h1>
+                <div id="articleContent" class="editor-content" style="transition: font-family 0.3s ease;"></div>
+            </article>
+        </main>
+
+        <aside class="right-sidebar">
+            <div class="info-box" id="externalControlPanel">
+                <span class="sidebar-label">Ovládací menu</span>
+                <div id="dynamicButtonsContainer" style="display:flex; flex-direction:column; gap:8px;"></div>
+            </div>
+            <div class="info-box">
+                <span class="sidebar-label">Štítky a Info</span>
+                <div style="font-size: 0.85rem; color: var(--text-secondary); margin-bottom: 15px;" id="articleMeta"></div>
+                <div id="articleTags"></div>
+            </div>
+        </aside>
+    </div>
+
+<script>
+    const DB_URL = "databaze-knihovny.json"; 
+    const MEDIA_BASE_URL = "https://www.salary.cz/jmhz2026/knihovna-jmhz/media/";
+    const DOCX_BASE_URL = "https://www.salary.cz/jmhz2026/knihovna-jmhz/dokumenty/";
+
+    const urlParams = new URLSearchParams(window.location.search);
+    const articleId = urlParams.get('id');
+
+    async function loadArticle() {
+        if (!articleId) return location.href = 'index.html';
+        try {
+            const res = await fetch(DB_URL + "?t=" + Date.now());
+            if (!res.ok) throw new Error("Nelze načíst databázi JSON");
+            const db = await res.json();
+            
+            const allItems = [...(db.articles || []), ...(db.lms || [])];
+            const article = allItems.find(a => a.id === articleId);
+            
+            if (!article || !article.docxFile) {
+                document.getElementById('loader').innerHTML = '<h2>Článek nenalezen</h2><p>V databázi chybí vazba na .docx soubor.</p><a href="index.html" class="btn">Zpět</a>';
+                return;
+            }
+
+            document.title = `${article.title} - SALARY KB`;
+            document.getElementById('articleTitle').textContent = article.title;
+            const dateObj = new Date(article.lastUpdated);
+            document.getElementById('articleMeta').innerHTML = `Aktualizace: <strong>${dateObj.toLocaleDateString('cs-CZ')}</strong><br>Čtení: <strong>${article.readingTimeMin || 1} min</strong>`;
+            document.getElementById('articleTags').innerHTML = (article.tags || []).map(t => `<span class="tag-pill">${t}</span>`).join('');
+
+            populateControlPanel();
+
+            const docxUrl = DOCX_BASE_URL + encodeURIComponent(article.docxFile);
+            const docRes = await fetch(docxUrl);
+            if (!docRes.ok) throw new Error(`Dokument "${article.docxFile}" nenalezen.`);
+            
+            const arrayBuffer = await docRes.arrayBuffer();
+            const mammothOptions = { ignoreEmptyParagraphs: false };
+            const result = await mammoth.convertToHtml({ arrayBuffer: arrayBuffer }, mammothOptions);
+            
+            let rawHtml = replaceMediaTags(result.value);
+
+            const contentContainer = document.getElementById('articleContent');
+            contentContainer.innerHTML = rawHtml || '<p><em>Tento dokument je prázdný.</em></p>';
+            
+            // Vylepšení: Odkazy z Wordu se budou otevírat v nové záložce
+            contentContainer.querySelectorAll('a').forEach(link => {
+                if (link.href && link.href.startsWith('http')) {
+                    link.setAttribute('target', '_blank');
+                    link.setAttribute('rel', 'noopener noreferrer');
+                }
+            });
+
+            // Vylepšení: Aktivace Lightboxu pro obrázky
+            contentContainer.querySelectorAll('img').forEach(img => {
+                img.addEventListener('click', () => openLightbox(img.src));
+            });
+
+            document.getElementById('loader').style.display = 'none';
+            document.getElementById('layoutContainer').style.display = 'grid';
+
+            generateTOC();
+
+        } catch (e) { 
+            document.getElementById('loader').innerHTML = `<h2 style="color:var(--error)">Chyba</h2><p>${e.message}</p><br><a href="index.html" class="btn">Zpět</a>`; 
+        }
+    }
+
+    function populateControlPanel() {
+        const container = document.getElementById('dynamicButtonsContainer');
+        container.innerHTML = `
+            <div style="display:flex; flex-direction:column; gap:4px; margin-bottom:10px; border-bottom:1px solid var(--border-subtle); padding-bottom:10px;">
+                <span style="font-size:0.75rem; color:var(--text-muted); font-weight:600; text-transform:uppercase;">Vzhled</span>
+                <button class="btn" onclick="setTheme('light')" style="text-align:left;">☀️ Světlý</button>
+                <button class="btn" onclick="setTheme('dark')" style="text-align:left;">🌙 Tmavý</button>
+                <button class="btn" onclick="setTheme('auto')" style="text-align:left;">⚙️ Auto</button>
+            </div>
+            
+            <div style="display:flex; flex-direction:column; gap:4px; margin-bottom:10px; border-bottom:1px solid var(--border-subtle); padding-bottom:10px;">
+                <span style="font-size:0.75rem; color:var(--text-muted); font-weight:600; text-transform:uppercase;">Písmo ke čtení</span>
+                <select id="fontSelect" class="sort-select" style="width:100%; padding:8px; font-size:0.9rem;" onchange="changeReaderFont(this.value)">
+                    <option value="system-ui, -apple-system, sans-serif">Výchozí Systémové Písmo</option>
+                    <option value="'Inter', sans-serif">Inter (Moderní)</option>
+                    <option value="'Roboto', sans-serif">Roboto (Google)</option>
+                    <option value="'Open Sans', sans-serif">Open Sans (Čisté)</option>
+                    <option value="'Montserrat', sans-serif">Montserrat (Geometrické)</option>
+                    <option value="'Ubuntu', sans-serif">Ubuntu (Kulaté)</option>
+                    <option value="'Lora', serif">Lora (Knižní Patkové)</option>
+                    <option value="'Merriweather', serif">Merriweather (Novinové)</option>
+                    <option value="'Playfair Display', serif">Playfair (Elegantní)</option>
+                </select>
+            </div>
+            
+            <button class="btn" onclick="copyArticleLink()" style="text-align:left;">📋 Sdílet článek</button>
+            <button class="btn" onclick="window.print()" style="text-align:left;">🖨️ Vytisknout článek</button>
+        `;
+
+        const savedFont = localStorage.getItem('jmhz_article_font');
+        if (savedFont) {
+            document.getElementById('fontSelect').value = savedFont;
+            changeReaderFont(savedFont);
+        }
+    }
+
+    window.changeReaderFont = function(fontFamily) {
+        document.getElementById('articleContent').style.fontFamily = fontFamily;
+        localStorage.setItem('jmhz_article_font', fontFamily);
+    };
+
+    window.copyArticleLink = function() {
+        navigator.clipboard.writeText(window.location.href).then(() => {
+            if(window.KB_Toaster) KB_Toaster.show('Zkopírováno', 'Odkaz na článek byl zkopírován do schránky.', 'success');
+            else alert('Zkopírováno: Odkaz byl zkopírován do schránky.');
+        });
+    };
+
+    window.toggleFaq = function(element) { element.parentElement.classList.toggle('open'); };
+
+    // Funkce pro Lightbox
+    window.openLightbox = function(src) {
+        document.getElementById('kbLightboxImg').src = src;
+        document.getElementById('kbLightbox').classList.add('active');
+    };
+    window.closeLightbox = function() {
+        document.getElementById('kbLightbox').classList.remove('active');
+        setTimeout(() => { document.getElementById('kbLightboxImg').src = ''; }, 300);
+    };
+
+    // Vylepšená podpora shortcodů s ořezem HTML balastu
+    function replaceMediaTags(html) {
+        let parsed = html;
+        
+        parsed = parsed.replace(/(?:<a[^>]*>)?\[VIDEO:\s*(.+?)\](?:<\/a>)?/gi, (match, content) => {
+            let src = content.replace(/<[^>]+>/g, '').trim();
+            if (!src.startsWith('http://') && !src.startsWith('https://')) src = MEDIA_BASE_URL + src;
+            let type = "video/mp4"; 
+            if (src.toLowerCase().endsWith('.mov')) type = "video/quicktime";
+            return `<div class="media-wrapper"><video controls preload="metadata" style="max-width:100%; border-radius:8px; box-shadow: 0 4px 10px rgba(0,0,0,0.1);"><source src="${src}" type="${type}">Video</video></div>`;
+        });
+        
+        parsed = parsed.replace(/(?:<a[^>]*>)?\[AUDIO:\s*(.+?)\](?:<\/a>)?/gi, (match, content) => {
+            let src = content.replace(/<[^>]+>/g, '').trim();
+            if (!src.startsWith('http://') && !src.startsWith('https://')) src = MEDIA_BASE_URL + src;
+            return `<div class="media-wrapper"><audio controls style="width:100%;"><source src="${src}" type="audio/mpeg">Audio</audio></div>`;
+        });
+        
+        parsed = parsed.replace(/(?:<a[^>]*>)?\[OBRAZEK:\s*(.+?)\](?:<\/a>)?/gi, (match, content) => {
+            let src = content.replace(/<[^>]+>/g, '').trim();
+            if (!src.startsWith('http://') && !src.startsWith('https://')) src = MEDIA_BASE_URL + src;
+            return `<div class="media-wrapper"><img src="${src}" style="max-width:100%; border-radius:8px; box-shadow: 0 4px 10px rgba(0,0,0,0.05);"></div>`;
+        });
+
+        parsed = parsed.replace(/(?:<a[^>]*>)?\[PRILOHA:\s*([^|\]]+)(?:\|([^\]]+))?\](?:<\/a>)?/gi, (match, url, label) => {
+            let src = url.replace(/<[^>]+>/g, '').trim();
+            let btnLabel = label ? label.replace(/<[^>]+>/g, '').trim() : "Stáhnout přílohu";
+            if (!src.startsWith('http://') && !src.startsWith('https://')) src = DOCX_BASE_URL + src;
+            return `<div style="margin: 20px 0;"><a href="${src}" target="_blank" class="btn primary" style="display:inline-flex; align-items:center; gap:8px; text-decoration:none;"><span style="font-size:1.2rem;">📎</span> ${btnLabel}</a></div>`;
+        });
+
+        parsed = parsed.replace(/(?:<a[^>]*>)?\[FAQ:\s*([^|\]]+)\|([^\]]+)\](?:<\/a>)?/gi, (match, question, answer) => {
+            let q = question.replace(/<[^>]+>/g, '').trim();
+            let a = answer.replace(/<[^>]+>/g, '').trim();
+            return `<div class="faq-box"><div class="faq-question" onclick="toggleFaq(this)"><span>${q}</span><span class="faq-icon">▼</span></div><div class="faq-answer">${a}</div></div>`;
+        });
+
+        parsed = parsed.replace(/(?:<a[^>]*>)?\[KVIZ:\s*(.+?)\](?:<\/a>)?/gi, (match, content) => {
+            let parts = content.split('|').map(p => p.trim().replace(/<[^>]+>/g, ''));
+            let question = parts.shift(); 
+            let quizId = 'quiz_' + Math.random().toString(36).substr(2, 9);
+            
+            let htmlOut = `<div class="lms-quiz-box" style="background:var(--bg-surface); border:1px solid var(--border-strong); border-radius:8px; padding:20px; margin:30px 0;"><h4 style="margin:0 0 15px 0; color:var(--text-primary); display:flex; align-items:center; gap:8px;"><span style="font-size:1.5rem;">🤔</span> ${question}</h4><div class="lms-quiz-options" style="display:flex; flex-direction:column; gap:10px;">`;
+            
+            parts.forEach((ans) => {
+                let isCorrect = ans.endsWith('*');
+                let cleanAns = isCorrect ? ans.slice(0, -1).trim() : ans;
+                htmlOut += `<button class="btn" onclick="checkArticleQuiz(this, ${isCorrect}, '${quizId}')" style="text-align:left; justify-content:flex-start; font-size:1rem; padding:12px; border:1px solid var(--border); background:var(--bg-elevated); transition:0.2s;">${cleanAns}</button>`;
+            });
+            
+            htmlOut += `</div><div id="${quizId}_feedback" style="margin-top:15px; font-weight:600; font-size:0.95rem; display:none; padding:10px; border-radius:6px;"></div></div>`;
+            return htmlOut;
+        });
+
+        return parsed;
+    }
+
+    window.checkArticleQuiz = function(btn, isCorrect, quizId) {
+        const parent = btn.parentElement;
+        const feedback = document.getElementById(quizId + '_feedback');
+        Array.from(parent.children).forEach(b => {
+            b.disabled = true; b.style.opacity = '0.7'; b.style.cursor = 'not-allowed';
+        });
+        btn.style.opacity = '1'; btn.style.color = '#fff';
+
+        if (isCorrect) {
+            btn.style.background = 'var(--success)'; btn.style.borderColor = 'var(--success)';
+            feedback.innerHTML = '✅ Správně!';
+            feedback.style.background = 'var(--success-bg)'; feedback.style.color = 'var(--success)';
+        } else {
+            btn.style.background = 'var(--error)'; btn.style.borderColor = 'var(--error)';
+            feedback.innerHTML = '❌ Nesprávně.';
+            feedback.style.background = 'var(--error-bg)'; feedback.style.color = 'var(--error)';
+        }
+        feedback.style.display = 'block';
+    };
+
+    function generateTOC() {
+        const headings = document.getElementById('articleContent').querySelectorAll('h1, h2');
+        let tocHtml = '';
+        headings.forEach((h, index) => {
+            const id = `sec-${index}`;
+            h.id = id;
+            const level = h.tagName.toLowerCase().replace('h', '');
+            // Přidána mezera na konci level-1 pro lepší čitelnost
+            const extraClass = level === '1' ? ' toc-level-1' : ' toc-level-2';
+            tocHtml += `<a href="#${id}" class="toc-link${extraClass}" data-target="${id}">${h.textContent}</a>`;
+        });
+
+        if (headings.length > 0) {
+            document.getElementById('tocList').innerHTML = tocHtml;
+            initEnterpriseScrollSpy(headings);
+        } else {
+            document.querySelector('.toc-aside').style.display = 'none';
+        }
+    }
+
+    function initEnterpriseScrollSpy(headings) {
+        const tocLinks = document.querySelectorAll('.toc-link');
+        // Upraven rootMargin pro plynulejší detekci při rolování
+        const observerOptions = { root: null, rootMargin: '-80px 0px -60% 0px', threshold: 0 };
+        
+        const observer = new IntersectionObserver(entries => {
+            entries.forEach(entry => {
+                if (entry.isIntersecting) {
+                    tocLinks.forEach(link => {
+                        link.classList.toggle('active', link.getAttribute('data-target') === entry.target.id);
+                    });
+                }
+            });
+        }, observerOptions);
+        headings.forEach(h => observer.observe(h));
+    }
+
+    // Bezpečná ochrana výpočtu šířky Progress Baru proti dělení nulou
+    window.addEventListener('scroll', () => {
+        const winScroll = document.body.scrollTop || document.documentElement.scrollTop;
+        const height = document.documentElement.scrollHeight - document.documentElement.clientHeight;
+        const scrolled = height > 0 ? (winScroll / height) * 100 : 0;
+        document.getElementById('progressBar').style.width = scrolled + "%";
+    }, { passive: true });
+
+    document.addEventListener('DOMContentLoaded', loadArticle);
+</script>
+</body>
+</html>

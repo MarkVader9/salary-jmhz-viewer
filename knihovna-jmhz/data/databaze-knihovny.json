@@ -1,0 +1,18 @@
+{
+  "categories": [
+    { "id": "cat_1", "name": "Měsíční hlášení", "parentId": null },
+    { "id": "cat_2", "name": "Nemocenské pojištění", "parentId": "cat_1" }
+  ],
+  "articles": [
+    {
+      "id": "art_kod_eldp",
+      "title": "Kód ELDP (ID 10240)",
+      "anchorId": "kod",
+      "tags": ["ELDP", "Kódy", "Důchodové pojištění"],
+      "categoryId": "cat_1",
+      "readingTimeMin": 3,
+      "lastUpdated": "2026-04-29T12:00:00Z",
+      "content": {} 
+    }
+  ]
+}

@@ -1,0 +1,260 @@
+<!DOCTYPE html>
+<html lang="cs" data-theme="light">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Knihovna znalostí - JMHZ</title>
+    <style>
+        :root {
+            --bg-base: oklch(97% 0.005 250); 
+            --bg-surface: oklch(99% 0.003 250); 
+            --bg-elevated: oklch(100% 0.002 250);
+            --bg-hover: oklch(96% 0.008 250);
+            --border: oklch(87% 0.012 250);
+            --text-primary: oklch(20% 0.02 250);
+            --text-secondary: oklch(42% 0.015 250);
+            --text-muted: oklch(58% 0.012 250);
+            --accent: oklch(50.48% 0.177 261.64);
+            --accent-bg: oklch(94% 0.035 255);
+            --shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
+            --radius-lg: 8px;
+            --radius-md: 6px;
+        }
+
+        body { font-family: system-ui, -apple-system, sans-serif; background: var(--bg-base); color: var(--text-primary); margin: 0; padding: 0; line-height: 1.5; }
+
+        .header-section { background: var(--bg-elevated); border-bottom: 1px solid var(--border); padding: 50px 20px; text-align: center; }
+        .header-title { font-size: 2.2rem; font-weight: 800; margin: 0 0 10px 0; color: #111827; letter-spacing: -0.02em;}
+        .header-subtitle { color: var(--text-secondary); margin-bottom: 40px; font-size: 1.1rem;}
+
+        .controls-container { max-width: 900px; margin: 0 auto; display: flex; flex-direction: column; gap: 20px; }
+        .search-row { display: flex; gap: 15px; flex-wrap: wrap; }
+        .search-box { flex: 1; min-width: 300px; position: relative; }
+        .search-input { width: 100%; padding: 16px 20px 16px 45px; border: 1px solid var(--border); border-radius: var(--radius-lg); font-size: 1.05rem; outline: none; transition: all 0.2s; box-sizing: border-box; background: var(--bg-surface); color: var(--text-primary); box-shadow: var(--shadow);}
+        .search-input:focus { border-color: var(--accent); box-shadow: 0 0 0 3px var(--accent-bg); }
+        .search-icon { position: absolute; left: 16px; top: 18px; color: var(--text-muted); font-size: 1.2rem; }
+        .sort-select { padding: 16px 20px; border: 1px solid var(--border); border-radius: var(--radius-lg); font-size: 0.95rem; background: var(--bg-surface); color: var(--text-primary); cursor: pointer; outline: none; min-width: 200px; box-shadow: var(--shadow);}
+        .sort-select:focus { border-color: var(--accent); }
+
+        .category-pills { display: flex; flex-wrap: wrap; gap: 10px; justify-content: center; }
+        .cat-pill { padding: 8px 16px; background: var(--bg-surface); border: 1px solid var(--border); border-radius: 20px; font-size: 0.85rem; font-weight: 600; cursor: pointer; transition: 0.2s; color: var(--text-secondary); }
+        .cat-pill:hover { border-color: var(--accent); color: var(--accent); }
+        .cat-pill.active { background: var(--accent); color: white; border-color: var(--accent); }
+
+        .content-container { max-width: 1200px; margin: 40px auto; padding: 0 20px; min-height: 50vh;}
+        .articles-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(340px, 1fr)); gap: 24px; }
+
+        .article-card { background: var(--bg-surface); border: 1px solid var(--border); border-radius: var(--radius-lg); padding: 24px; transition: transform 0.2s, box-shadow 0.2s; display: flex; flex-direction: column; position: relative; }
+        .article-card:hover { transform: translateY(-3px); box-shadow: var(--shadow); border-color: #cbd5e1; }
+
+        .card-meta { display: flex; justify-content: space-between; font-size: 0.8rem; color: var(--text-muted); margin-bottom: 12px; }
+        .card-title { font-size: 1.25rem; font-weight: 700; margin: 0 0 12px 0; line-height: 1.3;}
+        .card-title a { color: inherit; text-decoration: none; }
+        .card-title a:hover { color: var(--accent); }
+        .card-excerpt { font-size: 0.9rem; color: var(--text-secondary); margin: 0 0 20px 0; flex-grow: 1; }
+
+        .card-tags { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 20px; }
+        .tag { background: var(--accent-bg); color: var(--accent); padding: 4px 10px; border-radius: 20px; font-size: 0.75rem; font-weight: 600; }
+
+        .card-footer { border-top: 1px solid var(--border); padding-top: 16px; display: flex; justify-content: space-between; align-items: center; }
+        .read-more { color: var(--accent); text-decoration: none; font-size: 0.9rem; font-weight: 600; display: inline-flex; align-items: center; gap: 5px;}
+        .read-more:hover { text-decoration: underline; }
+
+        .loader { text-align: center; padding: 60px; color: var(--text-muted); font-size: 1.1rem;}
+        .empty-state { text-align: center; padding: 60px; color: var(--text-muted); grid-column: 1/-1; background: var(--bg-surface); border-radius: var(--radius-lg); border: 1px dashed var(--border);}
+        
+        .toast { position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%); background: #1f2937; color: white; padding: 12px 24px; border-radius: 30px; font-size: 0.9rem; font-weight: 500; opacity: 0; transition: 0.3s; z-index: 1000; pointer-events: none; }
+        .toast.show { opacity: 1; transform: translateX(-50%) translateY(-10px); }
+    </style>
+</head>
+<body>
+
+    <header class="header-section">
+        <h1 class="header-title">SALARY Knihovna Článků</h1>
+        <p class="header-subtitle">Znalostní báze pro metodiky a uživatele aplikace JMHZ</p>
+        
+        <div class="controls-container">
+            <div class="search-row">
+                <div class="search-box">
+                    <span class="search-icon">🔍</span>
+                    <input type="text" id="searchInput" class="search-input" placeholder="Hledat téma, kód ELDP, klíčové slovo...">
+                </div>
+                <select id="sortSelect" class="sort-select">
+                    <option value="newest">Nejnovější články</option>
+                    <option value="relevance">Nejrelevantnější</option>
+                </select>
+            </div>
+            <div class="category-pills" id="categoryFilterContainer">
+                <button class="cat-pill active" data-id="all">Všechny články</button>
+            </div>
+        </div>
+    </header>
+
+    <main class="content-container">
+        <div id="loader" class="loader">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="animation: spin 1s linear infinite;"><path d="M21 12a9 9 0 1 1-6.219-8.56"/></svg>
+            <br><br>Načítám databázi...
+        </div>
+        <div id="articlesGrid" class="articles-grid"></div>
+    </main>
+
+    <div id="toast" class="toast">Odkaz zkopírován do schránky</div>
+
+<script>
+    let dbData = { categories: [], articles: [] };
+    let activeCategoryId = 'all';
+    let searchTimeout = null;
+
+    const UI = {
+        search: document.getElementById('searchInput'),
+        sort: document.getElementById('sortSelect'),
+        grid: document.getElementById('articlesGrid'),
+        loader: document.getElementById('loader'),
+        catContainer: document.getElementById('categoryFilterContainer')
+    };
+
+    async function init() {
+        try {
+            const res = await fetch('data/api.php');
+            if (!res.ok) throw new Error('API Error');
+            dbData = await res.json();
+            
+            // Enterprise filtrace: Pouze publikované
+            dbData.articles = (dbData.articles || []).filter(a => a.status === 'public');
+            
+            renderCategoryFilters();
+            UI.loader.style.display = 'none';
+            applyFiltersAndRender();
+        } catch (e) {
+            UI.loader.innerHTML = '<span style="color:var(--danger)">  ⚠ Právě v tomto okamžiku se náš tým technické podpory a administrace obsahu Znalostní knihovny s plným nasazením stará o to, aby vše fungovalo co nejlépe. Děkujeme za Vaši trpělivost – zkuste prosím stránku za chvíli obnovit. P.S.: Jára Cimrman na tomto místě také nestudoval . . . </span>';
+        }
+    }
+
+    function renderCategoryFilters() {
+        const categoriesInUse = new Set(dbData.articles.map(a => a.categoryId).filter(Boolean));
+        dbData.categories.filter(c => categoriesInUse.has(c.id)).forEach(cat => {
+            const btn = document.createElement('button');
+            btn.className = 'cat-pill';
+            btn.textContent = cat.name;
+            btn.dataset.id = cat.id;
+            btn.onclick = () => {
+                document.querySelectorAll('.cat-pill').forEach(b => b.classList.remove('active'));
+                btn.classList.add('active');
+                activeCategoryId = cat.id;
+                applyFiltersAndRender();
+            };
+            UI.catContainer.appendChild(btn);
+        });
+
+        // Event listener pro tlačítko "Vše"
+        UI.catContainer.querySelector('[data-id="all"]').onclick = function() {
+            document.querySelectorAll('.cat-pill').forEach(b => b.classList.remove('active'));
+            this.classList.add('active');
+            activeCategoryId = 'all';
+            applyFiltersAndRender();
+        };
+    }
+
+    function extractText(html) {
+        if (!html) return "";
+        const tmp = document.createElement("div");
+        tmp.innerHTML = html;
+        return tmp.textContent || tmp.innerText || "";
+    }
+
+    function applyFiltersAndRender() {
+        const query = UI.search.value.toLowerCase().trim();
+        const sortBy = UI.sort.value;
+        
+        let filtered = dbData.articles;
+
+        // 1. Filtr dle kategorie
+        if (activeCategoryId !== 'all') {
+            filtered = filtered.filter(a => a.categoryId === activeCategoryId);
+        }
+
+        // 2. Full-text vyhledávání
+        if (query) {
+            if(sortBy === 'newest') UI.sort.value = 'relevance';
+            const kws = query.split(' ');
+            
+            filtered = filtered.map(art => {
+                let score = 0;
+                const title = (art.title || '').toLowerCase();
+                const tags = (art.tags || []).join(' ').toLowerCase();
+                const text = extractText(art.content).toLowerCase();
+
+                kws.forEach(kw => {
+                    if (title.includes(kw)) score += 10;
+                    if (tags.includes(kw)) score += 5;
+                    if (text.includes(kw)) score += 1;
+                });
+                return { ...art, score };
+            }).filter(art => art.score > 0);
+        }
+
+        // 3. Řazení
+        if (UI.sort.value === 'relevance' && query) {
+            filtered.sort((a, b) => b.score - a.score);
+        } else {
+            filtered.sort((a, b) => new Date(b.lastUpdated) - new Date(a.lastUpdated));
+        }
+
+        renderGrid(filtered);
+    }
+
+    function renderGrid(articles) {
+        UI.grid.innerHTML = '';
+        if (articles.length === 0) {
+            UI.grid.innerHTML = '<div class="empty-state"><h3>Žádné výsledky</h3><p>Zkuste upravit hledaný výraz nebo vybrat jinou kategorii.</p></div>';
+            return;
+        }
+
+        articles.forEach(art => {
+            const text = extractText(art.content);
+            const excerpt = text.length > 150 ? text.substring(0, 150).replace(/\s+\S*$/, '') + '...' : text;
+            const url = `clanek.html?id=${art.id}`;
+            const fUrl = window.location.origin + window.location.pathname.replace('index.html', '') + url;
+            const date = new Date(art.lastUpdated).toLocaleDateString('cs-CZ');
+            const tags = (art.tags || []).slice(0, 3).map(t => `<span class="tag">${t}</span>`).join('');
+
+            const card = document.createElement('div');
+            card.className = 'article-card';
+            card.innerHTML = `
+                <div class="card-meta"><span>📅 ${date}</span><span>⏱️ ${art.readingTimeMin || 1} min čtení</span></div>
+                <h3 class="card-title"><a href="${url}">${art.title || 'Neznámý článek'}</a></h3>
+                <div class="card-tags">${tags}</div>
+                <p class="card-excerpt">${excerpt}</p>
+                <div class="card-footer">
+                    <a href="${url}" class="read-more">Přečíst celé →</a>
+                    <button class="cat-pill" style="border:none; padding:4px 8px; font-size:1.1rem; background:transparent;" onclick="copyLink('${fUrl}')" title="Kopírovat odkaz">🔗</button>
+                </div>
+            `;
+            UI.grid.appendChild(card);
+        });
+    }
+
+    // Enterprise: Debouncing (čekání na dopání) pro výkon hledání
+    UI.search.addEventListener('input', () => {
+        clearTimeout(searchTimeout);
+        searchTimeout = setTimeout(applyFiltersAndRender, 300);
+    });
+    UI.sort.addEventListener('change', applyFiltersAndRender);
+
+    function copyLink(url) {
+        navigator.clipboard.writeText(url).then(() => {
+            const t = document.getElementById('toast');
+            t.classList.add('show');
+            setTimeout(() => t.classList.remove('show'), 2500);
+        });
+    }
+
+    // CSS animace
+    const style = document.createElement('style');
+    style.innerHTML = `@keyframes spin { 100% { transform: rotate(360deg); } }`;
+    document.head.appendChild(style);
+
+    document.addEventListener('DOMContentLoaded', init);
+</script>
+</body>
+</html>

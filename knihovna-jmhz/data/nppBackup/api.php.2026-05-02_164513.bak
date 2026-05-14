@@ -1,0 +1,107 @@
+<?php
+/**
+ * SALARY KB - Enterprise API Endpoint (MSSQL Verze)
+ * Handles secure JSON DB reading/writing via PDO SQL Server connection.
+ */
+header("Access-Control-Allow-Origin: *");
+header("Content-Type: application/json; charset=UTF-8");
+header("Access-Control-Allow-Methods: POST, GET, OPTIONS");
+header("Access-Control-Allow-Headers: Content-Type");
+
+if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
+    http_response_code(200);
+    exit;
+}
+
+// ==========================================
+// 🔐 KONFIGURACE (Vyplňte podle hostingu)
+// ==========================================
+$ADMIN_TOKEN = "SuperTajneHesloSalary2026";
+
+$DB_HOST = 'localhost'; // Někdy to bývá např. sql.vas-hosting.cz
+$DB_NAME = 'salary2.dbaserver.net';
+$DB_USER = 'salary2';
+$DB_PASS = 'g6XgFse4';
+
+// ==========================================
+// 🚀 PŘIPOJENÍ K DATABÁZI (PDO - SQLSRV)
+// ==========================================
+try {
+    // Připojovací řetězec pro Microsoft SQL Server (vyžaduje PDO_SQLSRV rozšíření na hostingu)
+    $pdo = new PDO("sqlsrv:Server=$DB_HOST;Database=$DB_NAME", $DB_USER, $DB_PASS);
+    $pdo->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
+} catch (PDOException $e) {
+    http_response_code(500);
+    echo json_encode(["error" => "Kritická chyba: Nelze se připojit k MSSQL databázi."]);
+    exit;
+}
+
+// ==========================================
+// 🟢 GET: Rychlé a bezpečné čtení z MSSQL
+// ==========================================
+if ($_SERVER['REQUEST_METHOD'] === 'GET') {
+    try {
+        $stmt = $pdo->prepare("SELECT json_payload FROM salary_kb_storage WHERE id = 1");
+        $stmt->execute();
+        $row = $stmt->fetch(PDO::FETCH_ASSOC);
+
+        if ($row && !empty($row['json_payload'])) {
+            echo $row['json_payload'];
+        } else {
+            echo json_encode(["categories" => [], "articles" => []]);
+        }
+    } catch (PDOException $e) {
+        http_response_code(500);
+        echo json_encode(["error" => "Chyba při čtení z databáze."]);
+    }
+    exit;
+}
+
+// ==========================================
+// 🔴 POST: Validovaný zápis do MSSQL
+// ==========================================
+if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+    $input = file_get_contents('php://input');
+    $request = json_decode($input, true);
+
+    if (json_last_error() !== JSON_ERROR_NONE) {
+        http_response_code(400);
+        echo json_encode(["error" => "Neplatný JSON formát."]);
+        exit;
+    }
+
+    if (!isset($request['token']) || $request['token'] !== $ADMIN_TOKEN) {
+        http_response_code(403);
+        echo json_encode(["error" => "Neplatný autorizační token!"]);
+        exit;
+    }
+
+    if (isset($request['dbData'])) {
+        $jsonString = json_encode($request['dbData'], JSON_UNESCAPED_UNICODE);
+        
+        try {
+            // Logika pro MSSQL: Zkusíme updatovat. Pokud nebyl ovlivněn žádný řádek (tabulka je prázdná), vložíme ho.
+            $sql = "
+                UPDATE salary_kb_storage SET json_payload = :data_update WHERE id = 1;
+                IF @@ROWCOUNT = 0
+                    INSERT INTO salary_kb_storage (id, json_payload) VALUES (1, :data);
+            ";
+            
+            $stmt = $pdo->prepare($sql);
+            $stmt->execute([
+                ':data' => $jsonString,
+                ':data_update' => $jsonString
+            ]);
+
+            echo json_encode(["success" => true, "message" => "Úspěšně uloženo do MSSQL databáze."]);
+        } catch (PDOException $e) {
+            http_response_code(500);
+            echo json_encode(["error" => "Kritická chyba při zápisu do MSSQL."]);
+        }
+    } else {
+        http_response_code(400);
+        echo json_encode(["error" => "Chybí payload data (dbData)."]);
+    }
+    exit;
+}
+?>

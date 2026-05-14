@@ -1,0 +1,54 @@
+
+
+
+
+
+
+
+
+
+
+
+(function () {
+  function loadScript(url) {
+    return new Promise(function (resolve, reject) {
+      var s = document.createElement('script');
+      s.src = url;
+      s.onload = resolve;
+      s.onerror = function () { reject(new Error('Nepodařilo se načíst: ' + url)); };
+      document.head.appendChild(s);
+    });
+  }
+  var ms = document.createElement('script');
+  ms.src = 'manifest.js?t=' + Date.now();
+  ms.onload = function () {
+    var m = window.__JMHZ_MANIFEST__;
+    if (!m) { document.getElementById('app').textContent = 'Chyba: manifest.js nenačten'; return; }
+    var f = m.files || {};
+    function r(name) { return f[name] || name; }
+    var link = document.createElement('link');
+    link.rel = 'stylesheet';
+    link.href = r('assets/viewer.css');
+    document.head.appendChild(link);
+    loadScript(r('vendor/xmllint-wasm-bundle.js'))
+    .then(function () { return Promise.all([loadScript(r('data/xsd-data.js')), loadScript(r('data/jmhz-xsd-data.js'))]); })
+    .then(function () { return loadScript(r('assets/formats.js')); })
+    .then(function () { return loadScript(r('assets/kontroly-utils.js')); })
+    .then(function () { return loadScript(r('assets/codelists-client.js')); })
+    .then(function () {
+      try { window.JMHZCodelists && window.JMHZCodelists.loadAll(); } catch (e) {}
+      return Promise.all([loadScript(r('assets/mh-kontroly.js')), loadScript(r('assets/regzec-kontroly.js'))]);
+    })
+    .then(function () { return loadScript(r('assets/viewer.runtime.js')); })
+    .then(function () {
+      var target = document.getElementById('app');
+      if (target) window.JMHZViewerRuntime.mount(target, { manageDocumentTitle: true, warnBeforeUnload: true });
+    })
+    .catch(function (err) {
+      console.error('JMHZ Viewer: ' + err.message);
+      document.getElementById('app').textContent = 'Chyba při načítání vieweru: ' + err.message;
+    });
+  };
+  ms.onerror = function () { document.getElementById('app').textContent = 'Chyba: nepodařilo se načíst manifest.js'; };
+  document.head.appendChild(ms);
+})();

@@ -1,0 +1,29 @@
+{
+  "categories": [
+    { "id": "cat_1", "name": "Měsíční hlášení", "parentId": null },
+    { "id": "cat_2", "name": "REGZEC", "parentId": null }
+    { "id": "cat_3", "name": "Školení", "parentId": null }
+    { "id": "cat_4", "name": "Používání Prohlížeče JMHZ Formulářů", "parentId": "Školení" }
+  ],
+  "articles": [
+    {
+      "id": "art_regzec_mapa",
+      "title": "Kompletní topologická mapa podprojektu JMHZ",
+      "tags": ["REGZEC", "Topologie", "Mapa"],
+      "categoryId": "cat_2",
+      "readingTimeMin": 5,
+      "lastUpdated": "2026-03-26T12:00:00Z",
+      "docxFile": "(26-BŘEZNA-2026___REVIZE_006)---NotebookLM Verze - Kompletní topologická mapa podprojektu JMHZ - Registrace Zaměstnance (REGZEC).docx"
+    }
+	  ]
+	{
+      "id": "skoleni_pouziti_prohlizece_jmhz_formularu",
+      "title": "Školení Používání Prohlížeče JMHZ Formulářů",
+      "tags": ["REGZEC", "Topologie", "Mapa"],
+      "categoryId": "cat_4",
+      "readingTimeMin": 25,
+      "lastUpdated": "2026-05-08T09:00:00Z",
+      "docxFile": "skoleni_pouzivani_prohlizece_jmhz_formularu.docx"
+    }
+  ]
+}

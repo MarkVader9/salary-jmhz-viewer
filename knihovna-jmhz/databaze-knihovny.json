@@ -1,0 +1,31 @@
+{
+  "categories": [
+    { "id": "cat_1", "name": "Měsíční hlášení", "parentId": null },
+    { "id": "cat_2", "name": "REGZEC", "parentId": null },
+    { "id": "cat_3", "name": "Školení", "parentId": null },
+    { "id": "cat_4", "name": "Používání Prohlížeče JMHZ Formulářů", "parentId": "cat_3" }
+  ],
+  "articles": [
+    {
+      "id": "art_regzec_mapa",
+      "title": "Kompletní Topologická Mapa Podprojektu JMHZ  •  REGZEC",
+      "tags": ["Pro Vývojáře", "REGZEC", "Topologie", "Mapa"],
+      "categoryId": "cat_2",
+      "readingTimeMin": 5,
+      "lastUpdated": "2026-03-26T12:00:00Z",
+      "docxFile": "(12-KVĚTNA-2026-_-REVIZE_007)---Kompletní topologická mapa podprojektu JMHZ - Registrace Zaměstnance (REGZEC).docx"
+    }
+  ],
+  "lms": [
+    {
+      "id": "kurz_jmhz_prohlizec",
+      "title": "Interaktivní Kurz: Prohlížeč JMHZ Formulářů",
+      "description": "Naučte se pracovat s prohlížečem efektivně krok za krokem. Kurz obsahuje videoukázky a cvičení.",
+      "tags": ["Pro Mzdové Účetní", "Kurz", "Školení", "LMS", "Video"],
+      "categoryId": "cat_4",
+      "readingTimeMin": 45,
+      "lastUpdated": "2026-05-10T10:00:00Z",
+      "docxFile": "skoleni_pouzivani_prohlizece_jmhz_formularu_004.docx"
+    }
+  ]
+}
