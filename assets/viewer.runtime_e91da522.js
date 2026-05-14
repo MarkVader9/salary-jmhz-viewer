@@ -7545,17 +7545,7 @@ Aktuální: ` + Ys(a) + `, nové soubory: ` + Ys(o) + `.`);
             let e = st() || ir();
             typeof e == `string` && Hn.getValue() !== e && Hn.setValue(e)
         }
-        async function xc() {
-            if (!Cn)
-                return;
-            let e = await yc();
-            Hn ? bc() : (Hn = e.editor.createModel(st() || ``, `xml`), Un = Hn.onDidChangeContent(() => {
-                    ct(Hn.getValue()),
-                    g(!0),
-                    _c()
-                })),
-            Vn ? (Vn.getDomNode() !== Cn && (Vn.dispose(), Vn = e.editor.create(Cn, {
-                        model: Hn,
+        async function xc() { if (!Cn || !document.body.contains(Cn)) return; let e = await yc(); Hn ? bc() : (Hn = e.editor.createModel(st() || ``, `xml`), Un = Hn.onDidChangeContent(() => { ct(Hn.getValue()), g(!0), _c() })), Vn ? (Vn.getDomNode() !== Cn && (Vn.dispose(), Vn = e.editor.create(Cn, { model: Hn,
                         automaticLayout: !0,
                         minimap: {
                             enabled: !1
