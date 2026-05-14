@@ -3194,14 +3194,14 @@ body {
                         
                         if (labelEl && xpathEl) {
                             // Vezmeme plnou cestu, např. "souhrnDataZec/zdravPojZamestnavatel/zdravotniPojisteni"
-                            const fullPath = xpathEl.textContent.trim();
-                            if (fullPath) {
-                                // Rozdělíme podle lomítek a získáme úplně poslední část (samotný tag)
-                                const pathParts = fullPath.split('/');
-                                const xmlTag = pathParts[pathParts.length - 1].toLowerCase();
-                                
-                                // Porovnáme tag s klíči ve slovníku
-                                if (window.JMHZ_INFO_DICTIONARY[xmlTag]) {
+                            const fullPath = xpathEl.textContent?.trim() || '';
+if (fullPath) {
+    // SWC/ES6 standard: Zabezpečení proti prázdnému poli a rychlé vytažení posledního prvku
+    const pathParts = fullPath.split('/');
+    const xmlTag = (pathParts.pop() || '').toLowerCase();
+    
+    // Pojistka, že slovník existuje, než z něj začneme číst
+    if (xmlTag && window.JMHZ_INFO_DICTIONARY && window.JMHZ_INFO_DICTIONARY[xmlTag]) {
                                     const btn = document.createElement('span');
                                     btn.className = 'info-icon-btn';
                                     btn.innerHTML = 'i';
