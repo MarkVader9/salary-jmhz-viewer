@@ -2131,22 +2131,26 @@
       }},
 
     // M260: Max one primary PPV (10495=ANO) per OIČ
-    { id: 'M260', scope: 'cross', sev: 'error', type: 'custom',
+    { id: 'M260', scope: 'emp', sev: 'error', type: 'custom',
       msg: 'Existuje více než jedno primární PPV za OIČ v rámci podání.',
       check: function(ctx) {
-        var countByOic = {};
+        var prim = getRowHeaderVal(ctx.emp, '10495');
+        if (!isTrueValue(prim)) return [];
+        var oic = ctx.getVal('10051');
+        if (!oic) return [];
+        
+        // Spočítáme, kolikrát se toto konkrétní OIČ vyskytuje s primárním PPV napříč všemi zaměstnanci
+        var count = 0;
         ctx.allEmps.forEach(function(e) {
-          var prim = getRowHeaderVal(e, '10495');
-          if (!isTrueValue(prim)) return;
-          var oic = getVal(e, '10051');
-          if (!oic) return;
-          countByOic[oic] = (countByOic[oic] || 0) + 1;
+          var ePrim = getRowHeaderVal(e, '10495');
+          if (isTrueValue(ePrim) && getVal(e, '10051') === oic) count++;
         });
-        var errors = [];
-        Object.keys(countByOic).forEach(function(oic) {
-          if (countByOic[oic] > 1) errors.push({ fieldCsszId: '10495', message: ctx.rule.msg });
-        });
-        return errors;
+        
+        // Pokud je duplicitní, vyhodíme chybu svázanou PŘÍMO s aktuálním zaměstnancem a jeho IK MPSV (10051)
+        if (count > 1) {
+          return [{ fieldCsszId: '10051', message: ctx.rule.msg }];
+        }
+        return [];
       }},
 
     // M267: Při nulové Mzdě za práci zúčtovaná (10328) se nevyplňují podřazené atributy
