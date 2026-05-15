@@ -3,13 +3,13 @@ const TYPY_PODANI_TXT = 'Pro řádné hlášení se uvádí hodnota R. Pokud pod
 
 // --- 1. DATABÁZE INFOHLÁŠEK ---
 window.JMHZ_INFO_DICTIONARY = {
-    /* ==========================================================================
+    //=================================================================================== *//
            ╔════════════════════════════════════════════════════════════════════════╗
            ║                                                                        ║
            ║               MĚSÍČNÍ HLÁŠENÍ INFOHLÁŠKY • HLAVIČKA PODÁNÍ             ║
            ║                                                                        ║
            ╚════════════════════════════════════════════════════════════════════════╝
-           ========================================================================== */
+    //=================================================================================== *//
 			
             'jmhz': { label: 'JMHZ Podání (Kořenový uzel)', desc: 'Hlavní obálka celého elektronického podání JMHZ.' },
             
@@ -582,13 +582,13 @@ window.JMHZ_INFO_DICTIONARY = {
             'mzdacista': { label: 'Mzda Čistá (Čistý Příjem)', desc: 'Blok formuláře v rámci Souhrnných Dat Zaměstnance. Tento blok sdružuje údaje o čistém příjmu zaměstnance a informace o prováděných srážkách. Vždy obsahuje podřízené datové pole pro samotný čistý příjem (ID 10344) a logický příznak pro evidenci srážek ze mzdy (ID 10116). U specifických scénářů chráněného trhu práce se větví i na komplexní poduzly pro výdělek osob OZP (<vydelekOZP>) a detailní srážky (<srazky>).', format: 'Komplexní XML element (kontejner). Neobsahuje přímo žádné vlastní číselníkové hodnoty, ale funguje výhradně jako obálka pro sdružení podřízených datových elementů.', scenarios: 'Vzhledem ke svému umístění uvnitř uzlu Souhrnná data zaměstnance (<souhrnDataZec>) se tento obalovací blok smí ve formuláři vyplnit a odeslat výhradně u zaměstnání, které je aktuálně označeno jako primární pracovněprávní vztah (ID 10495).' },
 			
 						
-			/* ==========================================================================
+	//=================================================================================== *//
            ╔════════════════════════════════════════════════════════════════════════╗
            ║                                                                        ║
            ║                    		REGZEC INFOHLÁŠKY		                    ║
            ║                                                                        ║
            ╚════════════════════════════════════════════════════════════════════════╝
-           ========================================================================== */
+    //=================================================================================== *//
 		   
 		   
 			'@sqnr': { label: 'Pořadové číslo věty v podání', desc: 'Technický atribut udávající pořadí konkrétní věty (záznamu zaměstnance) v rámci odesílané xml dávky (ID 10014).', format: 'Číselný typ (N), délka 1-4 znaky.', scenarios: 'Tuto hodnotu negeneruje mzdová účetní, ale zcela automaticky pořizovací software podávajícího. Zásadní pravidlo a chyták: Číslo nesmí být v rámci jednoho podání nikdy duplicitní. Důvodem je přesná identifikace zpracovaných vět při vracení logů a chybových protokolů od ČSSZ.' },
