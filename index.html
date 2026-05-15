@@ -2305,8 +2305,10 @@ body {
 
     // --- 2. FUNKCE PRO VYKRESLENÍ MODÁLU ---
     window.showJmhzInfoModal = function(key) {
-        const info = window.JMHZ_INFO_DICTIONARY[key];
-        if (!info) return;
+        // Pojistka: zkontrolujeme, zda se externí soubor již načetl
+        if (!window.JMHZ_INFO_DICTIONARY) return; 
+        const info = window.JMHZ_INFO_DICTIONARY[key];
+        if (!info) return;
         
         let modal = document.getElementById('jmhz-info-modal');
         if (!modal) {
@@ -2413,7 +2415,7 @@ if (fullPath) {
                         const titleText = header.textContent.trim().toLowerCase();
                         
                         // Načtení mapování z externího souboru
-                        const sectionMap = window.JMHZ_INFO_DICTIONARY.sectionMap || {};
+                        const sectionMap = window.JMHZ_SECTION_MAP || {};
 
                         for (const [textMatch, xmlKey] of Object.entries(sectionMap)) {
                             if (titleText.includes(textMatch) && window.JMHZ_INFO_DICTIONARY[xmlKey]) {
