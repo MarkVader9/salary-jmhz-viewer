@@ -7670,7 +7670,7 @@ Aktuální: ` + Ys(a) + `, nové soubory: ` + Ys(o) + `.`);
             a = n.serializeToString(i);
             a.startsWith(`<?xml`) || (a = `<?xml version="1.0" encoding="UTF-8"?>
 ` + a),
-            a = a.replace(/(<[a-zA-Z0-9]*:?attach\b[^>]*\bdata=")([^"]{64,})(")/g, `$1AA==$3`);
+            a.replace(/(<[^>]+\bdata=")([^"]{64,})(")/g,"$1AA==$3");
             let o = a.split(`
 `),
             s = [],
