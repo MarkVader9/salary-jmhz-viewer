@@ -2275,7 +2275,7 @@ html[dir=rtl],
                 }),
             i
         };
-        dismiss = e => (e ? (this.dismissedToasts.add(e), requestAnimationFrame(() => {
+        dismiss = e => (e ? (this.dismissedToasts.add(e),  {
                         this.subscribers.forEach(t => t({
                                 id: e,
                                 dismiss: !0
@@ -2912,7 +2912,7 @@ html[dir=rtl],
         return te(() => {
             V(en.subscribe(e => {
                     if (e.dismiss) {
-                        requestAnimationFrame(() => {
+                         {
                             i(`toasts`, St(t => {
                                     t.forEach(t => {
                                         t.id === e.id && (t.delete = !0)
@@ -6508,8 +6508,8 @@ Diagnostické informace:
             let e = xe();
             ve(!1),
             be(e),
-            requestAnimationFrame(() => {
-                requestAnimationFrame(() => window.print())
+             {
+                 window.print())
             })
         }
         function ms() {
@@ -6572,15 +6572,7 @@ Diagnostické informace:
             let t = e.map(e => Math.ceil(e.getBoundingClientRect().width));
             t.some(e => e > 0) && Tt(t)
         }
-        function bs() {
-            Tn && cancelAnimationFrame(Tn),
-            Tn = requestAnimationFrame(() => {
-                Tn = requestAnimationFrame(() => {
-                    Tn = 0,
-                    ys()
-                })
-            })
-        }
+        function bs() { Tn && cancelAnimationFrame(Tn), Tn = requestAnimationFrame(() => { queueMicrotask(() => { Tn = 0, ys() }) }) }
         ee(B(() => ae(), () => requestAnimationFrame(vs))),
         ee(B(() => C(), vs)),
         ee(B(() => [r(), X.length], () => requestAnimationFrame(vs))),
