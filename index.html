@@ -2304,9 +2304,9 @@ body {
    
 
     // --- 2. FUNKCE PRO VYKRESLENÍ MODÁLU ---
-    window.showJmhzInfoModal = function(key) {
-        // Pojistka: zkontrolujeme, zda se externí soubor již načetl
-        if (!window.JMHZ_INFO_DICTIONARY) return; 
+    // --- 2. FUNKCE PRO VYKRESLENÍ MODÁLU ---
+    window.showJmhzInfoModal = function(key) {
+        if (!window.JMHZ_INFO_DICTIONARY) return; // Pojistka proti pádu
         const info = window.JMHZ_INFO_DICTIONARY[key];
         if (!info) return;
         
@@ -2371,12 +2371,15 @@ body {
     };
 
     // --- 3. FUNKCE PRO START INJEKTORU ---
-    // Tuto funkci zavoláme bezpečně AŽ po inicializaci celé aplikace
     function startInfohlaskyInjector() {
         const observer = new MutationObserver(function(mutations) {
             mutations.forEach(function(mutation) {
                 if (mutation.addedNodes.length) {
                     
+                    // Bezpečnostní pojistka: Zkontrolujeme, zda se slovník už načetl
+                    const dict = window.JMHZ_INFO_DICTIONARY || null;
+                    if (!dict) return; // Pokud slovník ještě není připraven, počkáme
+
                     // A. Injekce do řádků polí formuláře podle XML Tagu z XPath
                     const fieldRows = document.querySelectorAll('.field-table tr:not(.info-injected)');
                     fieldRows.forEach(function(row) {
@@ -2384,22 +2387,18 @@ body {
                         const xpathEl = row.querySelector('.xpath');
                         
                         if (labelEl && xpathEl) {
-                            // Vezmeme plnou cestu, např. "souhrnDataZec/zdravPojZamestnavatel/zdravotniPojisteni"
                             const fullPath = xpathEl.textContent?.trim() || '';
-if (fullPath) {
-    // SWC/ES6 standard: Zabezpečení proti prázdnému poli a rychlé vytažení posledního prvku
-    const pathParts = fullPath.split('/');
-    const xmlTag = (pathParts.pop() || '').toLowerCase();
-    
-    // Pojistka, že slovník existuje, než z něj začneme číst
-    if (xmlTag && window.JMHZ_INFO_DICTIONARY && window.JMHZ_INFO_DICTIONARY[xmlTag]) {
+                            if (fullPath) {
+                                const pathParts = fullPath.split('/');
+                                const xmlTag = (pathParts.pop() || '').toLowerCase();
+                                
+                                if (xmlTag && dict[xmlTag]) {
                                     const btn = document.createElement('span');
                                     btn.className = 'info-icon-btn';
                                     btn.innerHTML = 'i';
                                     btn.title = 'Zobrazit Infohlášku';
                                     btn.onclick = function(e) { e.stopPropagation(); window.showJmhzInfoModal(xmlTag); };
                                     
-                                    // Vložíme ikonku k popisku pole
                                     labelEl.appendChild(btn);
                                 }
                             }
@@ -2408,17 +2407,23 @@ if (fullPath) {
                     });
 
                     // B. Injekce do hlaviček sekcí (hlavní bloky formuláře)
-                    // Protože UI hlaviček sekcí nevypisuje přímo XML XPath tagy jako u polí, 
-                    // provedeme mapování z titulků sekcí na konkrétní tagy (podle vašeho zadání).
                     const sectionHeaders = document.querySelectorAll('.section-header .section-title:not(.info-injected)');
                     sectionHeaders.forEach(function(header) {
                         const titleText = header.textContent.trim().toLowerCase();
                         
-                        // Načtení mapování z externího souboru
-                        const sectionMap = window.JMHZ_SECTION_MAP || {};
+                        // Bezpečné načtení mapování (buď z externího souboru, nebo pevný základ pro případ nouze)
+                        const sectionMap = dict.sectionMap || {
+                            'daňové zvýhodnění': 'zvyhodnenidetimesic',
+                            'seznam eldp': 'eldpseznam',
+                            'záznam evidenčního listu': 'eldp',
+                            'souhrnná data zaměstnance': 'souhrndatazec',
+                            'vykonávaná pozice': 'vykonavanapozice',
+                            'průběh zaměstnání': 'prubehzamestnani',
+                            'evidence mzdy': 'mzda'
+                        };
 
-                        for (const [textMatch, xmlKey] of Object.entries(sectionMap)) {
-                            if (titleText.includes(textMatch) && window.JMHZ_INFO_DICTIONARY[xmlKey]) {
+                        for (const [textMatch, xmlKey] of Object.entries(sectionMap)) {
+                            if (titleText.includes(textMatch) && dict[xmlKey]) {
                                 const btn = document.createElement('span');
                                 btn.className = 'info-icon-btn';
                                 btn.innerHTML = 'i';
@@ -2429,12 +2434,10 @@ if (fullPath) {
                         }
                         header.classList.add('info-injected');
                     });
-
                 }
             });
         });
 
-        // Nyní bezpečně sledujeme kontejner "app", který už jádro inicializovalo
         const appContainer = document.getElementById('app');
         if (appContainer) {
             observer.observe(appContainer, { childList: true, subtree: true });
@@ -2489,7 +2492,7 @@ if (fullPath) {
                     return Promise.all([
                         loadScript(r('data/xsd-data.js')),
                         loadScript(r('data/jmhz-xsd-data.js')),
-                        loadScript('data/infohlasky.js') // Náš nový externí slovník!
+                        loadScript('data/infohlasky.js?v=' + Date.now()) // Náš nový externí slovník!
                     ]);
                 })
                 .then(() => {
