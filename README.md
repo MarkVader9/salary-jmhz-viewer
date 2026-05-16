@@ -44,7 +44,7 @@ Ekosystém SALARY JMHZ je exkluzivně navržen pro dvě klíčové skupiny uživ
 ---
 
 ### Technologický Stack & Architektura
-Projekt je postaven na nejmodernějších webových technologiích s důrazem na maximální výkon, bezpečnost (Client-Side Only) a modularitu.
+Projekt je postaven na webových technologiích s důrazem na maximální výkon, bezpečnost (Client-Side Only) a modularitu.
 
 * **Jádro & UI vrstva:** `JavaScript (ES6+)`, `SolidJS` (Fine-grained reaktivita bez použití virtuálního DOMu pro extrémní výkon renderování)
 * **Build & Kompilace:** `SWC (Speedy Web Compiler)` (Rust-based kompilátor zajišťující vysoce optimalizovaný build, minimalizaci kódu a pokročilý Tree-Shaking pro nejrychlejší *Time-to-Interactive*)
