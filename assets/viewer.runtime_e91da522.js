@@ -2275,7 +2275,7 @@ html[dir=rtl],
                 }),
             i
         };
-        dismiss = e => (e ? (this.dismissedToasts.add(e),  {
+        dismiss = e => (e ? (this.dismissedToasts.add(e), requestAnimationFrame(() => {
                         this.subscribers.forEach(t => t({
                                 id: e,
                                 dismiss: !0
@@ -2912,7 +2912,7 @@ html[dir=rtl],
         return te(() => {
             V(en.subscribe(e => {
                     if (e.dismiss) {
-                         {
+                        requestAnimationFrame(() => {
                             i(`toasts`, St(t => {
                                     t.forEach(t => {
                                         t.id === e.id && (t.delete = !0)
@@ -5152,12 +5152,25 @@ html[dir=rtl],
         document.head.appendChild(t)
     }
     function Pi(e = ``) {
-        if (window.monaco?.editor)
-            return Promise.resolve(window.monaco);
-        if (Fi)
-            return Fi;
-        let t = ji(e, `vendor/monaco/vs`);
-        return Ni(ji(e, `vendor/monaco/vs/editor/editor.main.css`)),
+        if (window.monaco?.editor)
+            return Promise.resolve(window.monaco);
+        if (Fi)
+            return Fi;
+        
+        // OPRAVA: Bezpečné nastavení Monaco Web Workerů přes přímý skript
+        window.MonacoEnvironment = {
+            getWorkerUrl: function() {
+                return `data:text/javascript;charset=utf-8,${encodeURIComponent(`
+                    self.MonacoEnvironment = {
+                        baseUrl: '${window.location.origin}/vendor/monaco/'
+                    };
+                    importScripts('${window.location.origin}/vendor/monaco/vs/base/worker/workerMain.js');
+                `)}`;
+            }
+        };
+
+        let t = ji(e, `vendor/monaco/vs`);
+        return Ni(ji(e, `vendor/monaco/vs/editor/editor.main.css`)),
         Fi = Mi(ji(e, `vendor/monaco/vs/loader.js`)).then(() => {
             let e = window.require;
             if (!e?.config)
@@ -6508,8 +6521,8 @@ Diagnostické informace:
             let e = xe();
             ve(!1),
             be(e),
-             {
-                 window.print())
+            requestAnimationFrame(() => {
+                requestAnimationFrame(() => window.print())
             })
         }
         function ms() {
