@@ -5046,11 +5046,16 @@ html[dir=rtl],
         return bi[e] || e
     }
     async function Si(e) {
-        let t = await e.text();
-        if (!t.includes(`�`))
-            return t;
         let n = await e.arrayBuffer();
-        return new TextDecoder(`windows-1250`).decode(n)
+        try {
+            // Pokusíme se soubor přečíst jako striktní UTF-8
+            // fatal: !0 znamená, že pokud to UTF-8 není (což 1250 není), okamžitě to spadne do "catch"
+            return new TextDecoder("utf-8", { fatal: !0 }).decode(n);
+        } catch (err) {
+            // Pokud to spadlo (např. CSV z Vemy), víme bezpečně, že to není UTF-8.
+            // Přečteme to tedy jako windows-1250.
+            return new TextDecoder("windows-1250").decode(n);
+        }
     }
     var Ci = c({
         loadXlsx: () => Ei
