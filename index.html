@@ -2268,7 +2268,7 @@ body {
         align-items: center;
         height: 100%;
       }
-		.marquee-content {
+        .marquee-content {
         display: inline-block;
         padding-left: 100%;
         /* OPRAVA: Rozděleno na samostatné vlastnosti, aby to prohlížeč nezmrazil */
@@ -2305,10 +2305,10 @@ body {
 
     // --- 2. FUNKCE PRO VYKRESLENÍ MODÁLU ---
     // --- 2. FUNKCE PRO VYKRESLENÍ MODÁLU ---
-    window.showJmhzInfoModal = function(key) {
-        if (!window.JMHZ_INFO_DICTIONARY) return; // Pojistka proti pádu
-        const info = window.JMHZ_INFO_DICTIONARY[key];
-        if (!info) return;
+    window.showJmhzInfoModal = function(key) {
+        if (!window.JMHZ_INFO_DICTIONARY) return; // Pojistka proti pádu
+        const info = window.JMHZ_INFO_DICTIONARY[key];
+        if (!info) return;
         
         let modal = document.getElementById('jmhz-info-modal');
         if (!modal) {
@@ -2380,30 +2380,40 @@ body {
                     const dict = window.JMHZ_INFO_DICTIONARY || null;
                     if (!dict) return; // Pokud slovník ještě není připraven, počkáme
 
-                    // A. Injekce do řádků polí formuláře podle XML Tagu z XPath
-                    const fieldRows = document.querySelectorAll('.field-table tr:not(.info-injected)');
-                    fieldRows.forEach(function(row) {
-                        const labelEl = row.querySelector('.field-label');
-                        const xpathEl = row.querySelector('.xpath');
+                    // A. UNIVERZÁLNÍ INJEKCE DO VŠECH POLÍ (Hlavička i Zaměstnanci)
+                    // Hledáme přímo elementy s třídou .xpath kdekoli v aplikaci
+                    const xpathElements = document.querySelectorAll('.xpath:not(.info-injected)');
+                    
+                    xpathElements.forEach(function(xpathEl) {
+                        // Najdeme rodičovský prvek (label), ke kterému ikonku přilepíme
+                        const labelEl = xpathEl.parentElement;
                         
-                        if (labelEl && xpathEl) {
+                        if (labelEl) {
                             const fullPath = xpathEl.textContent?.trim() || '';
                             if (fullPath) {
                                 const pathParts = fullPath.split('/');
-                                const xmlTag = (pathParts.pop() || '').toLowerCase();
+                                let xmlTag = (pathParts.pop() || '').toLowerCase();
                                 
-                                if (xmlTag && dict[xmlTag]) {
+                                // Očištění od prefixů (v1:tag) a zavináčů (@atribut)
+                                if (xmlTag.includes(':')) xmlTag = xmlTag.split(':').pop();
+                                let finalKey = xmlTag.startsWith('@') ? xmlTag.substring(1) : xmlTag;
+
+                                if (finalKey && dict[finalKey]) {
                                     const btn = document.createElement('span');
                                     btn.className = 'info-icon-btn';
                                     btn.innerHTML = 'i';
-                                    btn.title = 'Zobrazit Infohlášku';
-                                    btn.onclick = function(e) { e.stopPropagation(); window.showJmhzInfoModal(xmlTag); };
+                                    btn.title = 'Zobrazit nápovědu k poli';
+                                    btn.onclick = function(e) { 
+                                        e.stopPropagation(); 
+                                        window.showJmhzInfoModal(finalKey); 
+                                    };
                                     
                                     labelEl.appendChild(btn);
                                 }
                             }
                         }
-                        row.classList.add('info-injected');
+                        // Označíme jako zpracované na úrovni elementu XPath
+                        xpathEl.classList.add('info-injected');
                     });
 
                     // B. Injekce do hlaviček sekcí (hlavní bloky formuláře)
@@ -2412,7 +2422,7 @@ body {
                         const titleText = header.textContent.trim().toLowerCase();
                         
                         // Bezpečné načtení mapování (buď z externího souboru, nebo pevný základ pro případ nouze)
-                        const sectionMap = dict.sectionMap || {
+                        const sectionMap = (window.JMHZ_INFO_DICTIONARY && window.JMHZ_INFO_DICTIONARY.sectionMap) ? window.JMHZ_INFO_DICTIONARY.sectionMap : {
                             'daňové zvýhodnění': 'zvyhodnenidetimesic',
                             'seznam eldp': 'eldpseznam',
                             'záznam evidenčního listu': 'eldp',
@@ -2489,11 +2499,11 @@ body {
             loadScript(r('vendor/xmllint-wasm-bundle.js'))
                 .then(() => {
                     log('Načítání datových XSD schémat a slovníků...');
-                    return Promise.all([
-                        loadScript(r('data/xsd-data.js')),
-                        loadScript(r('data/jmhz-xsd-data.js')),
-                        loadScript('data/infohlasky.js?v=' + Date.now()) // Náš nový externí slovník!
-                    ]);
+                    return Promise.all([
+                        loadScript(r('data/xsd-data.js')),
+                        loadScript(r('data/jmhz-xsd-data.js')),
+                        loadScript('data/infohlasky.js?v=' + Date.now()) // Vynucené stažení bez mezipaměti!
+                    ]);
                 })
                 .then(() => {
                     log('Načítání kontrolních mechanismů...');
@@ -2530,7 +2540,7 @@ body {
         ms.onerror = () => showError('Soubor <b>manifest.js</b> nebyl na serveru nalezen.<br>Ujistěte se, že leží ve stejném adresáři jako tento HTML soubor.');
         
         document.head.appendChild(ms);
-		})(); // <-- TOTO JE ZÁSADNÍ: Zde musíme bezpečně uzavřít a spustit blok "4. ZAVADĚČ"
+        })(); // <-- TOTO JE ZÁSADNÍ: Zde musíme bezpečně uzavřít a spustit blok "4. ZAVADĚČ"
 // Asynchronní funkce pro nasazení běžícího textu
       (async function initJmhzMarquee() {
         try {
