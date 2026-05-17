@@ -40,7 +40,11 @@
 
         <main class="lms-content-area">
             <div class="lms-lesson-header-wrap">
-                <h1 class="lms-lesson-title" id="lessonTitle">Lekce</h1>
+                <div style="display: flex; flex-direction: column; gap: 8px;">
+                    <h1 class="lms-lesson-title" id="lessonTitle">Lekce</h1>
+                    <div id="lmsTimeIndicator" style="font-size: 0.9rem; color: var(--text-muted); font-weight: 600;">
+                        </div>
+                </div>
                 <button class="btn" onclick="copyCourseLink()" title="Zkopírovat odkaz na tento kurz" style="white-space:nowrap;">📋 Sdílet kurz</button>
             </div>
             
@@ -691,6 +695,78 @@
         // <--- ZDE JE TO SPRÁVNÉ MÍSTO PRO INICIALIZACI VIDEA (až po ukončení cyklu forEach) --->
         if (window.KB_VideoManager) KB_VideoManager.init(); 
     }
+	// =========================================================
+    // VÝPOČET ČASU (Čtení + Délka Videí a Audia)
+    // =========================================================
+    window.calculateLessonTime = function(container) {
+        const indicator = document.getElementById('lmsTimeIndicator');
+        if (!indicator) return;
+
+        // 1. Výpočet času čtení textu (Průměrně čteme 200 slov za minutu)
+        const text = container.textContent || "";
+        const words = text.trim().split(/\s+/).length;
+        let totalSeconds = Math.ceil(words / 200) * 60; 
+
+        // 2. Nalezení všech přehrávačů v lekci (Videa i Audio)
+        const mediaElements = container.querySelectorAll('video, audio');
+        let loadedCount = 0;
+
+        // Funkce pro vykreslení finálního výsledku
+        c// Funkce pro vykreslení finálního výsledku
+        const updateUI = () => {
+            const mins = Math.ceil(totalSeconds / 60);
+            let minText = 'minut';
+            if (mins === 1) minText = 'minuta';
+            else if (mins >= 2 && mins <= 4) minText = 'minuty';
+            
+            // 1. Aktualizace hlavního indikátoru nad textem lekce
+            indicator.innerHTML = `⏱️ Odhadovaný čas na tuto lekci: <span style="color:var(--accent);">${mins} ${minText}</span>`;
+
+            // 2. NOVÉ: Přepis údaje v pravém panelu (Štítky a Info) pro aktuální lekcii
+            const metaBox = document.getElementById('articleMeta');
+            if (metaBox) {
+                // Skript vezme stávající obsah, odsekne ho u značky <br> (čímž zachráníme datum) 
+                // a připojí k němu nový, dynamicky spočítaný čas pro tuto konkrétní lekci.
+                const datePart = metaBox.innerHTML.split('<br>')[0];
+                metaBox.innerHTML = `${datePart}<br>Délka lekce: <strong>${mins} min</strong>`;
+            }
+        };
+
+        // Pokud v lekci není žádné video/audio, rovnou ukážeme čas čtení textu
+        if (mediaElements.length === 0) {
+            updateUI();
+            return;
+        }
+
+        indicator.innerHTML = `⏱️ Analyzuji délku videí...`;
+
+        // 3. Počkáme na načtení metadat z FTP, abychom znali PŘESNOU délku videí
+        mediaElements.forEach(media => {
+            // Pokud se metadata (délka) stihla načíst už dřív
+            if (media.readyState >= 1) { 
+                totalSeconds += media.duration;
+                loadedCount++;
+                if (loadedCount === mediaElements.length) updateUI();
+            } else {
+                // Pokud ještě nejsou, počkáme si na ně
+                media.addEventListener('loadedmetadata', () => {
+                    totalSeconds += media.duration;
+                    loadedCount++;
+                    if (loadedCount === mediaElements.length) updateUI();
+                });
+                
+                // BEZPEČNOSTNÍ POJISTKA: Pokud by video na FTP chybělo, nebo měl uživatel zablokovaná média
+                setTimeout(() => {
+                    if (loadedCount < mediaElements.length) {
+                        loadedCount++;
+                        // Pokud video selhalo, přidáme k času paušální odhad 3 minuty
+                        if (media.readyState === 0) totalSeconds += 180; 
+                        if (loadedCount === mediaElements.length) updateUI();
+                    }
+                }, 1500); // Čekáme max 1.5 sekundy
+            }
+        });
+    };
 
     document.addEventListener('DOMContentLoaded', initLms);
 </script>
