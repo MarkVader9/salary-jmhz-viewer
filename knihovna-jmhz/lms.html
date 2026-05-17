@@ -10,11 +10,14 @@
     <meta property="og:type" content="website">
     
     <script src="https://cdnjs.cloudflare.com/ajax/libs/mammoth/1.4.21/mammoth.browser.min.js"></script>
-    <script src="kb-core.js"></script>
+	
+	
+	<script src="kb-core.js"></script>
     <script src="library-menu.js"></script>
     <script src="library-ui.js"></script>
-    
-    <link rel="stylesheet" href="library-style.css?v=2">
+    <script src="kb-video.js"></script> 
+	<link rel="stylesheet" href="library-style.css?v=3">
+
 </head>
 
 <body>
@@ -280,33 +283,63 @@
         if (lessons.length > 1 && !lessons[0].content.trim()) lessons.shift();
     }
 
+// Vylepšená podpora shortcodů s ořezem HTML balastu lms.html
+
+// Vylepšená podpora shortcodů s ořezem HTML balastu lms.html
     function replaceMediaTags(html) {
         let parsed = html;
         
         parsed = parsed.replace(/(?:<a[^>]*>)?\[VIDEO:\s*(.+?)\](?:<\/a>)?/gi, (match, content) => {
-            let src = content.replace(/<[^>]+>/g, '').trim();
-            if (!src.startsWith('http://') && !src.startsWith('https://')) src = MEDIA_BASE_URL + src;
-            let type = "video/mp4"; 
-            if (src.toLowerCase().endsWith('.mov')) type = "video/quicktime";
-            return `<div class="media-wrapper"><video controls preload="metadata" style="max-width:100%; border-radius:8px; box-shadow: 0 4px 10px rgba(0,0,0,0.1);"><source src="${src}" type="${type}">Video</video></div>`;
+            let rawSrc = content.replace(/<[^>]+>/g, '').trim();
+            let fullSrc = rawSrc;
+            
+            // Sestavení absolutní URL přesně podle toho, co je ve Wordu
+            if (!fullSrc.startsWith('http://') && !fullSrc.startsWith('https://')) {
+                if (!fullSrc.startsWith('/')) {
+                    fullSrc = MEDIA_BASE_URL + fullSrc;
+                } else {
+                    fullSrc = MEDIA_BASE_URL.replace(/\/$/, '') + fullSrc;
+                }
+            }
+            
+            // baseSrc = ořízneme jen .mp4 (pro pozdější přilepení _4k.mp4 ve skriptu)
+            let baseSrc = fullSrc.replace(/\.mp4$/i, '');
+
+            // ZMĚNA: defaultVideoUrl je nyní PŘESNĚ fullSrc z Wordu (např. 001_uvod.mp4)
+            return `
+            <div class="media-wrapper kb-video-container" data-base-src="${baseSrc}" data-original-src="${fullSrc}">
+                <video controls preload="metadata" style="width:100%; border-radius:8px; box-shadow: 0 4px 10px rgba(0,0,0,0.1); background:#000;">
+                    <source src="${fullSrc}" type="video/mp4">
+                    Váš prohlížeč nepodporuje přehrávání videa.
+                </video>
+            </div>`;
         });
         
         parsed = parsed.replace(/(?:<a[^>]*>)?\[AUDIO:\s*(.+?)\](?:<\/a>)?/gi, (match, content) => {
             let src = content.replace(/<[^>]+>/g, '').trim();
-            if (!src.startsWith('http://') && !src.startsWith('https://')) src = MEDIA_BASE_URL + src;
+            if (!src.startsWith('http://') && !src.startsWith('https://')) {
+                 if (!src.startsWith('/')) src = MEDIA_BASE_URL + src;
+                 else src = MEDIA_BASE_URL.replace(/\/$/, '') + src;
+            }
             return `<div class="media-wrapper"><audio controls style="width:100%;"><source src="${src}" type="audio/mpeg">Audio</audio></div>`;
         });
         
         parsed = parsed.replace(/(?:<a[^>]*>)?\[OBRAZEK:\s*(.+?)\](?:<\/a>)?/gi, (match, content) => {
             let src = content.replace(/<[^>]+>/g, '').trim();
-            if (!src.startsWith('http://') && !src.startsWith('https://')) src = MEDIA_BASE_URL + src;
+            if (!src.startsWith('http://') && !src.startsWith('https://')) {
+                 if (!src.startsWith('/')) src = MEDIA_BASE_URL + src;
+                 else src = MEDIA_BASE_URL.replace(/\/$/, '') + src;
+            }
             return `<div class="media-wrapper"><img src="${src}" style="max-width:100%; border-radius:8px; box-shadow: 0 4px 10px rgba(0,0,0,0.05);"></div>`;
         });
 
         parsed = parsed.replace(/(?:<a[^>]*>)?\[PRILOHA:\s*([^|\]]+)(?:\|([^\]]+))?\](?:<\/a>)?/gi, (match, url, label) => {
             let src = url.replace(/<[^>]+>/g, '').trim();
             let btnLabel = label ? label.replace(/<[^>]+>/g, '').trim() : "Stáhnout přílohu";
-            if (!src.startsWith('http://') && !src.startsWith('https://')) src = DOCX_BASE_URL + src;
+            if (!src.startsWith('http://') && !src.startsWith('https://')) {
+                 if (!src.startsWith('/')) src = DOCX_BASE_URL + src;
+                 else src = DOCX_BASE_URL.replace(/\/$/, '') + src;
+            }
             return `<div style="margin: 20px 0;"><a href="${src}" target="_blank" class="btn primary" style="display:inline-flex; align-items:center; gap:8px; text-decoration:none;"><span style="font-size:1.2rem;">📎</span> ${btnLabel}</a></div>`;
         });
 
@@ -642,11 +675,14 @@
                                 statIndicator.style.opacity = '1'; 
                                 setTimeout(() => { statIndicator.style.opacity = '0'; }, 2000);
                             }
-                        }, 500);
+}, 500);
                     });
                 }
             }
         });
+
+        // <--- ZDE JE TO SPRÁVNÉ MÍSTO PRO INICIALIZACI VIDEA (až po ukončení cyklu forEach) --->
+        if (window.KB_VideoManager) KB_VideoManager.init(); 
     }
 
     document.addEventListener('DOMContentLoaded', initLms);
