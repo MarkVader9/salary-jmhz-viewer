@@ -11,14 +11,10 @@
 
     <script src="https://cdnjs.cloudflare.com/ajax/libs/mammoth/1.4.21/mammoth.browser.min.js"></script>
     <script src="kb-core.js"></script>
-    
     <script src="library-menu.js"></script>
     <script src="library-ui.js"></script>
+    <script src="kb-video.js"></script> 
     <link rel="stylesheet" href="library-style.css">
-	
-
-    
-
 </head>
 <body>
 
@@ -43,6 +39,9 @@
         <main style="min-width: 0;">
             <article class="article-card article-detail">
                 <h1 class="article-detail-title" id="articleTitle"></h1>
+                
+                <div id="articleTimeIndicator" style="font-size: 0.95rem; color: var(--text-muted); font-weight: 600; margin-top: -10px; margin-bottom: 25px;"></div>
+                
                 <div id="articleContent" class="editor-content" style="transition: font-family 0.3s ease;"></div>
             </article>
         </main>
@@ -86,7 +85,7 @@
             document.title = `${article.title} - SALARY KB`;
             document.getElementById('articleTitle').textContent = article.title;
             const dateObj = new Date(article.lastUpdated);
-            document.getElementById('articleMeta').innerHTML = `Aktualizace: <strong>${dateObj.toLocaleDateString('cs-CZ')}</strong><br>Čtení: <strong>${article.readingTimeMin || 1} min</strong>`;
+            document.getElementById('articleMeta').innerHTML = `Aktualizace: <strong>${dateObj.toLocaleDateString('cs-CZ')}</strong><br>Původní odhad: <strong>${article.readingTimeMin || 1} min</strong>`;
             document.getElementById('articleTags').innerHTML = (article.tags || []).map(t => `<span class="tag-pill">${t}</span>`).join('');
 
             populateControlPanel();
@@ -104,7 +103,6 @@
             const contentContainer = document.getElementById('articleContent');
             contentContainer.innerHTML = rawHtml || '<p><em>Tento dokument je prázdný.</em></p>';
             
-            // Vylepšení: Odkazy z Wordu se budou otevírat v nové záložce
             contentContainer.querySelectorAll('a').forEach(link => {
                 if (link.href && link.href.startsWith('http')) {
                     link.setAttribute('target', '_blank');
@@ -112,7 +110,6 @@
                 }
             });
 
-            // Vylepšení: Aktivace Lightboxu pro obrázky
             contentContainer.querySelectorAll('img').forEach(img => {
                 img.addEventListener('click', () => openLightbox(img.src));
             });
@@ -121,6 +118,10 @@
             document.getElementById('layoutContainer').style.display = 'grid';
 
             generateTOC();
+
+            // SPUŠTĚNÍ ENTEPRISE FUNKCÍ PO VYRENDERU DOMu
+            if (window.calculateArticleTime) calculateArticleTime(contentContainer);
+            if (window.KB_VideoManager) KB_VideoManager.init();
 
         } catch (e) { 
             document.getElementById('loader').innerHTML = `<h2 style="color:var(--error)">Chyba</h2><p>${e.message}</p><br><a href="index.html" class="btn">Zpět</a>`; 
@@ -171,13 +172,12 @@
     window.copyArticleLink = function() {
         navigator.clipboard.writeText(window.location.href).then(() => {
             if(window.KB_Toaster) KB_Toaster.show('Zkopírováno', 'Odkaz na článek byl zkopírován do schránky.', 'success');
-            else alert('Zkopírováno: Odkaz byl zkopírován do schránky.');
+            else alert('Zkopírováno: Odkaz na článek byl zkopírován do schránky.');
         });
     };
 
     window.toggleFaq = function(element) { element.parentElement.classList.toggle('open'); };
 
-    // Funkce pro Lightbox
     window.openLightbox = function(src) {
         document.getElementById('kbLightboxImg').src = src;
         document.getElementById('kbLightbox').classList.add('active');
@@ -187,34 +187,77 @@
         setTimeout(() => { document.getElementById('kbLightboxImg').src = ''; }, 300);
     };
 
-    // Vylepšená podpora shortcodů s ořezem HTML balastu
+    // OPERATIVNÍ REVIZE LOGIKY KVÍZŮ (BOD 2)
+    window.checkArticleQuiz = function(btn, isCorrect, quizId) {
+        const parent = btn.parentElement;
+        const feedback = document.getElementById(quizId + '_feedback');
+        
+        if (isCorrect) {
+            Array.from(parent.children).forEach(b => {
+                b.disabled = true; b.style.opacity = '0.5'; b.style.cursor = 'not-allowed';
+            });
+            btn.style.opacity = '1'; btn.style.color = '#fff';
+            btn.style.background = 'var(--success)'; btn.style.borderColor = 'var(--success)';
+            feedback.innerHTML = '✅ Správně!';
+            feedback.style.background = 'var(--success-bg)'; feedback.style.color = 'var(--success)';
+        } else {
+            btn.disabled = true; 
+            btn.style.opacity = '0.7'; 
+            btn.style.cursor = 'not-allowed';
+            btn.style.color = '#fff';
+            btn.style.background = 'var(--error)'; btn.style.borderColor = 'var(--error)';
+            feedback.innerHTML = '❌ Nesprávně. Zkuste kliknout na jinou možnost.';
+            feedback.style.background = 'var(--error-bg)'; feedback.style.color = 'var(--error)';
+        }
+        feedback.style.display = 'block';
+    };
+
+    // SYNCHRONIZACE SHORTCODŮ S CENTRALIZOVANÝM KB-VIDEO.JS
     function replaceMediaTags(html) {
         let parsed = html;
         
         parsed = parsed.replace(/(?:<a[^>]*>)?\[VIDEO:\s*(.+?)\](?:<\/a>)?/gi, (match, content) => {
-            let src = content.replace(/<[^>]+>/g, '').trim();
-            if (!src.startsWith('http://') && !src.startsWith('https://')) src = MEDIA_BASE_URL + src;
-            let type = "video/mp4"; 
-            if (src.toLowerCase().endsWith('.mov')) type = "video/quicktime";
-            return `<div class="media-wrapper"><video controls preload="metadata" style="max-width:100%; border-radius:8px; box-shadow: 0 4px 10px rgba(0,0,0,0.1);"><source src="${src}" type="${type}">Video</video></div>`;
+            let rawSrc = content.replace(/<[^>]+>/g, '').trim();
+            let fullSrc = rawSrc;
+            if (!fullSrc.startsWith('http://') && !fullSrc.startsWith('https://')) {
+                if (!fullSrc.startsWith('/')) fullSrc = MEDIA_BASE_URL + fullSrc;
+                else fullSrc = MEDIA_BASE_URL.replace(/\/$/, '') + fullSrc;
+            }
+            let baseSrc = fullSrc.replace(/\.mp4$/i, '');
+            return `
+            <div class="media-wrapper kb-video-container" data-base-src="${baseSrc}" data-original-src="${fullSrc}">
+                <video controls preload="metadata" style="width:100%; border-radius:8px; box-shadow: 0 4px 10px rgba(0,0,0,0.1); background:#000;">
+                    <source src="${fullSrc}" type="video/mp4">
+                    Váš prohlížeč nepodporuje přehrávání videa.
+                </video>
+            </div>`;
         });
         
         parsed = parsed.replace(/(?:<a[^>]*>)?\[AUDIO:\s*(.+?)\](?:<\/a>)?/gi, (match, content) => {
             let src = content.replace(/<[^>]+>/g, '').trim();
-            if (!src.startsWith('http://') && !src.startsWith('https://')) src = MEDIA_BASE_URL + src;
+            if (!src.startsWith('http://') && !src.startsWith('https://')) {
+                 if (!src.startsWith('/')) src = MEDIA_BASE_URL + src;
+                 else src = MEDIA_BASE_URL.replace(/\/$/, '') + src;
+            }
             return `<div class="media-wrapper"><audio controls style="width:100%;"><source src="${src}" type="audio/mpeg">Audio</audio></div>`;
         });
         
         parsed = parsed.replace(/(?:<a[^>]*>)?\[OBRAZEK:\s*(.+?)\](?:<\/a>)?/gi, (match, content) => {
             let src = content.replace(/<[^>]+>/g, '').trim();
-            if (!src.startsWith('http://') && !src.startsWith('https://')) src = MEDIA_BASE_URL + src;
+            if (!src.startsWith('http://') && !src.startsWith('https://')) {
+                 if (!src.startsWith('/')) src = MEDIA_BASE_URL + src;
+                 else src = MEDIA_BASE_URL.replace(/\/$/, '') + src;
+            }
             return `<div class="media-wrapper"><img src="${src}" style="max-width:100%; border-radius:8px; box-shadow: 0 4px 10px rgba(0,0,0,0.05);"></div>`;
         });
 
         parsed = parsed.replace(/(?:<a[^>]*>)?\[PRILOHA:\s*([^|\]]+)(?:\|([^\]]+))?\](?:<\/a>)?/gi, (match, url, label) => {
             let src = url.replace(/<[^>]+>/g, '').trim();
             let btnLabel = label ? label.replace(/<[^>]+>/g, '').trim() : "Stáhnout přílohu";
-            if (!src.startsWith('http://') && !src.startsWith('https://')) src = DOCX_BASE_URL + src;
+            if (!src.startsWith('http://') && !src.startsWith('https://')) {
+                 if (!src.startsWith('/')) src = DOCX_BASE_URL + src;
+                 else src = DOCX_BASE_URL.replace(/\/$/, '') + src;
+            }
             return `<div style="margin: 20px 0;"><a href="${src}" target="_blank" class="btn primary" style="display:inline-flex; align-items:center; gap:8px; text-decoration:none;"><span style="font-size:1.2rem;">📎</span> ${btnLabel}</a></div>`;
         });
 
@@ -228,15 +271,12 @@
             let parts = content.split('|').map(p => p.trim().replace(/<[^>]+>/g, ''));
             let question = parts.shift(); 
             let quizId = 'quiz_' + Math.random().toString(36).substr(2, 9);
-            
             let htmlOut = `<div class="lms-quiz-box" style="background:var(--bg-surface); border:1px solid var(--border-strong); border-radius:8px; padding:20px; margin:30px 0;"><h4 style="margin:0 0 15px 0; color:var(--text-primary); display:flex; align-items:center; gap:8px;"><span style="font-size:1.5rem;">🤔</span> ${question}</h4><div class="lms-quiz-options" style="display:flex; flex-direction:column; gap:10px;">`;
-            
             parts.forEach((ans) => {
                 let isCorrect = ans.endsWith('*');
                 let cleanAns = isCorrect ? ans.slice(0, -1).trim() : ans;
                 htmlOut += `<button class="btn" onclick="checkArticleQuiz(this, ${isCorrect}, '${quizId}')" style="text-align:left; justify-content:flex-start; font-size:1rem; padding:12px; border:1px solid var(--border); background:var(--bg-elevated); transition:0.2s;">${cleanAns}</button>`;
             });
-            
             htmlOut += `</div><div id="${quizId}_feedback" style="margin-top:15px; font-weight:600; font-size:0.95rem; display:none; padding:10px; border-radius:6px;"></div></div>`;
             return htmlOut;
         });
@@ -244,33 +284,65 @@
         return parsed;
     }
 
-window.checkArticleQuiz = function(btn, isCorrect, quizId) {
-        const parent = btn.parentElement;
-        const feedback = document.getElementById(quizId + '_feedback');
-        
-        if (isCorrect) {
-            // SPRÁVNÁ ODPOVĚĎ: Zablokujeme všechna tlačítka a ukážeme úspěch
-            Array.from(parent.children).forEach(b => {
-                b.disabled = true; b.style.opacity = '0.5'; b.style.cursor = 'not-allowed';
-            });
-            btn.style.opacity = '1'; btn.style.color = '#fff';
-            btn.style.background = 'var(--success)'; btn.style.borderColor = 'var(--success)';
+    // DYNAMICKÁ ANALÝZA A VÝPOČET ČASU ČTENÍ ČLÁNKU (BOD 3)
+    window.calculateArticleTime = function(container) {
+        const indicator = document.getElementById('articleTimeIndicator');
+        if (!indicator) return;
+
+        const text = container.textContent || "";
+        const words = text.trim().split(/\s+/).length;
+        let totalSeconds = Math.ceil(words / 200) * 60; 
+
+        const mediaElements = container.querySelectorAll('video, audio');
+        let loadedCount = 0;
+
+        const updateUI = () => {
+            const mins = Math.ceil(totalSeconds / 60);
+            let minText = 'minut';
+            if (mins === 1) minText = 'minuta';
+            else if (mins >= 2 && mins <= 4) minText = 'minuty';
             
-            feedback.innerHTML = '✅ Správně!';
-            feedback.style.background = 'var(--success-bg)'; feedback.style.color = 'var(--success)';
-        } else {
-            // ŠPATNÁ ODPOVĚĎ: Zablokujeme JEN to jedno kliknuté tlačítko
-            btn.disabled = true; 
-            btn.style.opacity = '0.7'; 
-            btn.style.cursor = 'not-allowed';
-            btn.style.color = '#fff';
-            btn.style.background = 'var(--error)'; 
-            btn.style.borderColor = 'var(--error)';
-            
-            feedback.innerHTML = '❌ Nesprávně. Zkuste kliknout na jinou možnost.';
-            feedback.style.background = 'var(--error-bg)'; feedback.style.color = 'var(--error)';
+            // 1. Aktualizace hlavního indikátoru pod nadpisem
+            indicator.innerHTML = `⏱️ Odhadovaný čas na přečtení článku: <span style="color:var(--accent); font-weight:700;">${mins} ${minText}</span>`;
+
+            // 2. Přepis údaje v pravém panelu (Štítky a Info)
+            const metaBox = document.getElementById('articleMeta');
+            if (metaBox) {
+                // Skript vezme stávající obsah, odsekne ho u značky <br> (čímž zachráníme datum) 
+                // a připojí k němu nový, dynamicky spočítaný čas.
+                const datePart = metaBox.innerHTML.split('<br>')[0];
+                metaBox.innerHTML = `${datePart}<br>Vypočtený odhad: <strong>${mins} min</strong>`;
+            }
+        };
+
+        if (mediaElements.length === 0) {
+            updateUI();
+            return;
         }
-        feedback.style.display = 'block';
+
+        indicator.innerHTML = `⏱️ Vyhodnocuji délku přiložených médií...`;
+
+        mediaElements.forEach(media => {
+            if (media.readyState >= 1) { 
+                totalSeconds += media.duration;
+                loadedCount++;
+                if (loadedCount === mediaElements.length) updateUI();
+            } else {
+                media.addEventListener('loadedmetadata', () => {
+                    totalSeconds += media.duration;
+                    loadedCount++;
+                    if (loadedCount === mediaElements.length) updateUI();
+                });
+                
+                setTimeout(() => {
+                    if (loadedCount < mediaElements.length) {
+                        loadedCount++;
+                        if (media.readyState === 0) totalSeconds += 180; 
+                        if (loadedCount === mediaElements.length) updateUI();
+                    }
+                }, 1500);
+            }
+        });
     };
 
     function generateTOC() {
@@ -280,7 +352,6 @@ window.checkArticleQuiz = function(btn, isCorrect, quizId) {
             const id = `sec-${index}`;
             h.id = id;
             const level = h.tagName.toLowerCase().replace('h', '');
-            // Přidána mezera na konci level-1 pro lepší čitelnost
             const extraClass = level === '1' ? ' toc-level-1' : ' toc-level-2';
             tocHtml += `<a href="#${id}" class="toc-link${extraClass}" data-target="${id}">${h.textContent}</a>`;
         });
@@ -295,7 +366,6 @@ window.checkArticleQuiz = function(btn, isCorrect, quizId) {
 
     function initEnterpriseScrollSpy(headings) {
         const tocLinks = document.querySelectorAll('.toc-link');
-        // Upraven rootMargin pro plynulejší detekci při rolování
         const observerOptions = { root: null, rootMargin: '-80px 0px -60% 0px', threshold: 0 };
         
         const observer = new IntersectionObserver(entries => {
@@ -310,7 +380,6 @@ window.checkArticleQuiz = function(btn, isCorrect, quizId) {
         headings.forEach(h => observer.observe(h));
     }
 
-    // Bezpečná ochrana výpočtu šířky Progress Baru proti dělení nulou
     window.addEventListener('scroll', () => {
         const winScroll = document.body.scrollTop || document.documentElement.scrollTop;
         const height = document.documentElement.scrollHeight - document.documentElement.clientHeight;
