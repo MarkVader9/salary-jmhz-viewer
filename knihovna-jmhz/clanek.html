@@ -244,7 +244,7 @@
         return parsed;
     }
 
-    window.checkQuizAnswer = function(btn, isCorrect, quizId) {
+window.checkArticleQuiz = function(btn, isCorrect, quizId) {
         const parent = btn.parentElement;
         const feedback = document.getElementById(quizId + '_feedback');
         
@@ -256,7 +256,7 @@
             btn.style.opacity = '1'; btn.style.color = '#fff';
             btn.style.background = 'var(--success)'; btn.style.borderColor = 'var(--success)';
             
-            feedback.innerHTML = '✅ Správná odpověď!';
+            feedback.innerHTML = '✅ Správně!';
             feedback.style.background = 'var(--success-bg)'; feedback.style.color = 'var(--success)';
         } else {
             // ŠPATNÁ ODPOVĚĎ: Zablokujeme JEN to jedno kliknuté tlačítko
@@ -267,7 +267,7 @@
             btn.style.background = 'var(--error)'; 
             btn.style.borderColor = 'var(--error)';
             
-            feedback.innerHTML = '❌ Bohužel, nesprávně. Zkuste to znovu.';
+            feedback.innerHTML = '❌ Nesprávně. Zkuste kliknout na jinou možnost.';
             feedback.style.background = 'var(--error-bg)'; feedback.style.color = 'var(--error)';
         }
         feedback.style.display = 'block';
