@@ -112,8 +112,7 @@ function renderGrid(articles) {
             return;
         }
 
-        articles.forEach((item, index) => {
-            // ZMĚNA: Přidán parametr 'index'
+        // OPRAVENO: Jen jeden cyklus forEach
         articles.forEach((item, index) => {
             // Rozcestník - jde o kurz nebo obyčejný článek?
             const url = item.isLms ? `lms.html?course=${item.id}` : `clanek.html?id=${item.id}`;
@@ -131,7 +130,7 @@ function renderGrid(articles) {
             const card = document.createElement('div');
             card.className = 'article-card';
             
-            // ZMĚNA: Každá karta dostane lehké zpoždění animace (první za 0s, druhá za 0.05s, třetí za 0.1s atd.)
+            // Kaskádová animace (každá karta má lehké zpoždění podle svého pořadí)
             card.style.animationDelay = `${index * 0.05}s`;
 
             card.innerHTML = `
