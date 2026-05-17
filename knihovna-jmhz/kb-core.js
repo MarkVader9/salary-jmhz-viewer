@@ -23,12 +23,7 @@ const KB_CONFIG = {
 const KB_Toaster = {
     container: null,
     init() {
-        if (!document.getElementById('kb-toaster-styles')) {
-
-            `;
-            document.head.appendChild(style);
-        }
-        
+        // CSS styly notifikací přesunuty do library-style.css
         this.container = document.createElement('div');
         this.container.className = 'kb-toaster';
         document.body.appendChild(this.container);
