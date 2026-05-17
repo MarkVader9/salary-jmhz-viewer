@@ -378,6 +378,8 @@ a:hover { text-decoration: underline; }
    library-style.css - Sjednocené Styly JMHZ KNIHOVNA Pro Modul clanek.html
    ========================================================================================= */
 
+
+
         /* ==========================================
            TYPOGRAFIE A FORMÁTOVÁNÍ Z MS WORD
            ========================================== */
@@ -405,7 +407,7 @@ a:hover { text-decoration: underline; }
 
         /* Vylepšení obrázků - kurzor ukazuje možnost zvětšení */
         .editor-content img {
-            max-width: 100%; height: auto; border-radius: var(--radius-md); margin: 1.5em auto;
+            max-width: 100%; height: auto; border-radius: 70px; margin: 1.5em auto;
             display: block; box-shadow: 0 2px 8px color-mix(in oklch, var(--shadow-color) 10%, transparent);
             cursor: zoom-in; transition: transform 0.2s ease;
         }
@@ -482,29 +484,14 @@ a:hover { text-decoration: underline; }
             .editor-content h1, .editor-content h2 { page-break-after: avoid; }
             .editor-content img, .editor-content table { page-break-inside: avoid; max-width: 100% !important; }
             .editor-content a { text-decoration: none !important; color: black !important; }
+			
+			}
 
 
 /* =========================================================================================
    library-style.css - Centralizované Styly JMHZ KNIHOVNA Pro Modul admin.html
    ========================================================================================= */
-   
-   
 
-        :root {
-            --bg-base: oklch(97% 0.005 250);
-            --bg-surface: oklch(99% 0.003 250);
-            --border: oklch(87% 0.012 250);
-            --text-primary: oklch(20% 0.02 250);
-            --text-muted: oklch(50% 0.01 250);
-            --accent: oklch(50.48% 0.177 261.64);
-            --accent-soft: oklch(94% 0.035 255);
-            --danger: #ef4444;
-            --success: #10b981;
-            --warning: #f59e0b;
-            --radius: 8px;
-        }
-
-        body { font-family: system-ui, sans-serif; background: var(--bg-base); color: var(--text-primary); margin: 0; height: 100vh; overflow: hidden; }
 
         /* Rozložení */
         .admin-grid { display: grid; grid-template-columns: 280px 1fr 300px; height: 100vh; }
@@ -811,7 +798,7 @@ a:hover { text-decoration: underline; }
 }
 .lms-instructor-info h3 { margin: 0 0 8px 0; color: var(--text-primary); font-size: 1.3rem; }
 .lms-instructor-info .lms-instructor-role {
-    font-size: 0.8rem; color: var(--accent); text-transform: uppercase; font-weight: 700; letter-spacing: 0.05em; margin-bottom: 12px; display: block;
+    font-size: 0.8rem; color: var(--accent); text-transform: uppercase; font-weight: 700; letter-spacing: 0.11em; margin-bottom: 12px; display: block;
 }
 
 /* Poznámky */
