@@ -54,12 +54,22 @@
         catContainer: document.getElementById('categoryFilterContainer')
     };
 
-    async function init() {
+async function init() {
         try {
-            const res = await fetch("databaze-knihovny.json?t=" + Date.now());
-            if (!res.ok) throw new Error(`Nelze načíst databázi JSON (HTTP chyba: ${res.status})`);
+            let rawDb = null;
+            const cachedDb = sessionStorage.getItem('jmhz_db_cache_v1');
             
-            const rawDb = await res.json();
+            // Zkusíme načíst z rychlé paměti prohlížeče (pokud už tam uživatel v této relaci byl)
+            if (cachedDb) {
+                rawDb = JSON.parse(cachedDb);
+            } else {
+                // Pokud tam není, stáhneme ji a uložíme pro příště
+                const res = await fetch("databaze-knihovny.json?t=" + Date.now());
+                if (!res.ok) throw new Error(`Nelze načíst databázi JSON (HTTP chyba: ${res.status})`);
+                rawDb = await res.json();
+                sessionStorage.setItem('jmhz_db_cache_v1', JSON.stringify(rawDb));
+            }
+            
             dbData.categories = rawDb.categories || [];
             
             // Sloučení "articles" a "lms" do jednoho pole pro jednotné vyhledávání
@@ -84,14 +94,27 @@
         }
     }
 
-    function renderGrid(articles) {
+function renderGrid(articles) {
         UI.grid.innerHTML = '';
         if (articles.length === 0) {
-            UI.grid.innerHTML = '<div class="empty-state"><h3>Žádné výsledky</h3><p style="color: var(--text-muted); font-size: 0.9rem;">Zkuste upravit filtry nebo hledaný výraz.</p></div>';
+            // DYNAMICKÝ EMPTY STATE
+            const query = UI.search.value.trim();
+            const queryText = query ? `pro výraz "<strong>${query}</strong>"` : 'pro zvolené filtry';
+            
+            UI.grid.innerHTML = `
+                <div class="empty-state" style="grid-column: 1/-1; padding: 60px 20px; background: var(--bg-surface); border-radius: var(--radius-lg); border: 2px dashed var(--border); text-align: center;">
+                    <div style="font-size: 3rem; margin-bottom: 15px;">🔎</div>
+                    <h3 style="color: var(--text-primary); font-size: 1.5rem; margin-bottom: 10px;">Bohužel jsme nenašli žádné články ${queryText}</h3>
+                    <p style="color: var(--text-muted); font-size: 1rem; margin-bottom: 25px;">Zkuste zkontrolovat překlepy, použít obecnější termín, nebo zrušte aktuální filtry.</p>
+                    <button class="btn primary" onclick="resetAllFilters()" style="padding: 12px 24px; font-size: 1rem; border-radius: 30px;">🔄 Zrušit všechny filtry a hledání</button>
+                </div>
+            `;
             return;
         }
 
-        articles.forEach(item => {
+        articles.forEach((item, index) => {
+            // ZMĚNA: Přidán parametr 'index'
+        articles.forEach((item, index) => {
             // Rozcestník - jde o kurz nebo obyčejný článek?
             const url = item.isLms ? `lms.html?course=${item.id}` : `clanek.html?id=${item.id}`;
             const fUrl = window.location.origin + window.location.pathname.replace('index.html', '') + url;
@@ -107,6 +130,10 @@
 
             const card = document.createElement('div');
             card.className = 'article-card';
+            
+            // ZMĚNA: Každá karta dostane lehké zpoždění animace (první za 0s, druhá za 0.05s, třetí za 0.1s atd.)
+            card.style.animationDelay = `${index * 0.05}s`;
+
             card.innerHTML = `
                 <div class="card-meta">${typeBadge} <span>⏱️ ${item.readingTimeMin || 1} min</span></div>
                 <h3 class="card-title"><a href="${url}">${item.title || 'Neznámý obsah'}</a></h3>
@@ -120,6 +147,15 @@
             UI.grid.appendChild(card);
         });
     }
+
+    // PŘIDEJ TUTO FUNKCI HNED POD renderGrid:
+    window.resetAllFilters = function() {
+        UI.search.value = ''; // Vymaže vyhledávač
+        UI.sort.value = 'newest'; // Obnoví řazení
+        // Simuluje kliknutí na tlačítko "Vše v Knihovně"
+        const allBtn = document.querySelector('.cat-pill[data-id="all"]') || document.querySelector('.cat-pill');
+        if (allBtn) selectCategory(allBtn, 'all');
+    };
 
     function renderCategoryFilters() {
         // 1. Zjistíme, do kterých kategorií fyzicky patří nějaké články
