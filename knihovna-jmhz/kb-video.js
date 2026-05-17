@@ -1,75 +1,59 @@
 /**
- * kb-video.js - Centralizovaný správce kvality videí (1080p vs 4K)
- * Analyzuje výkon HW/Sítě, ukládá preferenci do localStorage a plynule přepíná zdroje.
+ * kb-video.js - Centralizovaný správce kvality videí (Zpětně kompatibilní verze)
+ * Analyzuje výkon HW/Sítě, ukládá preferenci a plynule přepíná zdroje s ochranou proti chybě 404.
  */
 const KB_VideoManager = {
     config: {
-        storageKey: 'jmhz_video_quality',
-        qualities: {
-            '1080p': { label: '1080p (Rychlejší)', suffix: '_1080p.mp4' },
-            '4k': { label: '4K (Nejvyšší)', suffix: '_4k.mp4' }
-        }
+        storageKey: 'jmhz_video_quality'
     },
 
     init() {
         this.processAllVideos();
     },
 
-    // 1. Chytrá detekce procesně výkonnostního zatížení a sítě
     detectIdealQuality() {
-        // a) Pokud uživatel učinil manuální volbu, vždy ji respektujeme
         const saved = localStorage.getItem(this.config.storageKey);
         if (saved === '4k' || saved === '1080p') return saved;
 
-        // b) Analýza výkonu prohlížeče a sítě
         let isSlow = false;
-        
-        // Hodnocení CPU: méně než 4 jádra je na 4K video v prohlížeči slabé
         const cores = navigator.hardwareConcurrency || 4;
         if (cores < 4) isSlow = true;
 
-        // Hodnocení Sítě: Network Information API
         const conn = navigator.connection || navigator.mozConnection || navigator.webkitConnection;
         if (conn) {
             if (conn.effectiveType === '3g' || conn.effectiveType === '2g') isSlow = true;
-            if (conn.downlink && conn.downlink < 5.0) isSlow = true; // Méně než 5 Mbps
-            if (conn.saveData) isSlow = true; // Uživatel má zapnutý "Spořič dat" v telefonu
+            if (conn.downlink && conn.downlink < 5.0) isSlow = true;
+            if (conn.saveData) isSlow = true;
         }
 
         return isSlow ? '1080p' : '4k';
     },
 
-    // 2. Vynucená manuální změna (přepnutí)
     toggleGlobalQuality() {
         const current = localStorage.getItem(this.config.storageKey) || this.detectIdealQuality();
         const nextTarget = current === '4k' ? '1080p' : '4k';
         
         localStorage.setItem(this.config.storageKey, nextTarget);
         
-        // Přepne všechna videa na stránce (pokud jich je více)
         const containers = document.querySelectorAll('.kb-video-container');
-        containers.forEach(container => this.applyVideoQuality(container, nextTarget));
+        containers.forEach(container => this.applyVideoQuality(container, nextTarget, true));
         
         if(window.KB_Toaster) {
-            KB_Toaster.show('Kvalita upravena', `Všechna videa se nyní budou přehrávat ve formátu ${nextTarget.toUpperCase()}`, 'info');
+            KB_Toaster.show('Kvalita upravena', `Videa se nyní budou přehrávat ve formátu ${nextTarget.toUpperCase()}`, 'info');
         }
     },
 
-    // 3. Modifikace DOMu (Vyhledání a injekce tlačítek)
     processAllVideos() {
         const targetQuality = this.detectIdealQuality();
         const containers = document.querySelectorAll('.kb-video-container:not(.processed)');
         
         containers.forEach(container => {
             container.classList.add('processed');
-            container.style.position = 'relative'; // Nutné pro absolutní pozicování tlačítka
+            container.style.position = 'relative';
 
             const videoEl = container.querySelector('video');
-            const baseSrc = container.getAttribute('data-base-src');
-            
-            if (!videoEl || !baseSrc) return;
+            if (!videoEl) return;
 
-            // Injekce přepínacího tlačítka do vrstvy nad video
             const btnWrap = document.createElement('div');
             btnWrap.className = 'kb-video-qty-wrap';
             
@@ -81,47 +65,64 @@ const KB_VideoManager = {
             btnWrap.appendChild(btn);
             container.appendChild(btnWrap);
 
-            // Nastavíme úvodní kvalitu
-            this.applyVideoQuality(container, targetQuality);
+            this.applyVideoQuality(container, targetQuality, false);
         });
     },
 
-    // 4. Plynulé přepnutí zdroje za chodu (Seamless Swap)
-    applyVideoQuality(container, qualityId) {
+    applyVideoQuality(container, qualityId, isManualToggle = false) {
         const videoEl = container.querySelector('video');
         const btn = container.querySelector('.kb-video-qty-btn');
-        const baseSrc = container.getAttribute('data-base-src');
-        const qObj = this.config.qualities[qualityId];
         
-        if (!videoEl || !qObj) return;
-
-        const newSrc = baseSrc + qObj.suffix;
+        const originalSrc = container.getAttribute('data-original-src'); // Původní z Wordu (001_uvod.mp4)
+        const baseSrc = container.getAttribute('data-base-src'); // Oříznuto (001_uvod)
         
-        // Pokud už je to tento soubor, nic neděláme
-        if (videoEl.src === newSrc) return;
+        if (!videoEl || !originalSrc || !baseSrc) return;
 
-        // Uchování aktuálního stavu přehrávání, aby video neskočilo na 0:00
+        // ZPĚTNÁ KOMPATIBILITA: 1080p = Původní soubor | 4K = Soubor + _4k.mp4
+        let newSrc = (qualityId === '1080p') ? originalSrc : baseSrc + '_4k.mp4';
+        
+        // Prevence duplicity, pokud by už i Word soubor obsahoval _4k
+        if (qualityId === '4k' && originalSrc.toLowerCase().includes('_4k')) {
+            newSrc = originalSrc;
+        }
+
+        if (videoEl.src === newSrc && !isManualToggle) {
+             if (btn) btn.innerHTML = `⚙️ ${qualityId.toUpperCase()}`;
+             return;
+        }
+
         const currentTime = videoEl.currentTime || 0;
         const isPaused = videoEl.paused;
 
-        // Výměna souboru
         videoEl.src = newSrc;
         videoEl.load();
 
-        // Po navázání nového souboru posuneme čas na původní hodnotu
         videoEl.onloadedmetadata = () => {
-            videoEl.currentTime = currentTime;
-            if (!isPaused) {
-                // Pokud video běželo, znovu ho rozběhneme
+            if (currentTime > 0) videoEl.currentTime = currentTime;
+            if (!isPaused && isManualToggle) {
                 const playPromise = videoEl.play();
                 if (playPromise !== undefined) {
-                    playPromise.catch(e => console.log('Autoplay po přepnutí blokován prohlížečem.', e));
+                    playPromise.catch(e => console.log('Autoplay blokován prohlížečem.', e));
                 }
             }
             videoEl.onloadedmetadata = null;
+            videoEl.onerror = null; // Vyčistíme starý chyták chyb
         };
 
-        // Aktualizace nápisu na tlačítku
+        // ZÁCHRANNÁ BRZDA: Pokud 4K video na FTP neexistuje (404), vrátí to bezpečně na výchozí 1080p
+        videoEl.onerror = () => {
+            if (qualityId === '4k') {
+                console.warn(`Verze 4K nebyla nalezena, vracím se k původnímu souboru.`);
+                videoEl.src = originalSrc;
+                videoEl.load();
+                videoEl.currentTime = currentTime;
+                if (!isPaused) videoEl.play();
+                
+                if (btn) btn.innerHTML = `⚙️ 1080P`;
+                localStorage.setItem(this.config.storageKey, '1080p');
+            }
+        };
+
         if (btn) btn.innerHTML = `⚙️ ${qualityId.toUpperCase()}`;
     }
 };
