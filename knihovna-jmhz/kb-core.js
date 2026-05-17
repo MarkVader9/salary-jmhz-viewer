@@ -12,6 +12,7 @@ const KB_CONFIG = {
     
     // Daty řízená pravidla (Rule Engine)
     rules: [
+
         { id: 'R1', field: 'title', type: 'required', msg: 'Článek musí mít vyplněný nadpis.' },
         { id: 'R2', field: 'content', type: 'required', msg: 'Obsah článku nesmí být prázdný.' },
         { id: 'R3', field: 'categoryId', type: 'required', msg: 'Pro veřejné publikování musí být vybrána kategorie.', cond: (d) => d.status === 'public' }
@@ -23,20 +24,7 @@ const KB_Toaster = {
     container: null,
     init() {
         if (!document.getElementById('kb-toaster-styles')) {
-            const style = document.createElement('style');
-            style.id = 'kb-toaster-styles';
-            style.innerHTML = `
-                .kb-toaster { position: fixed; bottom: 20px; right: 20px; z-index: 99999; display: flex; flex-direction: column; gap: 10px; pointer-events: none; }
-                .kb-toast { background: var(--bg-surface, #fff); border: 1px solid var(--border, #e5e7eb); border-radius: 8px; padding: 16px; box-shadow: 0 4px 12px rgba(0,0,0,0.1); display: flex; align-items: flex-start; gap: 12px; pointer-events: auto; transform: translateX(120%); opacity: 0; transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275); width: 320px; box-sizing: border-box;}
-                .kb-toast.show { transform: translateX(0); opacity: 1; }
-                .kb-toast-icon { font-size: 1.2rem; line-height: 1; margin-top: 2px;}
-                .kb-toast-success .kb-toast-icon { color: var(--success, #10b981); }
-                .kb-toast-error .kb-toast-icon { color: var(--danger, #ef4444); }
-                .kb-toast-info .kb-toast-icon { color: var(--accent, #3b82f6); }
-                .kb-toast-warning .kb-toast-icon { color: var(--warning, #f59e0b); }
-                .kb-toast-content { display: flex; flex-direction: column; gap: 4px; }
-                .kb-toast-title { font-weight: 600; font-size: 0.9rem; color: var(--text-primary, #111827); }
-                .kb-toast-desc { font-size: 0.8rem; color: var(--text-muted, #6b7280); line-height: 1.4;}
+
             `;
             document.head.appendChild(style);
         }
@@ -46,6 +34,7 @@ const KB_Toaster = {
         document.body.appendChild(this.container);
     },
     show(title, desc = '', type = 'info') {
+		
         if (!this.container) this.init();
         const t = document.createElement('div');
         t.className = `kb-toast kb-toast-${type}`;
@@ -84,6 +73,12 @@ const MOCK_NOTIFICATIONS = [
         title: "Nový kurz pro Mzdové Účetní přidán do sekce Školení",
         content: "Přidali jsme nový interaktivní kurz zaměřený na Používání Webové Aplikace SALARY Prohlížeče JMHZ Formulářů. <br><br>Kurz si můžete spustit v hlavní nabídce knihovny, a nebo na tomto odkaze <a href=\"https://www.salary.cz/jmhz2026/knihovna-jmhz/lms.html?course=kurz_jmhz_prohlizec\">Přejít na Kurz</a>",
         tags: ["Kurzy", "Nové"]
+    },{
+        id: "notif_004",
+        date: "2026-05-13T07:26:33Z",
+        title: "Byl Přidán Nový JMHZ Číselník",
+        content: "Nově byl do knihovny přidán nový JMHZ Číselník Okresů. <br><br>Je možné si jej přečíst na tomto odkaze <a href=\"https://www.salary.cz/jmhz2026/knihovna-jmhz/clanek.html?id=jmhz_ciselnik_okresu\">Přejít na Nový Číselník</a>",
+        tags: ["JMHZ","Číselníky", "Nové"]
     }
 ];
 
