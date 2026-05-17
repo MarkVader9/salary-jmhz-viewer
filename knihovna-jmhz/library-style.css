@@ -588,8 +588,9 @@ a:hover { text-decoration: underline; }
 /* =========================================================================================
    library-style.css - Centralizované Styly JMHZ KNIHOVNA Pro Toast Notifikace JMHZ KNIHOVNA
    ========================================================================================= */
-   
-#kb-toaster {
+
+
+.kb-toaster {
     position: fixed;
     bottom: 20px;
     right: 20px;
@@ -612,15 +613,15 @@ a:hover { text-decoration: underline; }
     animation: kb-toast-in 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
     transition: all 0.3s ease;
 }
-.kb-toast.toast-success {
+.kb-toast-success {
     background: #15803d;
     border-left: 4px solid #4ade80;
 }
-.kb-toast.toast-error {
+.kb-toast-error {
     background: #b91c1c;
     border-left: 4px solid #f87171;
 }
-.kb-toast.toast-info {
+.kb-toast-info {
     background: #1d4ed8;
     border-left: 4px solid #60a5fa;
 }
@@ -632,6 +633,3 @@ a:hover { text-decoration: underline; }
     from { opacity: 0; transform: translateY(20px) scale(0.9); }
     to { opacity: 1; transform: translateY(0) scale(1); }
 }
-
-
-
