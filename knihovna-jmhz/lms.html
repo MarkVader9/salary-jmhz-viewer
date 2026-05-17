@@ -248,19 +248,26 @@
         const parent = btn.parentElement;
         const feedback = document.getElementById(quizId + '_feedback');
         
-        Array.from(parent.children).forEach(b => {
-            b.disabled = true; b.style.opacity = '0.7'; b.style.cursor = 'not-allowed';
-        });
-
-        btn.style.opacity = '1'; btn.style.color = '#fff';
-
         if (isCorrect) {
+            // SPRÁVNÁ ODPOVĚĎ: Zablokujeme všechna tlačítka a ukážeme úspěch
+            Array.from(parent.children).forEach(b => {
+                b.disabled = true; b.style.opacity = '0.5'; b.style.cursor = 'not-allowed';
+            });
+            btn.style.opacity = '1'; btn.style.color = '#fff';
             btn.style.background = 'var(--success)'; btn.style.borderColor = 'var(--success)';
+            
             feedback.innerHTML = '✅ Správná odpověď!';
             feedback.style.background = 'var(--success-bg)'; feedback.style.color = 'var(--success)';
         } else {
-            btn.style.background = 'var(--error)'; btn.style.borderColor = 'var(--error)';
-            feedback.innerHTML = '❌ Bohužel, nesprávně. Zkuste znovu.';
+            // ŠPATNÁ ODPOVĚĎ: Zablokujeme JEN to jedno kliknuté tlačítko
+            btn.disabled = true; 
+            btn.style.opacity = '0.7'; 
+            btn.style.cursor = 'not-allowed';
+            btn.style.color = '#fff';
+            btn.style.background = 'var(--error)'; 
+            btn.style.borderColor = 'var(--error)';
+            
+            feedback.innerHTML = '❌ Bohužel, nesprávně. Zkuste to znovu.';
             feedback.style.background = 'var(--error-bg)'; feedback.style.color = 'var(--error)';
         }
         feedback.style.display = 'block';
