@@ -30,6 +30,7 @@ const KB_Toaster = {
     },
     show(title, desc = '', type = 'info') {
 		
+		
         if (!this.container) this.init();
         const t = document.createElement('div');
         t.className = `kb-toast kb-toast-${type}`;
