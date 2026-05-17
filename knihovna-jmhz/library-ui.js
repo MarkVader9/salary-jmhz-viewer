@@ -43,14 +43,7 @@
 document.addEventListener("DOMContentLoaded", () => {
     const logoSvg = `<?xml version="1.0" encoding="UTF-8"?> <svg xmlns="http://www.w3.org/2000/svg" width="98" height="28" viewBox="0 0 166 48" fill="none"><defs><linearGradient id="fractalOrange1" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" stop-color="#FFB74D" /><stop offset="100%" stop-color="#F57C00" /></linearGradient><linearGradient id="fractalOrange2" x1="0%" y1="100%" x2="100%" y2="0%"><stop offset="0%" stop-color="#FF9800" /><stop offset="100%" stop-color="#E65100" /></linearGradient><linearGradient id="fractalOrange3" x1="100%" y1="50%" x2="0%" y2="50%"><stop offset="0%" stop-color="#FFB74D" /><stop offset="100%" stop-color="#FF5722" /></linearGradient></defs><g transform="translate(6, 2)"><polygon points="16,4 32,4 8,16" fill="url(#fractalOrange1)" /><polygon points="32,4 24,16 8,16" fill="url(#fractalOrange2)" /><polygon points="8,16 24,16 32,28" fill="url(#fractalOrange3)" /><polygon points="8,16 32,28 16,28" fill="url(#fractalOrange1)" /><polygon points="16,28 32,28 8,40" fill="url(#fractalOrange2)" /><polygon points="32,28 24,40 8,40" fill="url(#fractalOrange3)" /><polygon points="16,4 24,16 16,16" fill="#ffffff" opacity="0.3"/><polygon points="8,16 16,28 24,16" fill="#000000" opacity="0.15"/><polygon points="16,28 24,40 16,40" fill="#ffffff" opacity="0.3"/></g><text x="52" y="34" font-family="system-ui, -apple-system, sans-serif" font-weight="900" font-size="22" fill="currentColor" letter-spacing="1.5">SALARY</text></svg>`;
 
-    const style = document.createElement('style');
-    style.innerHTML = `
-        .drawer-backdrop { opacity: 0; pointer-events: none; transition: opacity 0.3s ease; }
-        .drawer-backdrop.show { opacity: 1; pointer-events: auto; }
-        .drawer { transform: translateX(100%); transition: transform 0.3s ease; }
-        .drawer.open { transform: translateX(0); }
-    `;
-    document.head.appendChild(style);
+
 
     const header = document.createElement('div');
     header.className = 'jmhz-toolbar';
