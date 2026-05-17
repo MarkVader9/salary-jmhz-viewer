@@ -187,7 +187,12 @@ a:hover { text-decoration: underline; }
 .empty-state { text-align: center; padding: 60px; color: var(--text-muted); grid-column: 1/-1; background: var(--bg-surface); border-radius: var(--radius-lg); border: 1px dashed var(--border);}
 
 @media (max-width: 1200px) { .layout { grid-template-columns: 1fr 260px; } .toc-aside { display: none; } }
-@media (max-width: 900px) { .layout { grid-template-columns: 1fr; padding: 20px 10px;} .right-sidebar { display: none; } .article-detail{ padding: 30px 20px;} }
+@media (max-width: 900px) { 
+    .layout { grid-template-columns: 1fr; padding: 20px 10px;} 
+    /* Panel už nezmizí, ale plynule se přesune pod článek */
+    .right-sidebar { position: static; margin-top: 30px; display: flex; flex-direction: column; gap: 20px; } 
+    .article-detail{ padding: 30px 20px;} 
+}
 
 
 
