@@ -1,6 +1,6 @@
-/* ==========================================================================
-   library-style.css - Sjednocené styly pro JMHZ KNIHOVNA a VIEWER
-   ========================================================================== */
+/* =======================================================================================================================
+   library-style.css - Centralizované Styly Aplikace JMHZ KNIHOVNA Esteticky Sladěné s Hlavní Webovou Aplikací JMHZ VIEWER
+   ======================================================================================================================= */
 
 /* === Design Tokens z JMHZ VIEWER === */
 :root {
@@ -65,7 +65,7 @@
 }
 
 /* === Reset & Base === */
-*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+*, *::before, *::after { box-sizing: border-box; margin: 0px; padding: 0; }
 body {
   font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif;
   font-size: 0.875rem;
@@ -88,11 +88,11 @@ a:hover { text-decoration: underline; }
 
 /* === Toolbar a Drawer (Převzato z Viewer) === */
 .jmhz-toolbar {
-  display: flex; align-items: center; justify-content: space-between; height: 56px; padding: 0 20px;
+  display: flex; align-items: center; justify-content: space-between; height: 48px; padding: 0 20px;
   background: var(--bg-elevated); border-bottom: 1px solid var(--border); position: sticky; top: 0; z-index: 1000; box-shadow: 0 1px 2px rgba(0,0,0,0.02);
 }
 .toolbar-left { display: flex; align-items: center; gap: 12px; }
-.brand-logo { display: inline-flex; align-items: center; height: 28px; color: var(--logo-color); }
+.brand-logo { display: inline-flex; align-items: center; height: 38px; color: var(--logo-color); }
 .brand-logo svg { display: block; height: 100%; width: auto; }
 .toolbar-title { font-weight: 600; font-size: 0.875rem; color: var(--text-primary); }
 .drawer-toggle-btn { background: var(--bg-elevated); border: 1px solid var(--border); font-size: 1rem; cursor: pointer; color: var(--text-secondary); padding: 4px 10px; border-radius: var(--radius-md); transition: 0.2s;}
@@ -181,13 +181,16 @@ a:hover { text-decoration: underline; }
 .media-wrapper img { max-width: 100%; height: auto; border-radius: var(--radius-md); }
 
 /* Ostatní */
-.progress-bar-container { position: fixed; top: 56px; left: 0; width: 100%; height: 3px; background: transparent; z-index: 9999; }
+.progress-bar-container { position: fixed; top: 48px; left: 0; width: 100%; height: 3px; background: transparent; z-index: 9999; }
 .progress-bar { height: 100%; background: var(--accent); width: 0%; transition: width 0.15s ease-out; }
 .loader { text-align: center; padding: 60px; color: var(--text-muted); font-size: 1.1rem;}
 .empty-state { text-align: center; padding: 60px; color: var(--text-muted); grid-column: 1/-1; background: var(--bg-surface); border-radius: var(--radius-lg); border: 1px dashed var(--border);}
 
 @media (max-width: 1200px) { .layout { grid-template-columns: 1fr 260px; } .toc-aside { display: none; } }
 @media (max-width: 900px) { .layout { grid-template-columns: 1fr; padding: 20px 10px;} .right-sidebar { display: none; } .article-detail{ padding: 30px 20px;} }
+
+
+
 
 /* ==========================================================================
    NOTIFIKAČNÍ SYSTÉM (ZVONEČEK, DROPDOWN, MODALY)
@@ -368,3 +371,234 @@ a:hover { text-decoration: underline; }
 .notif-reader a { color: var(--accent); text-decoration: underline; text-underline-offset: 2px;}
 .notif-reader a:hover { color: var(--accent-hover); text-decoration-thickness: 2px;}
 .notif-reader .tag-pill { display: inline-block; padding: 2px 8px; background: var(--bg-hover); border: 1px solid var(--border); border-radius: 12px; font-size: 0.7rem; margin-right: 4px;}
+
+
+
+/* =========================================================================================
+   library-style.css - Sjednocené Styly JMHZ KNIHOVNA Pro Modul clanek.html
+   ========================================================================================= */
+
+
+<style>
+        /* ==========================================
+           TYPOGRAFIE A FORMÁTOVÁNÍ Z MS WORD
+           ========================================== */
+
+        .editor-content p { margin-bottom: 1.2em; line-height: 1.7; }
+
+        .editor-content h1, .editor-content h2, .editor-content h3, .editor-content h4 {
+            color: var(--text-primary); margin-top: 1.8em; margin-bottom: 0.8em; line-height: 1.3; font-weight: 700;
+        }
+        .editor-content h2 { font-size: 1.6rem; border-bottom: 1px solid var(--border-subtle); padding-bottom: 8px; }
+        .editor-content h3 { font-size: 1.3rem; }
+        .editor-content h4 { font-size: 1.1rem; }
+
+        .editor-content ul, .editor-content ol { margin-bottom: 1.5em; padding-left: 2.5em; }
+        .editor-content ul { list-style-type: disc; }
+        .editor-content ul ul { list-style-type: circle; margin-bottom: 0; }
+        .editor-content ol { list-style-type: decimal; }
+        .editor-content li { margin-bottom: 0.5em; line-height: 1.6; }
+
+        .editor-content blockquote {
+            border-left: 4px solid var(--accent); margin: 1.5em 0; padding: 1em 1.5em;
+            background: var(--bg-surface); color: var(--text-secondary); font-style: italic;
+            border-radius: 0 var(--radius-md) var(--radius-md) 0; box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+        }
+
+        /* Vylepšení obrázků - kurzor ukazuje možnost zvětšení */
+        .editor-content img {
+            max-width: 100%; height: auto; border-radius: var(--radius-md); margin: 1.5em auto;
+            display: block; box-shadow: 0 2px 8px color-mix(in oklch, var(--shadow-color) 10%, transparent);
+            cursor: zoom-in; transition: transform 0.2s ease;
+        }
+        .editor-content img:hover { transform: scale(1.02); }
+
+        .editor-content a {
+            color: var(--accent); text-decoration: underline; text-decoration-thickness: 1px;
+            text-underline-offset: 3px; font-weight: 500; transition: color 0.2s ease;
+        }
+        .editor-content a:hover { color: var(--accent-hover); text-decoration-thickness: 2px; }
+        .editor-content strong, .editor-content b { font-weight: 700; color: var(--text-primary); }
+        
+        /* Estetické tabulky generované z MS Word */
+        .editor-content table {
+            width: 100%; border-collapse: separate; border-spacing: 0; margin: 2em 0; font-size: 0.95rem;
+            background: var(--bg-elevated); border-radius: var(--radius-lg); overflow: hidden; 
+            box-shadow: 0 4px 6px color-mix(in oklch, var(--shadow-color) 5%, transparent); border: 1px solid var(--border);
+        }
+        .editor-content th, .editor-content tr:first-child td { background-color: var(--bg-hover); color: var(--text-primary); font-weight: 700; text-align: left; }
+        .editor-content th, .editor-content td { padding: 12px 16px; border-bottom: 1px solid var(--border-subtle); border-right: 1px solid var(--border-subtle); vertical-align: top; line-height: 1.5; }
+        .editor-content tr th:last-child, .editor-content tr td:last-child { border-right: none; }
+        .editor-content tr:last-child td { border-bottom: none; }
+        .editor-content tr:not(:first-child):hover td { background-color: var(--accent-subtle); }
+
+        /* Akordeony (FAQ) */
+        .faq-box { margin: 15px 0; border: 1px solid var(--border); border-radius: var(--radius-md); overflow: hidden; background: var(--bg-surface); }
+        .faq-question { padding: 15px; font-weight: 600; cursor: pointer; display: flex; justify-content: space-between; align-items: center; color: var(--text-primary); background: var(--bg-elevated); transition: 0.2s;}
+        .faq-question:hover { background: var(--bg-hover); }
+        .faq-answer { padding: 0 15px; max-height: 0; overflow: hidden; transition: max-height 0.3s ease, padding 0.3s ease; color: var(--text-secondary); font-size: 0.95rem; border-top: 1px solid transparent;}
+        .faq-box.open .faq-answer { padding: 15px; max-height: 500px; border-top-color: var(--border-subtle); overflow-y: auto;}
+        .faq-icon { transition: transform 0.3s ease; font-size: 0.8rem;}
+        .faq-box.open .faq-icon { transform: rotate(180deg); }
+        
+        .editor-content p:empty { min-height: 1.5em; margin: 0; }
+		
+		
+
+        /* ==========================================
+           LIGHTBOX PRO OBRÁZKY
+           ========================================== */
+        .kb-lightbox {
+            position: fixed; inset: 0; z-index: 99999; background: rgba(0,0,0,0.85);
+            display: flex; align-items: center; justify-content: center;
+            opacity: 0; pointer-events: none; transition: opacity 0.3s ease; backdrop-filter: blur(4px);
+        }
+        .kb-lightbox.active { opacity: 1; pointer-events: auto; }
+        .kb-lightbox img { max-width: 90%; max-height: 90vh; border-radius: 8px; box-shadow: 0 10px 25px rgba(0,0,0,0.5); transform: scale(0.95); transition: transform 0.3s ease;}
+        .kb-lightbox.active img { transform: scale(1); }
+        .kb-lightbox-close { position: absolute; top: 20px; right: 30px; color: white; font-size: 40px; cursor: pointer; line-height: 1; text-shadow: 0 2px 4px rgba(0,0,0,0.5); }
+        .kb-lightbox-close:hover { color: var(--error); }
+		
+		
+
+        /* ==========================================
+           TISKOVÉ STYLY (@media print)
+           ========================================== */
+		   
+		   
+        @media print {
+            body { background: white !important; color: black !important; }
+			
+            /* Skrýt všechny rušivé elementy */
+            .jmhz-toolbar, .right-sidebar, .toc-aside, .progress-bar-container, 
+            .drawer-toggle-btn, .lms-tabs-container, .faq-box, button, 
+            .btn, .drawer-backdrop, .drawer { 
+                display: none !important; }
+				
+            /* Roztažení článku na celou šířku papíru */
+            .layout { display: block !important; padding: 0 !important; margin: 0 !important; }
+            .article-card { border: none !important; box-shadow: none !important; padding: 0 !important; }
+			
+            /* Optimalizace textu pro tisk */
+            .editor-content { font-size: 12pt !important; line-height: 1.5 !important; }
+            .editor-content h1, .editor-content h2 { page-break-after: avoid; }
+            .editor-content img, .editor-content table { page-break-inside: avoid; max-width: 100% !important; }
+            .editor-content a { text-decoration: none !important; color: black !important; }
+
+
+/* =========================================================================================
+   library-style.css - Centralizované Styly JMHZ KNIHOVNA Pro Modul admin.html
+   ========================================================================================= */
+   
+   
+
+        :root {
+            --bg-base: oklch(97% 0.005 250);
+            --bg-surface: oklch(99% 0.003 250);
+            --border: oklch(87% 0.012 250);
+            --text-primary: oklch(20% 0.02 250);
+            --text-muted: oklch(50% 0.01 250);
+            --accent: oklch(50.48% 0.177 261.64);
+            --accent-soft: oklch(94% 0.035 255);
+            --danger: #ef4444;
+            --success: #10b981;
+            --warning: #f59e0b;
+            --radius: 8px;
+        }
+
+        body { font-family: system-ui, sans-serif; background: var(--bg-base); color: var(--text-primary); margin: 0; height: 100vh; overflow: hidden; }
+
+        /* Rozložení */
+        .admin-grid { display: grid; grid-template-columns: 280px 1fr 300px; height: 100vh; }
+        .panel { background: var(--bg-surface); display: flex; flex-direction: column; overflow-y: auto; }
+        .border-r { border-right: 1px solid var(--border); }
+        .border-l { border-left: 1px solid var(--border); }
+
+        /* Seznam článků */
+        .panel-header { padding: 20px; border-bottom: 1px solid var(--border); background: var(--bg-surface); position: sticky; top: 0; z-index: 10;}
+        .article-list { padding: 10px; flex-grow: 1; }
+        .article-item { padding: 12px 15px; border-radius: var(--radius); border: 1px solid transparent; cursor: pointer; margin-bottom: 5px; transition: 0.2s; position: relative; background: transparent;}
+        .article-item:hover { background: var(--bg-base); }
+        .article-item.active { background: var(--accent-soft); border-color: var(--accent); }
+        .article-item-title { font-size: 0.9rem; font-weight: 700; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; color: #111827;}
+        .article-item-status { font-size: 0.75rem; font-weight: 600; margin-top: 4px; }
+        .status-tag-pub { color: var(--success); }
+        .status-tag-priv { color: var(--text-muted); }
+        .del-btn { position: absolute; right: 10px; top: 12px; display: none; color: var(--danger); cursor: pointer; padding: 4px;}
+        .article-item:hover .del-btn { display: block; }
+
+        /* Editor */
+        .editor-container { background: var(--bg-base); overflow-y: auto; padding: 40px; display: flex; flex-direction: column; align-items: center; position: relative;}
+        .editor-canvas { width: 100%; max-width: 900px; background: white; padding: 50px; border-radius: var(--radius); box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05); display: flex; flex-direction: column; min-height: max-content; }
+        .title-input { width: 100%; border: none; font-size: 2.2rem; font-weight: 800; outline: none; margin-bottom: 20px; color: #111827; background: transparent; letter-spacing: -0.02em;}
+        .title-input::placeholder { color: #cbd5e1; }
+        
+        .ck-editor__editable { min-height: 50vh !important; border: 1px solid transparent !important; box-shadow: none !important; padding: 0 !important; font-size: 1.1rem; line-height: 1.6; color: #374151;}
+        .ck.ck-editor__main>.ck-editor__editable:not(.ck-focused) { border: 1px solid transparent !important; }
+        .ck-toolbar { border: none !important; border-bottom: 1px solid var(--border) !important; background: white !important; position: sticky; top: -50px; z-index: 10; padding: 10px 0 !important; margin-bottom: 20px !important;}
+
+        .editor-footer { margin-top: auto; padding-top: 30px; border-top: 1px solid var(--border); display: flex; justify-content: space-between; align-items: center; }
+        .editor-loader { padding: 40px; text-align: center; color: var(--text-muted); font-weight: 500; }
+        
+        /* Postranní panel */
+        .side-group { margin-bottom: 30px; }
+        .side-label { font-size: 0.75rem; font-weight: 800; text-transform: uppercase; color: var(--text-muted); display: block; margin-bottom: 10px; letter-spacing: 0.05em;}
+        select, .cat-input { width: 100%; padding: 12px; border: 1px solid var(--border); border-radius: var(--radius); margin-bottom: 10px; background: white; font-size: 0.9rem; outline: none; box-sizing: border-box;}
+        select:focus, .cat-input:focus { border-color: var(--accent); }
+        
+        .btn-main { background: var(--accent); color: white; border: none; padding: 12px 20px; border-radius: var(--radius); cursor: pointer; font-weight: 600; font-size: 0.95rem; transition: 0.2s; white-space: nowrap;}
+        .btn-save { background: white; color: var(--accent); border: 1px solid var(--accent); }
+        .btn-main:hover { transform: translateY(-1px); box-shadow: 0 4px 6px rgba(0,0,0,0.1); }
+        .btn-save:hover { background: var(--bg-base); box-shadow: none; transform: none;}
+
+        .tags-box { border: 1px solid var(--border); border-radius: var(--radius); padding: 8px; display: flex; flex-wrap: wrap; gap: 6px; background: white; }
+        .tag-pill { background: var(--accent-soft); color: var(--accent); padding: 4px 10px; border-radius: 12px; font-size: 0.8rem; font-weight: 600; display: flex; align-items: center; gap: 6px; }
+        .tag-pill span { cursor: pointer; opacity: 0.7; }
+        .tag-pill span:hover { opacity: 1; }
+        .tag-field { border: none; outline: none; padding: 4px; flex-grow: 1; font-size: 0.9rem; min-width: 100px;}
+
+        /* Status & Progress */
+        .progress-container { position: sticky; bottom: 0; background: var(--bg-surface); padding: 20px; border-top: 1px solid var(--border); display: none; }
+        .progress-track { width: 100%; background: #e5e7eb; border-radius: 4px; height: 6px; overflow: hidden; margin-top: 8px; }
+        .progress-fill { width: 0%; height: 100%; background: var(--accent); transition: width 0.1s linear; }
+        #unsavedIndicator { display: none; width: 8px; height: 8px; background: var(--accent); border-radius: 50%; margin-left: auto;}
+        
+        @keyframes blink-warning { 0% { opacity: 1; } 50% { opacity: 0.2; } 100% { opacity: 1; } }
+        .status-blinking { animation: blink-warning 1s infinite; color: var(--danger) !important; }
+        .status-offline { color: var(--warning) !important; font-weight: 800; }
+
+        /* Sonner-Lite Toasts */
+        .toaster { position: fixed; bottom: 20px; right: 20px; z-index: 9999; display: flex; flex-direction: column; gap: 10px; pointer-events: none; }
+        .toast { background: var(--bg-surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 16px; box-shadow: 0 4px 12px rgba(0,0,0,0.1); display: flex; align-items: flex-start; gap: 12px; pointer-events: auto; transform: translateX(120%); opacity: 0; transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275); width: 320px; box-sizing: border-box;}
+        .toast.show { transform: translateX(0); opacity: 1; }
+        .toast-icon { font-size: 1.2rem; line-height: 1; margin-top: 2px;}
+        .toast-success .toast-icon { color: var(--success); }
+        .toast-error .toast-icon { color: var(--danger); }
+        .toast-info .toast-icon { color: var(--accent); }
+        .toast-warning .toast-icon { color: var(--warning); }
+        .toast-content { display: flex; flex-direction: column; gap: 4px; }
+        .toast-title { font-weight: 600; font-size: 0.9rem; color: var(--text-primary); }
+        .toast-desc { font-size: 0.8rem; color: var(--text-muted); line-height: 1.4;}
+
+        /* Import panel */
+        .import-panel { margin-bottom: 20px; background: #f8fafc; padding: 15px 20px; border-radius: var(--radius); border: 1px dashed #cbd5e1; display: flex; flex-direction: column; gap: 10px; }
+        .import-row { display: flex; gap: 10px; }
+
+
+/* =========================================================================================
+   library-style.css - Centralizované Styly JMHZ KNIHOVNA Pro Toast Notifikace JMHZ KNIHOVNA
+   ========================================================================================= */
+   
+   
+
+		.kb-toaster { position: fixed; bottom: 20px; right: 20px; z-index: 99999; display: flex; flex-direction: column; gap: 10px; pointer-events: none; }
+		.kb-toast { background: var(--bg-surface, #fff); border: 1px solid var(--border, #e5e7eb); border-radius: 8px; padding: 16px; box-shadow: 0 4px 12px rgba(0,0,0,0.1); display: flex; align-items: flex-start; gap: 12px; pointer-events: auto; transform: translateX(120%); opacity: 0; transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275); width: 320px; box-sizing: border-box;}
+		.kb-toast.show { transform: translateX(0); opacity: 1; }
+		.kb-toast-icon { font-size: 1.2rem; line-height: 1; margin-top: 2px;}
+		.kb-toast-success .kb-toast-icon { color: var(--success, #10b981); }
+		.kb-toast-error .kb-toast-icon { color: var(--danger, #ef4444); }
+		.kb-toast-info .kb-toast-icon { color: var(--accent, #3b82f6); }
+		.kb-toast-warning .kb-toast-icon { color: var(--warning, #f59e0b); }
+		.kb-toast-content { display: flex; flex-direction: column; gap: 4px; }
+		.kb-toast-title { font-weight: 600; font-size: 0.9rem; color: var(--text-primary, #111827); }
+		.kb-toast-desc { font-size: 0.8rem; color: var(--text-muted, #6b7280); line-height: 1.4;}
