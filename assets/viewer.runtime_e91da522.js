@@ -6267,7 +6267,7 @@ Diagnostické informace:
         }
         function _i() {
             Me(``),
-            Pe(t.flexiCustomerNumber == null ? `` : String(t.flexiCustomerNumber)),
+            Pe(t.salaryCustomerNumber == null ? `` : String(t.salaryCustomerNumber)),
             Ie(mi()),
             Ae(!0)
         }
@@ -10505,7 +10505,7 @@ Aktuální: ` + Ys(a) + `, nové soubory: ` + Ys(o) + `.`);
             manageDocumentTitle: !1,
             warnBeforeUnload: !1,
             assetBase: ``,
-            flexiCustomerNumber: null,
+            salaryCustomerNumber: null,
             onReady: null,
             ...t
         },
