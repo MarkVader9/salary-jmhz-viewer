@@ -751,7 +751,8 @@ html[dir=rtl],
 
 /* === Reset & Base === */
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-html, body { min-height: 100%; overflow: auto; }
+/* OPRAVA 1: Smazáno overflow: auto z html/body, které blokuje sticky pozice */
+html, body { min-height: 100%; } 
 body {
   font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif;
   font-size: 0.875rem;
@@ -766,8 +767,14 @@ body {
 .toolbar {
   display: grid; grid-template-columns: auto minmax(0, 1fr) auto; align-items: center; gap: var(--sp-3); padding: 0 var(--sp-4);
   min-height: 48px; background: var(--bg-elevated); border-bottom: 1px solid var(--border);
-  z-index: 10; flex-shrink: 0; position: relative;
+  
+  /* OPRAVA 2: Nastavení sticky pozice a stejné bezpečné autority z-indexu jako u knihovny */
+  z-index: 999997; 
+  flex-shrink: 0; 
+  position: sticky; 
+  top: 0;
 }
+
 .content { padding: var(--sp-4) var(--sp-6); }
 .validation-panel-spacer { flex-shrink: 0; }
 .validation-panel {
