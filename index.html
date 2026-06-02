@@ -4,6 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Prohlížeč JMHZ</title>
+	<link rel="stylesheet" href="core-responsive.css">
     <style>
 /* ==========================================================================
    1. STYLOPIS: Sonner Toaster (Notifikace)
@@ -751,7 +752,6 @@ html[dir=rtl],
 
 /* === Reset & Base === */
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-/* OPRAVA 1: Smazáno overflow: auto z html/body, které blokuje sticky pozice */
 html, body { min-height: 100%; } 
 body {
   font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif;
@@ -767,8 +767,6 @@ body {
 .toolbar {
   display: grid; grid-template-columns: auto minmax(0, 1fr) auto; align-items: center; gap: var(--sp-3); padding: 0 var(--sp-4);
   min-height: 48px; background: var(--bg-elevated); border-bottom: 1px solid var(--border);
-  
-  /* OPRAVA 2: Nastavení sticky pozice a stejné bezpečné autority z-indexu jako u knihovny */
   z-index: 999997; 
   flex-shrink: 0; 
   position: sticky; 
@@ -820,7 +818,7 @@ body {
 .toolbar-right > button, .toolbar-right > .split-button { white-space: nowrap; }
 .brand-logo {
   display: inline-flex; align-items: center; flex-shrink: 0;
-  height: 28px; color: var(--logo-color);
+  height: 38px; color: var(--logo-color);
 }
 .brand-logo svg { display: block; height: 100%; width: auto; }
 .toolbar-center {
@@ -1385,6 +1383,17 @@ body {
 .field-row.has-warning { background: var(--warning-bg); }
 .show-all-toggle { padding: var(--sp-1) var(--sp-4); font-size: 0.75rem; color: var(--accent); cursor: pointer; }
 .show-all-toggle:hover { text-decoration: underline; }
+
+
+/* Aplikováno na kontejnery výstupů kontrol a tabulek */
+.data-table-wrapper {
+  width: 100%;
+  overflow-x: auto; /* Zásadní: Povolí scrollování tabulky do boku na mobilu */
+  -webkit-overflow-scrolling: touch; /* Plynulý scroll na iOS */
+  padding-bottom: 1rem; /* Místo pro scrollbar */
+}
+
+
 
 /* === Validation Panel === */
 .validation-header {
@@ -2278,7 +2287,6 @@ body {
         .marquee-content {
         display: inline-block;
         padding-left: 100%;
-        /* OPRAVA: Rozděleno na samostatné vlastnosti, aby to prohlížeč nezmrazil */
         animation-name: marquee;
         animation-timing-function: linear;
         animation-iteration-count: infinite;
@@ -2287,7 +2295,6 @@ body {
         font-size: 0.95rem;
       }
       
-      /* Zastavení textu při najetí myší s absolutní prioritou */
       .marquee-container:hover .marquee-content {
         animation-play-state: paused !important;
       }
@@ -2311,9 +2318,8 @@ body {
    
 
     // --- 2. FUNKCE PRO VYKRESLENÍ MODÁLU ---
-    // --- 2. FUNKCE PRO VYKRESLENÍ MODÁLU ---
     window.showJmhzInfoModal = function(key) {
-        if (!window.JMHZ_INFO_DICTIONARY) return; // Pojistka proti pádu
+        if (!window.JMHZ_INFO_DICTIONARY) return; 
         const info = window.JMHZ_INFO_DICTIONARY[key];
         if (!info) return;
         
@@ -2383,16 +2389,12 @@ body {
             mutations.forEach(function(mutation) {
                 if (mutation.addedNodes.length) {
                     
-                    // Bezpečnostní pojistka: Zkontrolujeme, zda se slovník už načetl
                     const dict = window.JMHZ_INFO_DICTIONARY || null;
-                    if (!dict) return; // Pokud slovník ještě není připraven, počkáme
+                    if (!dict) return; 
 
-                    // A. UNIVERZÁLNÍ INJEKCE DO VŠECH POLÍ (Hlavička i Zaměstnanci)
-                    // Hledáme přímo elementy s třídou .xpath kdekoli v aplikaci
                     const xpathElements = document.querySelectorAll('.xpath:not(.info-injected)');
                     
                     xpathElements.forEach(function(xpathEl) {
-                        // Najdeme rodičovský prvek (label), ke kterému ikonku přilepíme
                         const labelEl = xpathEl.parentElement;
                         
                         if (labelEl) {
@@ -2401,7 +2403,6 @@ body {
                                 const pathParts = fullPath.split('/');
                                 let xmlTag = (pathParts.pop() || '').toLowerCase();
                                 
-                                // Očištění od prefixů (v1:tag) a zavináčů (@atribut)
                                 if (xmlTag.includes(':')) xmlTag = xmlTag.split(':').pop();
                                 let finalKey = xmlTag.startsWith('@') ? xmlTag.substring(1) : xmlTag;
 
@@ -2419,16 +2420,13 @@ body {
                                 }
                             }
                         }
-                        // Označíme jako zpracované na úrovni elementu XPath
                         xpathEl.classList.add('info-injected');
                     });
 
-                    // B. Injekce do hlaviček sekcí (hlavní bloky formuláře)
                     const sectionHeaders = document.querySelectorAll('.section-header .section-title:not(.info-injected)');
                     sectionHeaders.forEach(function(header) {
                         const titleText = header.textContent.trim().toLowerCase();
                         
-                        // Bezpečné načtení mapování (buď z externího souboru, nebo pevný základ pro případ nouze)
                         const sectionMap = (window.JMHZ_INFO_DICTIONARY && window.JMHZ_INFO_DICTIONARY.sectionMap) ? window.JMHZ_INFO_DICTIONARY.sectionMap : {
                             'daňové zvýhodnění': 'zvyhodnenidetimesic',
                             'seznam eldp': 'eldpseznam',
@@ -2458,6 +2456,141 @@ body {
         const appContainer = document.getElementById('app');
         if (appContainer) {
             observer.observe(appContainer, { childList: true, subtree: true });
+        }
+    }
+
+    // --- 5. FUNKCE PRO SKRYTÍ PRÁZDNÝCH SLOUPCŮ ---
+    function startEmptyColumnsFilterInjector() {
+        let isEnabled = false;
+        let debounceTimer = null;
+
+        function evaluateEmptyColumns() {
+            if (!isEnabled) {
+                const styleEl = document.getElementById('hide-empty-cols-style');
+                if (styleEl) styleEl.innerHTML = '';
+                return;
+            }
+
+            const table = document.querySelector('.table-view table');
+            if (!table) return;
+
+            const thead = table.querySelector('thead tr');
+            const tbody = table.querySelector('tbody');
+            if (!thead || !tbody) return;
+
+            const ths = thead.querySelectorAll('th');
+            const rows = tbody.querySelectorAll('tr:not(.separator-row)'); 
+            
+            const emptyCols = [];
+
+            for (let colIdx = 1; colIdx <= ths.length; colIdx++) {
+                // Přeskočíme první fixní sloupec (zpravidla jméno/ID)
+                if (colIdx === 1) continue; 
+
+                let isEmpty = true;
+                for (let rowIdx = 0; rowIdx < rows.length; rowIdx++) {
+                    const cell = rows[rowIdx].querySelector(`td:nth-child(${colIdx})`);
+                    if (cell) {
+                        // Očištění o veškeré možné mezery, nezlomitelné mezery a kontrola
+                        // Viewer vykresluje prázdné buňky jako '—' (em dash)
+                        const text = cell.textContent.replace(/[\s\u00A0\u200B]+/g, '').trim();
+                        if (text !== '' && text !== '—') {
+                            isEmpty = false;
+                            break;
+                        }
+                    }
+                }
+
+                if (isEmpty) {
+                    emptyCols.push(colIdx);
+                }
+            }
+
+            let styleEl = document.getElementById('hide-empty-cols-style');
+            if (!styleEl) {
+                styleEl = document.createElement('style');
+                styleEl.id = 'hide-empty-cols-style';
+                document.head.appendChild(styleEl);
+            }
+            
+            if (emptyCols.length > 0) {
+                // Dynamicky vygenerujeme CSS pravidlo pro skrytí celého daného sloupce
+                const selectors = emptyCols.map(idx => 
+                    `.table-view table th:nth-child(${idx}), .table-view table td:nth-child(${idx}), .table-view table col:nth-child(${idx})`
+                ).join(', ');
+                styleEl.innerHTML = `${selectors} { display: none !important; }`;
+            } else {
+                styleEl.innerHTML = '';
+            }
+        }
+
+        const observer = new MutationObserver(() => {
+            const pillsContainer = document.querySelector('.group-filter-pills');
+            const tableView = document.querySelector('.table-view');
+
+            // Vložení checkboxu do sekce "group-filter-pills", pokud je zrovna otevřená tabulka
+            if (pillsContainer && tableView && !document.getElementById('toggle-empty-cols-wrapper')) {
+                const wrapper = document.createElement('label');
+                wrapper.id = 'toggle-empty-cols-wrapper';
+                wrapper.style.cssText = 'font-size:0.75rem; font-weight:600; cursor:pointer; display:flex; align-items:center; gap:6px; margin-left:auto; background:var(--bg-elevated); padding:3px 10px; border-radius:20px; border:1px solid var(--border); color:var(--text-secondary); transition:all 0.2s;';
+                wrapper.innerHTML = `<input type="checkbox" id="toggle-empty-cols" style="margin:0; cursor:pointer;"> Vypnout prázdné sloupce`;
+                
+                // Hover efekt na wrapper label
+                wrapper.addEventListener('mouseenter', () => {
+                    if(!isEnabled) {
+                        wrapper.style.background = 'var(--bg-hover)';
+                        wrapper.style.color = 'var(--text-primary)';
+                    }
+                });
+                wrapper.addEventListener('mouseleave', () => {
+                    if(!isEnabled) {
+                        wrapper.style.background = 'var(--bg-elevated)';
+                        wrapper.style.color = 'var(--text-secondary)';
+                    }
+                });
+
+                const checkbox = wrapper.querySelector('input');
+                checkbox.checked = isEnabled;
+                
+                // Obnova grafického stavu tlačítka (např. po přepnutí zpět z Karet na Tabulku)
+                if(isEnabled) {
+                    wrapper.style.background = 'var(--accent-subtle)';
+                    wrapper.style.color = 'var(--accent)';
+                    wrapper.style.borderColor = 'var(--accent)';
+                }
+
+                checkbox.addEventListener('change', (e) => {
+                    isEnabled = e.target.checked;
+                    if (isEnabled) {
+                        wrapper.style.background = 'var(--accent-subtle)';
+                        wrapper.style.color = 'var(--accent)';
+                        wrapper.style.borderColor = 'var(--accent)';
+                    } else {
+                        wrapper.style.background = 'var(--bg-elevated)';
+                        wrapper.style.color = 'var(--text-secondary)';
+                        wrapper.style.borderColor = 'var(--border)';
+                    }
+                    evaluateEmptyColumns();
+                });
+
+                pillsContainer.appendChild(wrapper);
+            }
+
+            // Ošetření: Pokud se tabulka schová (přepnutí na Karty), vymažeme skrytí sloupců
+            if (!tableView && document.getElementById('hide-empty-cols-style')) {
+                document.getElementById('hide-empty-cols-style').innerHTML = '';
+            }
+
+            // Pokud dojde ke změně v DOMu (scrollování, filtrování), přehodnotíme, které sloupce skrýt
+            if (isEnabled && tableView) {
+                clearTimeout(debounceTimer);
+                debounceTimer = setTimeout(evaluateEmptyColumns, 150);
+            }
+        });
+
+        const appContainer = document.getElementById('app');
+        if (appContainer) {
+            observer.observe(appContainer, { childList: true, subtree: true, characterData: true });
         }
     }
 
@@ -2534,6 +2667,9 @@ body {
                         
                         // 2. Aplikace běží, zapínáme detekci Injekcí Infohlášek!
                         startInfohlaskyInjector();
+
+                        // 3. Aplikace běží, zapínáme filtr prázdných sloupců!
+                        startEmptyColumnsFilterInjector();
                     } else {
                         throw new Error('Jádro aplikace (JMHZViewerRuntime) nebylo nalezeno v načtených skriptech.');
                     }

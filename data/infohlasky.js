@@ -591,27 +591,27 @@ window.JMHZ_INFO_DICTIONARY = {
            ========================================================================== */
 		   
 		   
-			'@sqnr': { label: 'Pořadové číslo věty v podání', desc: 'Technický atribut udávající pořadí konkrétní věty (záznamu zaměstnance) v rámci odesílané xml dávky (ID 10014).', format: 'Číselný typ (N), délka 1-4 znaky.', scenarios: 'Tuto hodnotu negeneruje mzdová účetní, ale zcela automaticky pořizovací software podávajícího. Zásadní pravidlo a chyták: Číslo nesmí být v rámci jednoho podání nikdy duplicitní. Důvodem je přesná identifikace zpracovaných vět při vracení logů a chybových protokolů od ČSSZ.' },
+			'sqnr': { label: 'Pořadové číslo věty v podání', desc: 'Technický atribut udávající pořadí konkrétní věty (záznamu zaměstnance) v rámci odesílané xml dávky (ID 10014).', format: 'Číselný typ (N), délka 1-4 znaky.', scenarios: 'Tuto hodnotu negeneruje mzdová účetní, ale zcela automaticky pořizovací software podávajícího. Zásadní pravidlo a chyták: Číslo nesmí být v rámci jednoho podání nikdy duplicitní. Důvodem je přesná identifikace zpracovaných vět při vracení logů a chybových protokolů od ČSSZ.' },
 			
 			
 			
-'@dep': { 
+'dep': { 
     label: 'Kód Územního Pracoviště (OSSZ)', 
     desc: 'Souvisí s Číselníkem Okresů. Souvisí také s položkou ID Atributu (ID 10004) určující Příslušnost k Organizační Jednotce ČSSZ podle sídla mzdové účtárny.', 
     format: 'Číselný typ, délka 3 znaky s pevnou vazbou na tzv. <a href="https://docs.google.com/spreadsheets/d/166IC4DVICsadGdnkoTUMsVtFn1GH3gO3TBTp7-FvVA8/edit?usp=sharing" target="_blank">Číselník Okresů</a>.', scenarios: 'Vyskytuje se povinně u všech procesních akcí A1-A8. Software jej zpravidla doplňuje automaticky do každé věty z globálního nastavení podniku.' },
 
 
 
-'@act': { label: 'Typ Akce (Druh Podání)', desc: 'Základní organizační údaj v hlavičce formuláře REGZEC (v dokumentaci spadá do bloku Meta atributy formuláře). Jednoduše úřadům říká, jakou konkrétní životní situaci u zaměstnance právě řešíte.', format: 'Výběr z Číselníku (hodnoty 1 až 8).', scenarios: 'Položka "Typ akce" (ID 10008) je absolutně povinná u každého jednoho hlášení (A1 až A8). Je to mozek celého podání – podle toho, zda hlásíte NÁSTUP, ODHLÁŠKU, ZMĚNU či STORNO, mzdový software SALARY automaticky odemkne a začne vyžadovat správné kolonky. V praxi vždy úzce souvisí s dalšími řídícími údaji hlavičky podání, kterými jsou "Platnost Akce Ke Dni" (ID 10009), "Datum a Čas Vyplnění Podání" (ID 10005) a příslušné "Pracoviště ÚSSZ (OSSZ/PSSZ/MSSZ Brno)" (ID 10004).' },
+'act': { label: 'Typ Akce (Druh Podání)', desc: 'Základní organizační údaj v hlavičce formuláře REGZEC (v dokumentaci spadá do bloku Meta atributy formuláře). Jednoduše úřadům říká, jakou konkrétní životní situaci u zaměstnance právě řešíte.', format: 'Výběr z Číselníku (hodnoty 1 až 8).', scenarios: 'Položka "Typ akce" (ID 10008) je absolutně povinná u každého jednoho hlášení (A1 až A8). Je to mozek celého podání – podle toho, zda hlásíte NÁSTUP, ODHLÁŠKU, ZMĚNU či STORNO, mzdový software SALARY automaticky odemkne a začne vyžadovat správné kolonky. V praxi vždy úzce souvisí s dalšími řídícími údaji hlavičky podání, kterými jsou "Platnost Akce Ke Dni" (ID 10009), "Datum a Čas Vyplnění Podání" (ID 10005) a příslušné "Pracoviště ÚSSZ (OSSZ/PSSZ/MSSZ Brno)" (ID 10004).' },
 
 
 
-'@dat': { label: 'Datum (Vyplnění / Narození)', desc: 'Sdružená položka REGZEC formuláře pro dvě různé entity. Zastupuje Datum vyplnění/vyhotovení podání (ID 10005 v uzlu employee) a Datum narození klienta (ID 10056 v uzlu birth).', format: 'Datumový formát (D) RRRR-MM-DD.', scenarios: 'Chytáky k validaci: Datum vyplnění (ID 10005) nesmí být v žádném případě vyšší (v budoucnosti) než je aktuální datum. Datum narození (ID 10056) je kritické zejména u cizinců jako náhradní identifikátor. Systémové pravidlo okamžitě zamítne podání na vstupu, pokud věk zaměstnance na základě data narození nedosahuje 14 let a nejedná-li se např. o uměleckou činnost.' },
+'dat': { label: 'Datum (Vyplnění / Narození)', desc: 'Sdružená položka REGZEC formuláře pro dvě různé entity. Zastupuje Datum vyplnění/vyhotovení podání (ID 10005 v uzlu employee) a Datum narození klienta (ID 10056 v uzlu birth).', format: 'Datumový formát (D) RRRR-MM-DD.', scenarios: 'Chytáky k validaci: Datum vyplnění (ID 10005) nesmí být v žádném případě vyšší (v budoucnosti) než je aktuální datum. Datum narození (ID 10056) je kritické zejména u cizinců jako náhradní identifikátor. Systémové pravidlo okamžitě zamítne podání na vstupu, pokud věk zaměstnance na základě data narození nedosahuje 14 let a nejedná-li se např. o uměleckou činnost.' },
 
 
 
 
-'@fro': {
+'fro': {
   label: 'Datum Platnosti Od / Datum Nástupu do Zaměstnání / Zdravotní Omezení Od',
   desc: 'Zde rozlišujeme tři významy (s úzkou vazbou na ID 10009 Platnost Akce Ke Dni, ID 10223 Datum Nástupu Do Zaměstnání a ID 10086 Zdravotní Omezení Od Data) a musíte dávat pozor, do kterých uzlů údajů položka patří. V uzlu hlavičky s metadaty podání funguje položka jako Datum Platnosti Změny či Opravy. Pokud se nachází v uzlu o samotném Zaměstnání, znamená skutečný den nástupu do práce. Třetím případem je uzel doplňujících skutečností, kde položka vyjadřuje datum, od kdy je přiznáno zdravotní omezení.',
   format: 'Datumy jsou ve formátu RRRR-MM-DD (musí být vždy přesně 10 znaků).',
@@ -621,213 +621,213 @@ window.JMHZ_INFO_DICTIONARY = {
 
 
 
-'@bno': { label: 'Rodné číslo / Evidenční číslo pojištěnce (EČP)', desc: 'Základní identifikační atribut klienta z uzlu client (ID 10057/10058).', format: 'Alfanumerický (NN), délka 9-10 znaků (zapisuje se bez lomítka).', scenarios: 'Je zatížen tvrdými matematickými validacemi včetně modulo 11 a porovnání s datem narození. Účetní chyták: Je absolutně povinné u zaměstnanců se státním občanstvím "CZ". U cizinců jej při nástupu do zaměstnání často necháváte prázdné, systém si jej následně spáruje.' },
+'bno': { label: 'Rodné číslo / Evidenční číslo pojištěnce (EČP)', desc: 'Základní identifikační atribut klienta z uzlu client (ID 10057/10058).', format: 'Alfanumerický (NN), délka 9-10 znaků (zapisuje se bez lomítka).', scenarios: 'Je zatížen tvrdými matematickými validacemi včetně modulo 11 a porovnání s datem narození. Účetní chyták: Je absolutně povinné u zaměstnanců se státním občanstvím "CZ". U cizinců jej při nástupu do zaměstnání často necháváte prázdné, systém si jej následně spáruje.' },
 
 
-'@ikmpsv': { label: 'IK MPSV (Osobní identifikační číslo - OIČ)', desc: 'Stykový systémový identifikátor resortu MPSV (ID 10051) pro mezinárodní sdílení informací v rámci JMHZ.', format: 'Numerický (NN), délka přesně 10 číslic. Prvních 9 čísel se kontroluje na modulo 11.', scenarios: 'Logická past v software SALARY  pro první podání cizince (Akce A1): Jakmile tento atribut ze záhadného důvodu vyplníte, systém zničehonic začne vyžadovat jako povinné pole i Rodné číslo / EČP, což vede k zamítnutí dávky, pokud jej cizinec ještě nedostal.' },
+'ikmpsv': { label: 'IK MPSV (Osobní identifikační číslo - OIČ)', desc: 'Stykový systémový identifikátor resortu MPSV (ID 10051) pro mezinárodní sdílení informací v rámci JMHZ.', format: 'Numerický (NN), délka přesně 10 číslic. Prvních 9 čísel se kontroluje na modulo 11.', scenarios: 'Logická past v software SALARY  pro první podání cizince (Akce A1): Jakmile tento atribut ze záhadného důvodu vyplníte, systém zničehonic začne vyžadovat jako povinné pole i Rodné číslo / EČP, což vede k zamítnutí dávky, pokud jej cizinec ještě nedostal.' },
 
 
-'@vcp': { label: 'Vlastní číslo plátce (VČP)', desc: 'Doplňkový daňový identifikátor (ID 10060) přidělovaný plátcům Finanční správou.', format: 'Číselný typ (N), délka přesně 9 číslic.', scenarios: 'Tvrdé pravidlo Finanční správy pro mzdový software SALARY: Toto číslo musí vždy bezpodmínečně začínat číslicí "6". Atribut je v celém podání nepovinný.' },
+'vcp': { label: 'Vlastní číslo plátce (VČP)', desc: 'Doplňkový daňový identifikátor (ID 10060) přidělovaný plátcům Finanční správou.', format: 'Číselný typ (N), délka přesně 9 číslic.', scenarios: 'Tvrdé pravidlo Finanční správy pro mzdový software SALARY: Toto číslo musí vždy bezpodmínečně začínat číslicí "6". Atribut je v celém podání nepovinný.' },
 
 
 
-'@sur': { label: 'Příjmení', desc: 'Atribut pro aktuální platné příjmení osoby, umístěný v uzlu name (ID 10053).', format: 'Textový (A, ZX, SP), délka 1-50 znaků.', scenarios: 'Základní a vždy povinný údaj pro úspěšnou identifikaci zaměstnance při všech procesech.' },
+'sur': { label: 'Příjmení', desc: 'Atribut pro aktuální platné příjmení osoby, umístěný v uzlu name (ID 10053).', format: 'Textový (A, ZX, SP), délka 1-50 znaků.', scenarios: 'Základní a vždy povinný údaj pro úspěšnou identifikaci zaměstnance při všech procesech.' },
 
 
-'@fir': { label: 'Jméno', desc: 'Atribut pro křestní jméno zaměstnance v uzlu name (ID 10054).', format: 'Textový (A, ZX, SP), délka 1-50 znaků.', scenarios: 'Stejně jako u příjmení se jedná o vynucený a nepřeskočitelný údaj pro ztotožnění FO v databázi státu.' },
+'fir': { label: 'Jméno', desc: 'Atribut pro křestní jméno zaměstnance v uzlu name (ID 10054).', format: 'Textový (A, ZX, SP), délka 1-50 znaků.', scenarios: 'Stejně jako u příjmení se jedná o vynucený a nepřeskočitelný údaj pro ztotožnění FO v databázi státu.' },
 
 
-'@tit': { label: 'Titul', desc: 'Atribut pro zápis všech akademických a vědeckých titulů (ID 10055).', format: 'Textový (A, ZX, SP), délka 1-30 znaků.', scenarios: 'Doplňkový nepovinný údaj. Účetní sem nezapisuje pouze vybraný titul, ale kumulovaně všechny tituly klienta v pořadí před i za jménem (oddělené textem/mezerou v rámci jednoho řetězce).' },
+'tit': { label: 'Titul', desc: 'Atribut pro zápis všech akademických a vědeckých titulů (ID 10055).', format: 'Textový (A, ZX, SP), délka 1-30 znaků.', scenarios: 'Doplňkový nepovinný údaj. Účetní sem nezapisuje pouze vybraný titul, ale kumulovaně všechny tituly klienta v pořadí před i za jménem (oddělené textem/mezerou v rámci jednoho řetězce).' },
 
 
-'@ona': { label: 'Dřívější příjmení', desc: 'Atribut mapující jmennou historii zaměstnance v uzlu údajů Jméno (ID 10064).', format: 'Textový (A, ZX, SP), délka 1-100 znaků.', scenarios: 'Specifický chyták: Zde se NEHLÁSÍ Rodné Příjmení! Mzdová účetní sem musí vypsat plně a poctivě VŠECHNA další předchozí příjmení zaměstnance, pokud jich měl během života více (např. z předešlých manželství), a to nutně oddělená čárkou.' },
+'ona': { label: 'Dřívější příjmení', desc: 'Atribut mapující jmennou historii zaměstnance v uzlu údajů Jméno (ID 10064).', format: 'Textový (A, ZX, SP), délka 1-100 znaků.', scenarios: 'Specifický chyták: Zde se NEHLÁSÍ Rodné Příjmení! Mzdová účetní sem musí vypsat plně a poctivě VŠECHNA další předchozí příjmení zaměstnance, pokud jich měl během života více (např. z předešlých manželství), a to nutně oddělená čárkou.' },
 
 
-'@nam': { label: 'Název / Rodné Příjmení (Sdružený Atribut)', desc: 'Silně přetížený textový atribut. Podle toho, ve kterém uzlu údajů se nachází, znamená: Rodné Příjmení v uzlu Rodné Údaje (ID 10063), Název Zaměstnavatele v uzlu Identifikace Zaměstnavatele (ID 10120), Jméno Cizozemského Nositele Pojištění v uzlu Informace o Cizozemském Nositeli Pojištění (ID 10093), a Název Současného (ID 10103) či Předchozího Orgánu (ID 10104) Nemocenského Pojištění u Ozbrojených Složek.', format: 'Textový (A, ZX, SP) s proměnlivou délkou (1-50 znaků u rodného příjmení, až do 150 znaků pro název organizace).', scenarios: 'Kritické pravidlo: V bloku Identifikace Zaměstnavatele (ID 10120) je Název Zaměstnavatele (ID 10120) vždy tvrdě povinný u všech akcí A1-A8. Účetní chyták u uzlu Rodné Údaje (Rodné Příjmení, ID 10063): Pokud zaměstnanec jméno neměnil, mzdový software SALARY sem běžně jako výchozí stav překopíruje hodnotu aktuálního Příjmení. Účetní chyták u cizích institucí: Názvy Nemocenského Pojištění (10103 / 10104) se vyplňují pouze u Převodů Vojáků / Policistů, a nikoli u běžných civilistů!' },
+'nam': { label: 'Název / Rodné Příjmení (Sdružený Atribut)', desc: 'Silně přetížený textový atribut. Podle toho, ve kterém uzlu údajů se nachází, znamená: Rodné Příjmení v uzlu Rodné Údaje (ID 10063), Název Zaměstnavatele v uzlu Identifikace Zaměstnavatele (ID 10120), Jméno Cizozemského Nositele Pojištění v uzlu Informace o Cizozemském Nositeli Pojištění (ID 10093), a Název Současného (ID 10103) či Předchozího Orgánu (ID 10104) Nemocenského Pojištění u Ozbrojených Složek.', format: 'Textový (A, ZX, SP) s proměnlivou délkou (1-50 znaků u rodného příjmení, až do 150 znaků pro název organizace).', scenarios: 'Kritické pravidlo: V bloku Identifikace Zaměstnavatele (ID 10120) je Název Zaměstnavatele (ID 10120) vždy tvrdě povinný u všech akcí A1-A8. Účetní chyták u uzlu Rodné Údaje (Rodné Příjmení, ID 10063): Pokud zaměstnanec jméno neměnil, mzdový software SALARY sem běžně jako výchozí stav překopíruje hodnotu aktuálního Příjmení. Účetní chyták u cizích institucí: Názvy Nemocenského Pojištění (10103 / 10104) se vyplňují pouze u Převodů Vojáků / Policistů, a nikoli u běžných civilistů!' },
 
 
-'@cit': { label: 'Obec / Místo (Sdružený adresní atribut)', desc: 'Univerzální pole formuláře REGZEC pro lokalizaci. Označuje Obec u všech typů adres: Trvalý pobyt (ID 10080), Pobyt v ČR (ID 10516), Kontaktní adresa (ID 10509), Adresa rezidentství (ID 10523) a Adresa cizí pojišťovny (ID 10097). Mimo adresy navíc definuje Místo narození klienta v bloku <birth> (ID 10066) a Název obce místa výkonu práce v bloku <job> (ID 10528).', format: 'Textový (A, NN, ZL, SP), délka 1-50 znaků.', scenarios: 'Chyták na adresy: U změn (akce A3/A4) jsou adresy nepovinné. Pokud ale vyplníte byť jen jedinou část adresy, rázem se Město/Obec stává striktně povinnou položkou napříč celou rozdělanou adresou. U cizinců navíc Místo narození (ID 10066) částečně nahrazuje chybějící rodné číslo a je při nástupu tvrdě povinné.' },
+'cit': { label: 'Obec / Místo (Sdružený adresní atribut)', desc: 'Univerzální pole formuláře REGZEC pro lokalizaci. Označuje Obec u všech typů adres: Trvalý pobyt (ID 10080), Pobyt v ČR (ID 10516), Kontaktní adresa (ID 10509), Adresa rezidentství (ID 10523) a Adresa cizí pojišťovny (ID 10097). Mimo adresy navíc definuje Místo narození klienta v bloku <birth> (ID 10066) a Název obce místa výkonu práce v bloku <job> (ID 10528).', format: 'Textový (A, NN, ZL, SP), délka 1-50 znaků.', scenarios: 'Chyták na adresy: U změn (akce A3/A4) jsou adresy nepovinné. Pokud ale vyplníte byť jen jedinou část adresy, rázem se Město/Obec stává striktně povinnou položkou napříč celou rozdělanou adresou. U cizinců navíc Místo narození (ID 10066) částečně nahrazuje chybějící rodné číslo a je při nástupu tvrdě povinné.' },
 
 
-'@str': { label: 'Ulice (Sdružený adresní atribut)', desc: 'Objevuje se jako název ulice ve všech vnořených strukturách pro adresy: Trvalý pobyt (ID 10077), Pobyt v ČR u cizinců (ID 10513), Kontaktní adresa (ID 10506), Adresa ve státě rezidence (ID 10519) a Adresa cizozemského nositele pojištění (ID 10094).', format: 'Textový (A, NN, ZZ, SP), délka 1-50 znaků.', scenarios: 'Zrádná položka: Jedná se o volitelný prvek (jelikož mnoho obcí v ČR ulice nevede). Chyták je v tom, že jakmile jej do XML vyplníte, aktivujete tím celou skupinovou povinnost dané adresy a systém bude padat, pokud nepošlete také obec, PSČ a číslo popisné.' },
+'str': { label: 'Ulice (Sdružený adresní atribut)', desc: 'Objevuje se jako název ulice ve všech vnořených strukturách pro adresy: Trvalý pobyt (ID 10077), Pobyt v ČR u cizinců (ID 10513), Kontaktní adresa (ID 10506), Adresa ve státě rezidence (ID 10519) a Adresa cizozemského nositele pojištění (ID 10094).', format: 'Textový (A, NN, ZZ, SP), délka 1-50 znaků.', scenarios: 'Zrádná položka: Jedná se o volitelný prvek (jelikož mnoho obcí v ČR ulice nevede). Chyták je v tom, že jakmile jej do XML vyplníte, aktivujete tím celou skupinovou povinnost dané adresy a systém bude padat, pokud nepošlete také obec, PSČ a číslo popisné.' },
 
 
-'@num': { label: 'Číslo popisné / Doklad', desc: 'Komplexní položka REGZEC formuláře. V uzlech adres reprezentuje Číslo popisné: Trvalý pobyt (ID 10078), Pobyt v ČR (ID 10514), Kontaktní adresa (ID 10507), Adresa rezidence (ID 10520) a Cizí pojišťovna (ID 10095). Avšak mimo adresy reprezentuje Číslo daňového identifikátoru klienta v uzlu <taxidrezid> (ID 10062) a Číslo průkazu totožnosti v uzlu <proofid> (ID 10070).', format: 'Alfanumerický (dle uzlu), pro adresy délka do 12 znaků, pro identifikátory maximálně do 20 znaků.', scenarios: 'Největší chyták celého REGZEC pro adresy: Pokud se jedná o českou adresu (stát je "CZ"), systém vynucuje maximální délku 4 znaky a povoluje zde JEN A POUZE číslice! U Daňového identifikátoru (10062) se tento tag musí odeslat vždy, když kód státu rezidentství je vyplněn jinak než CZ.' },
+'num': { label: 'Číslo popisné / Doklad', desc: 'Komplexní položka REGZEC formuláře. V uzlech adres reprezentuje Číslo popisné: Trvalý pobyt (ID 10078), Pobyt v ČR (ID 10514), Kontaktní adresa (ID 10507), Adresa rezidence (ID 10520) a Cizí pojišťovna (ID 10095). Avšak mimo adresy reprezentuje Číslo daňového identifikátoru klienta v uzlu <taxidrezid> (ID 10062) a Číslo průkazu totožnosti v uzlu <proofid> (ID 10070).', format: 'Alfanumerický (dle uzlu), pro adresy délka do 12 znaků, pro identifikátory maximálně do 20 znaků.', scenarios: 'Největší chyták celého REGZEC pro adresy: Pokud se jedná o českou adresu (stát je "CZ"), systém vynucuje maximální délku 4 znaky a povoluje zde JEN A POUZE číslice! U Daňového identifikátoru (10062) se tento tag musí odeslat vždy, když kód státu rezidentství je vyplněn jinak než CZ.' },
 
 
-'@onum': { label: 'Číslo orientační (Sdružený adresní atribut)', desc: 'Doplňkový údaj o čísle domu u všech typů evidovaných adres (ID 10079, 10515, 10508, 10521 a 10096).', format: 'Alfanumerický (A, NN, ZZ), délka 1-12 znaků.', scenarios: 'Atribut je plně nepovinný. Účetní chyták se projevuje u akce A3 (Změna): Pokud hlásíte pouze změnu tohoto orientačního čísla, musíte přesto k němu do balíčku povinně nabalit minimálně Obec, Číslo popisné, PSČ a Stát dané adresy, jinak ePortál dávku zamítne.' },
+'onum': { label: 'Číslo orientační (Sdružený adresní atribut)', desc: 'Doplňkový údaj o čísle domu u všech typů evidovaných adres (ID 10079, 10515, 10508, 10521 a 10096).', format: 'Alfanumerický (A, NN, ZZ), délka 1-12 znaků.', scenarios: 'Atribut je plně nepovinný. Účetní chyták se projevuje u akce A3 (Změna): Pokud hlásíte pouze změnu tohoto orientačního čísla, musíte přesto k němu do balíčku povinně nabalit minimálně Obec, Číslo popisné, PSČ a Stát dané adresy, jinak ePortál dávku zamítne.' },
 
 
-'@pnu': { label: 'Poštovní směrovací číslo (PSČ)', desc: 'Směrovací kód pošt v adresních uzlech Trvalého pobytu (ID 10082), Pobytu v ČR (ID 10517), Kontaktní adresy (ID 10510), Adresy rezidence (ID 10522) a Adresy cizozemského nositele pojištění (ID 10098).', format: 'Numerický/Alfanumerický, délka 1-11 znaků.', scenarios: 'Účetní pravidlo: U tuzemské české adresy (kód CZ) vyžaduje systém formát přesně pět po sobě jdoucích číslic bez mezer. Existuje zde hard-kontrola, kdy první číslice PSČ nesmí NIKDY začínat na 8, 9 nebo 0.' },
+'pnu': { label: 'Poštovní směrovací číslo (PSČ)', desc: 'Směrovací kód pošt v adresních uzlech Trvalého pobytu (ID 10082), Pobytu v ČR (ID 10517), Kontaktní adresy (ID 10510), Adresy rezidence (ID 10522) a Adresy cizozemského nositele pojištění (ID 10098).', format: 'Numerický/Alfanumerický, délka 1-11 znaků.', scenarios: 'Účetní pravidlo: U tuzemské české adresy (kód CZ) vyžaduje systém formát přesně pět po sobě jdoucích číslic bez mezer. Existuje zde hard-kontrola, kdy první číslice PSČ nesmí NIKDY začínat na 8, 9 nebo 0.' },
 
 
-'@ruianpoint': { label: 'Kód adresního místa RÚIAN', desc: 'Identifikátor z registru nemovitostí. Lze jej vložit do adres Trvalého pobytu (ID 10076), Pobytu v ČR (ID 10512) a Kontaktní adresy (ID 10505).', format: 'Číselný (N), délka 9 znaků.', scenarios: 'Zajímavost a validační zkratka: Ačkoliv jde o technický nepovinný tag, je-li software SALARY  do podání vygenerován, činí všechny ostatní atributy adresy povinnými pro validaci. U adres, které RÚIAN nemají (zahraniční), se striktně vynechává.' },
+'ruianpoint': { label: 'Kód adresního místa RÚIAN', desc: 'Identifikátor z registru nemovitostí. Lze jej vložit do adres Trvalého pobytu (ID 10076), Pobytu v ČR (ID 10512) a Kontaktní adresy (ID 10505).', format: 'Číselný (N), délka 9 znaků.', scenarios: 'Zajímavost a validační zkratka: Ačkoliv jde o technický nepovinný tag, je-li software SALARY  do podání vygenerován, činí všechny ostatní atributy adresy povinnými pro validaci. U adres, které RÚIAN nemají (zahraniční), se striktně vynechává.' },
 
 
-'@stat': { label: 'Stát (Narození / Rezidentství / Vydání dokladu)', desc: 'Identifikátor suverénního státu nezávislý na adresách. Znamená Stát narození v uzlu <birth> (ID 10065), Kód státu daňového rezidentství v uzlu <taxidrezid> (ID 10068) a Stát vydání cizozemského průkazu totožnosti v uzlu <proofid> (ID 10072).', format: 'Textový kód (A), přesně 2 znaky napojené na číselník C_STAT.', scenarios: 'Velký chyták pro Daňovou rezidenci (ID 10068): Tento stát musí být reportován VŽDY u všech nástupů (A1) a hlášení změn (A3), a to včetně českých občanů (posílá se CZ). Oproti tomu Stát vydání dokladu (ID 10072) posíláte výhradně a pouze za cizince pro účely mezinárodní výměny informací VDA.' },
+'stat': { label: 'Stát (Narození / Rezidentství / Vydání dokladu)', desc: 'Identifikátor suverénního státu nezávislý na adresách. Znamená Stát narození v uzlu <birth> (ID 10065), Kód státu daňového rezidentství v uzlu <taxidrezid> (ID 10068) a Stát vydání cizozemského průkazu totožnosti v uzlu <proofid> (ID 10072).', format: 'Textový kód (A), přesně 2 znaky napojené na číselník C_STAT.', scenarios: 'Velký chyták pro Daňovou rezidenci (ID 10068): Tento stát musí být reportován VŽDY u všech nástupů (A1) a hlášení změn (A3), a to včetně českých občanů (posílá se CZ). Oproti tomu Stát vydání dokladu (ID 10072) posíláte výhradně a pouze za cizince pro účely mezinárodní výměny informací VDA.' },
 
 
-'@cnt': { label: 'Kód státu (Občanství / Stát adresy)', desc: 'Druhý typ státního identifikátoru. Určuje Státní občanství klienta v bloku <stat> (ID 10067) a dále kód Státu u většiny adres: Trvalý pobyt (ID 10083), Kontaktní adresa (ID 10511), Adresa rezidence (ID 10524) a Adresa cizí pojišťovny (ID 10099).', format: 'Textový kód (A), přesně 2 znaky (číselník C_STAT).', scenarios: 'Logická past mezi státy: Pokud u Státního občanství (ID 10067) vyplníte "CZ", stává se RČ naprosto povinné. Pokud u adresy trvalého pobytu vložíte jiný stát než "CZ", nutí vás to založit a poslat ještě navíc strukturu adresy Pobytu v ČR (<fdr>). U adresy Pobytu v ČR tag státu (@cnt) vůbec nenajdete, protože je z logiky věci zamknutá na Česko.' },
+'cnt': { label: 'Kód státu (Občanství / Stát adresy)', desc: 'Druhý typ státního identifikátoru. Určuje Státní občanství klienta v bloku <stat> (ID 10067) a dále kód Státu u většiny adres: Trvalý pobyt (ID 10083), Kontaktní adresa (ID 10511), Adresa rezidence (ID 10524) a Adresa cizí pojišťovny (ID 10099).', format: 'Textový kód (A), přesně 2 znaky (číselník C_STAT).', scenarios: 'Logická past mezi státy: Pokud u Státního občanství (ID 10067) vyplníte "CZ", stává se RČ naprosto povinné. Pokud u adresy trvalého pobytu vložíte jiný stát než "CZ", nutí vás to založit a poslat ještě navíc strukturu adresy Pobytu v ČR (<fdr>). U adresy Pobytu v ČR tag státu (@cnt) vůbec nenajdete, protože je z logiky věci zamknutá na Česko.' },
 
 
 
-'@type': { label: 'Typ záznamu (Identifikace / Doklad / Omezení)', desc: 'Řídící klasifikátor bloku. V uzlu <taxidrezid> definuje Typ daňové identifikace (ID 10061, např. DIČ či Social Security), v uzlu <proofid> udává Typ dokladu cizince (ID 10069, např. Pas), a v uzlu <healtrest> klasifikuje Typ zdravotního omezení / Invalidity (ID 10085).', format: 'Číselníkové hodnoty.', scenarios: 'Chyták u Invalidity (ID 10085): Účetní hlásí kódy z nového číselníku pro stupně invalidity (I. až III.) nebo OZZ. Změny těchto kódů se plnohodnotně hlásí pomocí běžné akce A3. U Dokladů totožnosti (10069) si dávají účetní pozor – týká se to pouze cizinců, české OP si stát páruje automaticky.' },
+'type': { label: 'Typ záznamu (Identifikace / Doklad / Omezení)', desc: 'Řídící klasifikátor bloku. V uzlu <taxidrezid> definuje Typ daňové identifikace (ID 10061, např. DIČ či Social Security), v uzlu <proofid> udává Typ dokladu cizince (ID 10069, např. Pas), a v uzlu <healtrest> klasifikuje Typ zdravotního omezení / Invalidity (ID 10085).', format: 'Číselníkové hodnoty.', scenarios: 'Chyták u Invalidity (ID 10085): Účetní hlásí kódy z nového číselníku pro stupně invalidity (I. až III.) nebo OZZ. Změny těchto kódů se plnohodnotně hlásí pomocí běžné akce A3. U Dokladů totožnosti (10069) si dávají účetní pozor – týká se to pouze cizinců, české OP si stát páruje automaticky.' },
 
 
 
 
 
 
-'@fro': { label: 'Datum OD (Sdružený časový atribut počátku)', desc: 'Zastupuje datum počátku úkonu. Jde o Platnost akce / Změna ze dne (ID 10009), Datum nástupu do zaměstnání (ID 10223), Zdravotní omezení přiznané od (ID 10086), Doba trvání cizího pracovního oprávnění od (ID 10109) a Počátek intervalu důchodového pojištění (ID 10386).', format: 'Datum (RRRR-MM-DD).', scenarios: 'Největší chyták systému: Atribut Platnost akce OD (ID 10009) se absolutně NESMÍ vyplnit u nového nástupu (A1) a skončení (A2), dává se výhradně u změn a oprav! U Invalidity (10086) se zase NIKDY nesmí zadat datum nástupu do firmy, ale výhradně skutečné datum, kdy orgán SSZ přiznal status ZTP nebo invalidity.' },
+'fro': { label: 'Datum OD (Sdružený časový atribut počátku)', desc: 'Zastupuje datum počátku úkonu. Jde o Platnost akce / Změna ze dne (ID 10009), Datum nástupu do zaměstnání (ID 10223), Zdravotní omezení přiznané od (ID 10086), Doba trvání cizího pracovního oprávnění od (ID 10109) a Počátek intervalu důchodového pojištění (ID 10386).', format: 'Datum (RRRR-MM-DD).', scenarios: 'Největší chyták systému: Atribut Platnost akce OD (ID 10009) se absolutně NESMÍ vyplnit u nového nástupu (A1) a skončení (A2), dává se výhradně u změn a oprav! U Invalidity (10086) se zase NIKDY nesmí zadat datum nástupu do firmy, ale výhradně skutečné datum, kdy orgán SSZ přiznal status ZTP nebo invalidity.' },
 
 
-'@to': { label: 'Datum DO (Sdružený časový atribut konce)', desc: 'Univerzální atribut zastupující datum konce daného úkonu. Podle kontextu zahrnuje: Datum skončení zaměstnání (ID 10224), Zdravotní omezení přiznané do (ID 10087), Trvání pracovního oprávnění cizince do (ID 10110) a Dobu trvání důchodového pojištění ze zaměstnání do (ID 10387).', format: 'Datum (RRRR-MM-DD).', scenarios: 'Mzdový chyták č. 1 (Konec zaměstnání): Datum skončení zaměstnání (ID 10224) se logicky hlásí přes Odhlášku (akce A2). Jakmile ho vyplníte, systém automaticky zaktivuje povinnost doplnit i podklady pro Úřad práce. Výjimku lze nastavit pouze použitím správného kódu pro Důvod neposkytnutí podkladů (ID 10376). Mzdový chyták č. 2 (Průběžné změny): Vypršení platnosti dokumentů u cizinců (10110) nebo u invalidity/OZZ (10087) může nastat kdykoliv během pracovněprávního vztahu. Jakmile dokument vyprší, nebo dojde k jeho prodloužení, musí se nová hodnota bezodkladně odeslat nezávisle přes ePortál pomocí akce Změna (A3).' },
+'to': { label: 'Datum DO (Sdružený časový atribut konce)', desc: 'Univerzální atribut zastupující datum konce daného úkonu. Podle kontextu zahrnuje: Datum skončení zaměstnání (ID 10224), Zdravotní omezení přiznané do (ID 10087), Trvání pracovního oprávnění cizince do (ID 10110) a Dobu trvání důchodového pojištění ze zaměstnání do (ID 10387).', format: 'Datum (RRRR-MM-DD).', scenarios: 'Mzdový chyták č. 1 (Konec zaměstnání): Datum skončení zaměstnání (ID 10224) se logicky hlásí přes Odhlášku (akce A2). Jakmile ho vyplníte, systém automaticky zaktivuje povinnost doplnit i podklady pro Úřad práce. Výjimku lze nastavit pouze použitím správného kódu pro Důvod neposkytnutí podkladů (ID 10376). Mzdový chyták č. 2 (Průběžné změny): Vypršení platnosti dokumentů u cizinců (10110) nebo u invalidity/OZZ (10087) může nastat kdykoliv během pracovněprávního vztahu. Jakmile dokument vyprší, nebo dojde k jeho prodloužení, musí se nová hodnota bezodkladně odeslat nezávisle přes ePortál pomocí akce Změna (A3).' },
 
 
 
-'@mal': { label: 'Pohlaví', desc: 'Fyzický atribut biologického pohlaví klienta z bloku stat (ID 10059).', format: 'Textový/Alfabetický, délka 1 znak.', scenarios: 'Může nabývat výhradně logických hodnot "M" a "Ž". Systém jej při příjmu tvrdě křížově validuje s přiděleným rodným číslem (kontrola na připočítané padesátky v měsíci u žen), což rovnou odhaluje překlepy.' },
+'mal': { label: 'Pohlaví', desc: 'Fyzický atribut biologického pohlaví klienta z bloku stat (ID 10059).', format: 'Textový/Alfabetický, délka 1 znak.', scenarios: 'Může nabývat výhradně logických hodnot "M" a "Ž". Systém jej při příjmu tvrdě křížově validuje s přiděleným rodným číslem (kontrola na připočítané padesátky v měsíci u žen), což rovnou odhaluje překlepy.' },
 
 
-'@vs': { label: 'Variabilní symbol zaměstnavatele', desc: 'Identifikační znak plátce (mzdové účtárny) přidělený příslušnou okresní správou (ID 10221).', format: 'Číselný typ (N), délka 8 až 10 znaků (Luhnův algoritmus).', scenarios: 'Je zcela povinný u všech procesních akcí podání REGZEC (A1-A8).' },
+'vs': { label: 'Variabilní symbol zaměstnavatele', desc: 'Identifikační znak plátce (mzdové účtárny) přidělený příslušnou okresní správou (ID 10221).', format: 'Číselný typ (N), délka 8 až 10 znaků (Luhnův algoritmus).', scenarios: 'Je zcela povinný u všech procesních akcí podání REGZEC (A1-A8).' },
 
 
-'@nvs': { label: 'Nový variabilní symbol', desc: 'Doplňkový identifikátor organizační složky nebo cizí mzdové účtárny, pod kterou je zaměstnanec po fúzi nebo vnitropodnikové změně nově převáděn (ID 10222).', format: 'Číselný typ (N), délka 8-10 znaků s kontrolou modulo.', scenarios: 'Vyplňuje se exkluzivně pouze při speciální akci A5 (Převod zaměstnance k jinému VS). Logický chyták: Nově vyplněný symbol se při převodu na vstupu do ČSSZ nesmí nikdy shodovat s původním variabilním symbolem z téže dávky.' },
+'nvs': { label: 'Nový variabilní symbol', desc: 'Doplňkový identifikátor organizační složky nebo cizí mzdové účtárny, pod kterou je zaměstnanec po fúzi nebo vnitropodnikové změně nově převáděn (ID 10222).', format: 'Číselný typ (N), délka 8-10 znaků s kontrolou modulo.', scenarios: 'Vyplňuje se exkluzivně pouze při speciální akci A5 (Převod zaměstnance k jinému VS). Logický chyták: Nově vyplněný symbol se při převodu na vstupu do ČSSZ nesmí nikdy shodovat s původním variabilním symbolem z téže dávky.' },
 
 
 
 
-'@oid': { label: 'ID pojistného vztahu (Identifikátor zaměstnání)', desc: 'Jedinečný technický identifikátor konkrétního pracovněprávního vztahu generovaný systémem ČSSZ (ID 10228).', format: 'Číselný typ (N), maximální délka 22 znaků.', scenarios: 'Zcela se vynechává u Nástupu (A1), protože ještě nebylo přiděleno. Je však striktně povinné u všech oprav, změn a odhlášek (A2-A8), kde tvoří naprosto klíčový párovací identifikátor.' },
+'oid': { label: 'ID pojistného vztahu (Identifikátor zaměstnání)', desc: 'Jedinečný technický identifikátor konkrétního pracovněprávního vztahu generovaný systémem ČSSZ (ID 10228).', format: 'Číselný typ (N), maximální délka 22 znaků.', scenarios: 'Zcela se vynechává u Nástupu (A1), protože ještě nebylo přiděleno. Je však striktně povinné u všech oprav, změn a odhlášek (A2-A8), kde tvoří naprosto klíčový párovací identifikátor.' },
 
 
-'@fro': { label: 'Datum OD (Sdružený časový atribut počátku)', desc: 'Zastupuje Datum nástupu do zaměstnání (ID 10223) a Datum přiznání zdravotního omezení od (ID 10086).', format: 'Datum (RRRR-MM-DD).', scenarios: 'Datum nástupu je povinné u všech akcí. U cizinců nesmí přesáhnout 8 dnů do budoucna. U zdravotního omezení se nejedná o nástup do firmy, ale striktně o datum právní moci posudku.' },
+'fro': { label: 'Datum OD (Sdružený časový atribut počátku)', desc: 'Zastupuje Datum nástupu do zaměstnání (ID 10223) a Datum přiznání zdravotního omezení od (ID 10086).', format: 'Datum (RRRR-MM-DD).', scenarios: 'Datum nástupu je povinné u všech akcí. U cizinců nesmí přesáhnout 8 dnů do budoucna. U zdravotního omezení se nejedná o nástup do firmy, ale striktně o datum právní moci posudku.' },
 
 
 
 
-'@rel': { label: 'Druh činnosti', desc: 'Klasifikátor typu výdělečné činnosti z číselníku ČSSZ (ID 10239).', format: 'Alfanumerický kód, délka 1-2 znaky.', scenarios: 'Zásadní chyták u oprav (A4): Systém nedovolí překlopit běžný pracovní poměr (kódy 1-9) na specifické právní vztahy (např. společník) a naopak. Pro nápravu takové chyby se musí odeslat Storno (A8) a založit nový Nástup (A1).' },
+'rel': { label: 'Druh činnosti', desc: 'Klasifikátor typu výdělečné činnosti z číselníku ČSSZ (ID 10239).', format: 'Alfanumerický kód, délka 1-2 znaky.', scenarios: 'Zásadní chyták u oprav (A4): Systém nedovolí překlopit běžný pracovní poměr (kódy 1-9) na specifické právní vztahy (např. společník) a naopak. Pro nápravu takové chyby se musí odeslat Storno (A8) a založit nový Nástup (A1).' },
 
 
-'@relDetail': { label: 'Bližší určení PPV', desc: 'Vynucený detailní rozpad pro standardní druhy činnosti k odlišení specifických úředníků (ID 10502).', format: 'Číselníková hodnota (1 = Žádné, 2 = Výkon trestu, 3 = Pracovní vztah spec. skupiny).', scenarios: 'Těžký chyták na uživatele mzdových systémů: Pokud je hlášen klasický druh činnosti s kódem 1-9, je tento element povinný. Běžná firma zde tak rutinně musí vždy odeslat hodnotu "1" (Žádné).' },
+'relDetail': { label: 'Bližší určení PPV', desc: 'Vynucený detailní rozpad pro standardní druhy činnosti k odlišení specifických úředníků (ID 10502).', format: 'Číselníková hodnota (1 = Žádné, 2 = Výkon trestu, 3 = Pracovní vztah spec. skupiny).', scenarios: 'Těžký chyták na uživatele mzdových systémů: Pokud je hlášen klasický druh činnosti s kódem 1-9, je tento element povinný. Běžná firma zde tak rutinně musí vždy odeslat hodnotu "1" (Žádné).' },
 
 
-'@sme': { label: 'Zaměstnání malého rozsahu (ZMR)', desc: 'Indikátor pracovního vztahu, kde sjednaný příjem formálně nedosahuje rozhodné částky (ID 10243).', format: 'Logický příznak.', scenarios: 'Účast na pojištění a odvody se aktivují střídavě v měsících dosažení limitu. Odhláška (A2) u ZMR se ovšem na ČSSZ odesílá nikoliv podle konce účasti, ale zásadně až po vypršení faktického data kontraktu.' },
+'sme': { label: 'Zaměstnání malého rozsahu (ZMR)', desc: 'Indikátor pracovního vztahu, kde sjednaný příjem formálně nedosahuje rozhodné částky (ID 10243).', format: 'Logický příznak.', scenarios: 'Účast na pojištění a odvody se aktivují střídavě v měsících dosažení limitu. Odhláška (A2) u ZMR se ovšem na ČSSZ odesílá nikoliv podle konce účasti, ale zásadně až po vypršení faktického data kontraktu.' },
 
 
-'@endbydeath': { label: 'Zaměstnání ukončeno smrtí', desc: 'Příznak spjatý s událostí úmrtí zaměstnance během trvání PPV (ID 10225).', format: 'Logický příznak.', scenarios: 'Silná účetní úleva: Jakmile v odhlášce pošlete "ANO", ePortál automaticky promíjí a vypíná povinnosti odesílat jakékoliv blokační podklady pro Úřad práce (důvody propuštění, výdělek, odstupné).' },
+'endbydeath': { label: 'Zaměstnání ukončeno smrtí', desc: 'Příznak spjatý s událostí úmrtí zaměstnance během trvání PPV (ID 10225).', format: 'Logický příznak.', scenarios: 'Silná účetní úleva: Jakmile v odhlášce pošlete "ANO", ePortál automaticky promíjí a vypíná povinnosti odesílat jakékoliv blokační podklady pro Úřad práce (důvody propuštění, výdělek, odstupné).' },
 
 
-'@notstart': { label: 'Zaměstnanec nenastoupil', desc: 'Příznak u Storna pročišťující evidenci, jestliže k výkonu podepsaného PPV fyzicky vůbec nedošlo (ID 10226).', format: 'Logický příznak.', scenarios: 'Odesílá a objevuje se naprosto exkluzivně pouze tehdy, když do sítě ČSSZ emitujete Výmaz zaměstnání pod akcí A8.' },
+'notstart': { label: 'Zaměstnanec nenastoupil', desc: 'Příznak u Storna pročišťující evidenci, jestliže k výkonu podepsaného PPV fyzicky vůbec nedošlo (ID 10226).', format: 'Logický příznak.', scenarios: 'Odesílá a objevuje se naprosto exkluzivně pouze tehdy, když do sítě ČSSZ emitujete Výmaz zaměstnání pod akcí A8.' },
 
 
-'@contractfro': { label: 'Vznik zaměstnání', desc: 'Právně stanovené datum vzniku pracovněprávního vztahu vyznačené ve fyzické smlouvě (ID 10227).', format: 'Datum (RRRR-MM-DD).', scenarios: 'Stát tento tag využívá v případech, kdy k faktickému výkonu práce dochází až dny/týdny po formálním podpisu (např. v případě nemoci před nástupem).' },
+'contractfro': { label: 'Vznik zaměstnání', desc: 'Právně stanovené datum vzniku pracovněprávního vztahu vyznačené ve fyzické smlouvě (ID 10227).', format: 'Datum (RRRR-MM-DD).', scenarios: 'Stát tento tag využívá v případech, kdy k faktickému výkonu práce dochází až dny/týdny po formálním podpisu (např. v případě nemoci před nástupem).' },
 
 
-'@relat': { label: 'Postavení v zaměstnání', desc: 'Statistický klíč určující typ pracovněprávního vztahu z Národní klasifikace postavení v zaměstnání (ID 10249).', format: 'Čtyřmístný kód (číselník NKPZ).', scenarios: 'Atribut odebíraný primárně pro strukturální statistiky a Český statistický úřad (ISPV).' },
+'relat': { label: 'Postavení v zaměstnání', desc: 'Statistický klíč určující typ pracovněprávního vztahu z Národní klasifikace postavení v zaměstnání (ID 10249).', format: 'Čtyřmístný kód (číselník NKPZ).', scenarios: 'Atribut odebíraný primárně pro strukturální statistiky a Český statistický úřad (ISPV).' },
 
 
-'@workmode': { label: 'Pracovní režim', desc: 'Identifikátor směnnosti fondu konkrétního pracovníka (ID 10255).', format: 'Číselníkový kód (1 = Jednosměnný, 2 = Dvousměnný, atd.).', scenarios: 'Zákeřné pro dohody mimo pracovní poměr: U dohodářů (DPP a DPČ) musíte v softwaru vždy bezpodmínečně vybrat kód "4 - Neuvedeno".' },
+'workmode': { label: 'Pracovní režim', desc: 'Identifikátor směnnosti fondu konkrétního pracovníka (ID 10255).', format: 'Číselníkový kód (1 = Jednosměnný, 2 = Dvousměnný, atd.).', scenarios: 'Zákeřné pro dohody mimo pracovní poměr: U dohodářů (DPP a DPČ) musíte v softwaru vždy bezpodmínečně vybrat kód "4 - Neuvedeno".' },
 
 
-'@cont': { label: 'Nepřetržitý provoz', desc: 'Logický příznak nasazení pracovníka do režimu, který zajišťuje nepřetržitý chod podniku (ID 10407).', format: 'Logický příznak.', scenarios: 'Slouží k monitoringu pro Inspekci práce při auditech fondů přesčasů a směnností.' },
+'cont': { label: 'Nepřetržitý provoz', desc: 'Logický příznak nasazení pracovníka do režimu, který zajišťuje nepřetržitý chod podniku (ID 10407).', format: 'Logický příznak.', scenarios: 'Slouží k monitoringu pro Inspekci práce při auditech fondů přesčasů a směnností.' },
 
 
-'@place': { label: 'Práce probíhá převážně', desc: 'Lokalizace faktického výkonu směn u OZP (v provozovně, u zákazníka, doma) (ID 10258).', format: 'Číselníkový kód z CIS Průběh práce.', scenarios: 'Složitá křížová podmínka: Mzdová účetní jej smí odeslat pouze tehdy, když je podnik uznán na chráněném trhu práce a občan má zároveň přiznán určitý typ zdravotního omezení (ID 10085).' },
+'place': { label: 'Práce probíhá převážně', desc: 'Lokalizace faktického výkonu směn u OZP (v provozovně, u zákazníka, doma) (ID 10258).', format: 'Číselníkový kód z CIS Průběh práce.', scenarios: 'Složitá křížová podmínka: Mzdová účetní jej smí odeslat pouze tehdy, když je podnik uznán na chráněném trhu práce a občan má zároveň přiznán určitý typ zdravotního omezení (ID 10085).' },
 
 
-'@preplace': { label: 'Předpokládané místo výkonu práce', desc: 'Slovní doplňující geolokace pro cizince, u kterých nelze místo určit jedinou adresou (ID 10526).', format: 'Textový typ, max 500 znaků.', scenarios: 'Past pro personalisty cizinců: Tento text nesmí přesáhnout hranice území, které jste předtím reportovali na inzerátu Úřadu práce pro vydání Modré/Zaměstnanecké karty.' },
+'preplace': { label: 'Předpokládané místo výkonu práce', desc: 'Slovní doplňující geolokace pro cizince, u kterých nelze místo určit jedinou adresou (ID 10526).', format: 'Textový typ, max 500 znaků.', scenarios: 'Past pro personalisty cizinců: Tento text nesmí přesáhnout hranice území, které jste předtím reportovali na inzerátu Úřadu práce pro vydání Modré/Zaměstnanecké karty.' },
 
 
-'@contractplace': { label: 'Místo výkonu práce (smlouva)', desc: 'Přesný opis ujednání umístění pracoviště dle pracovní smlouvy (ID 10527).', format: 'Textový typ, max 200 znaků.', scenarios: 'Metodické omezení JMHZ: U dohod (DPP/DPČ) nebo u smluv typu "celá ČR" sem nesmíte vypsat ony obce, ale musíte vyplnit výhradně legislativní sídlo zaměstnavatele.' },
+'contractplace': { label: 'Místo výkonu práce (smlouva)', desc: 'Přesný opis ujednání umístění pracoviště dle pracovní smlouvy (ID 10527).', format: 'Textový typ, max 200 znaků.', scenarios: 'Metodické omezení JMHZ: U dohod (DPP/DPČ) nebo u smluv typu "celá ČR" sem nesmíte vypsat ony obce, ale musíte vyplnit výhradně legislativní sídlo zaměstnavatele.' },
 
 
 
 
 
-'@municode': { label: 'Kód obce (místo výkonu)', desc: 'Šestimístný statistický klíč obce převzatý do JMHZ z registru RÚIAN/CIS_OBCE (ID 10529).', format: 'Číselný kód o 6 znacích.', scenarios: 'Vyžadováno pro státní a demografické statistiky a k přerozdělení daní Finanční správou.' },
+'municode': { label: 'Kód obce (místo výkonu)', desc: 'Šestimístný statistický klíč obce převzatý do JMHZ z registru RÚIAN/CIS_OBCE (ID 10529).', format: 'Číselný kód o 6 znacích.', scenarios: 'Vyžadováno pro státní a demografické statistiky a k přerozdělení daní Finanční správou.' },
 
 
-'@clas': { label: 'Kód profese (CZ-ISCO)', desc: 'Klasifikátor převažující pracovní náplně pozice podle evidence ČSÚ (ID 10234).', format: 'Numerický, délka 3-5 znaků.', scenarios: 'Systém neakceptuje ledabylé vyplnění jedním číslem. Účetní u nástupu volí exaktní kód (minimálně 3 znaky nadřazené větve) přímo z CIS Klasifikace zaměstnání.' },
+'clas': { label: 'Kód profese (CZ-ISCO)', desc: 'Klasifikátor převažující pracovní náplně pozice podle evidence ČSÚ (ID 10234).', format: 'Numerický, délka 3-5 znaků.', scenarios: 'Systém neakceptuje ledabylé vyplnění jedním číslem. Účetní u nástupu volí exaktní kód (minimálně 3 znaky nadřazené větve) přímo z CIS Klasifikace zaměstnání.' },
 
 
-'@edu': { label: 'Vzdělání pro profesi', desc: 'Určuje minimální formální stupeň vzdělání, který firma nutně požaduje pro výkon povolaní (ID 10248).', format: 'Znak z číselníku KKOV.', scenarios: 'Nejhorší validátor pro cizineckou politiku: Skutečně dosažené vzdělání cizince (ID 10091) nesmí matematicky klesnout pod hodnotu požadovanou pro vízum v tomto tagu, jinak je balík nemilosrdně zamítnut.' },
+'edu': { label: 'Vzdělání pro profesi', desc: 'Určuje minimální formální stupeň vzdělání, který firma nutně požaduje pro výkon povolaní (ID 10248).', format: 'Znak z číselníku KKOV.', scenarios: 'Nejhorší validátor pro cizineckou politiku: Skutečně dosažené vzdělání cizince (ID 10091) nesmí matematicky klesnout pod hodnotu požadovanou pro vízum v tomto tagu, jinak je balík nemilosrdně zamítnut.' },
 
 
-'@name': { label: 'Název Pozice', desc: 'Běžný domácký či vnitropodnikový interní název uvedený v reálné smlouvě klienta (ID 10235).', format: 'Text, max 100 znaků.', scenarios: 'Toto pole REGZEC formuláře je nepovinný, ovšem s háčkem. Pokud sem mzdový software SALARY natáhne název pozice, vynutí si tím od uživatele automaticky i vyplnění numerického kódu klasifikace CZ-ISCO.' },
+'name': { label: 'Název Pozice', desc: 'Běžný domácký či vnitropodnikový interní název uvedený v reálné smlouvě klienta (ID 10235).', format: 'Text, max 100 znaků.', scenarios: 'Toto pole REGZEC formuláře je nepovinný, ovšem s háčkem. Pokud sem mzdový software SALARY natáhne název pozice, vynutí si tím od uživatele automaticky i vyplnění numerického kódu klasifikace CZ-ISCO.' },
 
 
-'@lead': { label: 'Vedoucí zaměstnanec', desc: 'Příznak udávající, že pozice disponuje pravomocemi řídit podřízené pracovníky (ID 10238).', format: 'Logický příznak ANO / NE.', scenarios: 'Slouží čistě pro podklady o strukturálních rozdílech ve mzdách v ČR.' },
+'lead': { label: 'Vedoucí zaměstnanec', desc: 'Příznak udávající, že pozice disponuje pravomocemi řídit podřízené pracovníky (ID 10238).', format: 'Logický příznak ANO / NE.', scenarios: 'Slouží čistě pro podklady o strukturálních rozdílech ve mzdách v ČR.' },
 
 
-'@typ': { label: 'Druh důchodu (Mimo ČSSZ)', desc: 'Klasifikátor k evidenci speciálních penzí poskytovaných od zcela odlišných orgánů (ID 10113).', format: 'Textový kód (1 znak).', scenarios: 'Nesmíte sem vůbec vyplnit klasický starobní důchod občana. Používá se převážně na označení důchodů vyplácených z resortů MVČR a obrany, nebo rent ze zahraničí.' },
+'typ': { label: 'Druh důchodu (Mimo ČSSZ)', desc: 'Klasifikátor k evidenci speciálních penzí poskytovaných od zcela odlišných orgánů (ID 10113).', format: 'Textový kód (1 znak).', scenarios: 'Nesmíte sem vůbec vyplnit klasický starobní důchod občana. Používá se převážně na označení důchodů vyplácených z resortů MVČR a obrany, nebo rent ze zahraničí.' },
 
 
-'@tak': { label: 'Důchod pobírán od', desc: 'Přesné datum nabytí právní moci výměru cizího či ozbrojeného důchodu (ID 10114).', format: 'Datum (RRRR-MM-DD).', scenarios: 'Logicky vázáno na vyplnění tagu @typ. Nesmí být uloženo v datu budoucím vůči odeslání.' },
+'tak': { label: 'Důchod pobírán od', desc: 'Přesné datum nabytí právní moci výměru cizího či ozbrojeného důchodu (ID 10114).', format: 'Datum (RRRR-MM-DD).', scenarios: 'Logicky vázáno na vyplnění tagu @typ. Nesmí být uloženo v datu budoucím vůči odeslání.' },
 
 
-'@early': { label: 'Předčasný důchod', desc: 'Označuje občany požívající předčasný starobní důchod před dovršením plného důchodového věku (ID 10115).', format: 'Logický příznak.', scenarios: 'Metodické specifikum: Musí se označit jako aktivní pouze tehdy, je-li předčasný důchod před dovršením věku klientem REÁLNĚ už pobírán (ne pro odloženou výplatu).' },
+'early': { label: 'Předčasný důchod', desc: 'Označuje občany požívající předčasný starobní důchod před dovršením plného důchodového věku (ID 10115).', format: 'Logický příznak.', scenarios: 'Metodické specifikum: Musí se označit jako aktivní pouze tehdy, je-li předčasný důchod před dovršením věku klientem REÁLNĚ už pobírán (ne pro odloženou výplatu).' },
 
 
-'@reducedAge': { label: 'Snížený důchodový věk', desc: 'Příznak starobního důchodu dle záchranářské/hornické větve pro náročné profese (ID 10504).', format: 'Logický příznak.', scenarios: 'Nová infrastruktura zavedená pro důchodovou reformu platnou od roku 2026.' },
+'reducedAge': { label: 'Snížený důchodový věk', desc: 'Příznak starobního důchodu dle záchranářské/hornické větve pro náročné profese (ID 10504).', format: 'Logický příznak.', scenarios: 'Nová infrastruktura zavedená pro důchodovou reformu platnou od roku 2026.' },
 
 
-'@cnr': { label: 'Kód zdravotní pojišťovny', desc: 'Trojmístný číselný registr, pod kterým je zdravotní péče srážena (ID 10102).', format: 'Číselný kód.', scenarios: 'Spása pro HR: Pokud máte cizince s komerčním pojištěním nebo pracujícího na DPP bez dosaženého odvodového limitu, volí účetní fiktivní kód "999" (Ostatní ZP).' },
+'cnr': { label: 'Kód zdravotní pojišťovny', desc: 'Trojmístný číselný registr, pod kterým je zdravotní péče srážena (ID 10102).', format: 'Číselný kód.', scenarios: 'Spása pro HR: Pokud máte cizince s komerčním pojištěním nebo pracujícího na DPP bez dosaženého odvodového limitu, volí účetní fiktivní kód "999" (Ostatní ZP).' },
 
 
 
 
-'@rsn': { label: 'Důvod neposkytnutí podkladů', desc: 'Řídící kód odhlášky zasílaný Úřadu práce pro výjimky, kdy zaměstnanec nespadá do evidence pro podporu (ID 10376).', format: 'Třímístný kód z číselníku.', scenarios: 'Extrémní usnadnění odhlášek (A2): Vložením kódu "2" (dohodáři pod limitem, starobní důchodci) nebo "3" (státní aparát) vypínáte z XML plošnou nutnost vyplňovat průměrný výdělek a důvody propuštění!' },
+'rsn': { label: 'Důvod neposkytnutí podkladů', desc: 'Řídící kód odhlášky zasílaný Úřadu práce pro výjimky, kdy zaměstnanec nespadá do evidence pro podporu (ID 10376).', format: 'Třímístný kód z číselníku.', scenarios: 'Extrémní usnadnění odhlášek (A2): Vložením kódu "2" (dohodáři pod limitem, starobní důchodci) nebo "3" (státní aparát) vypínáte z XML plošnou nutnost vyplňovat průměrný výdělek a důvody propuštění!' },
 
 
-'@typeempl': { label: 'Druh zaměstnání (Úřad práce)', desc: 'Třídění profesní aktivity používané exkluzivně pro výpočet koeficientů podpory v nezaměstnanosti (ID 10525).', format: 'Kód z číselníku (1-3).', scenarios: 'Osvobozeny od odesílání jsou všechny situace popsané v kódech neposkytnutí nebo činnosti M až S.' },
+'typeempl': { label: 'Druh zaměstnání (Úřad práce)', desc: 'Třídění profesní aktivity používané exkluzivně pro výpočet koeficientů podpory v nezaměstnanosti (ID 10525).', format: 'Kód z číselníku (1-3).', scenarios: 'Osvobozeny od odesílání jsou všechny situace popsané v kódech neposkytnutí nebo činnosti M až S.' },
 
 
-'@avgmonear': { label: 'Průměrný čistý výdělek', desc: 'Datová věta plně nahrazující papírové potvrzení o průměrném příjmu pro pracáky (ID 10377).', format: 'Číselný, celé číslo do 10 znaků.', scenarios: 'Zásadní omyl v účtárnách: Částka v žádném případě nesmí obsahovat daňový bonus! Je to striktně průměrný ČISTÝ měsíční výdělek.' },
+'avgmonear': { label: 'Průměrný čistý výdělek', desc: 'Datová věta plně nahrazující papírové potvrzení o průměrném příjmu pro pracáky (ID 10377).', format: 'Číselný, celé číslo do 10 znaků.', scenarios: 'Zásadní omyl v účtárnách: Částka v žádném případě nesmí obsahovat daňový bonus! Je to striktně průměrný ČISTÝ měsíční výdělek.' },
 
 
-'@belong': { label: 'Nárok na odstupné/odchodné/odbytné', desc: 'Příznak deklarující propouštěcí bonus oddalující Úřadem práce vyplácenou podporu (ID 10378).', format: 'Logický příznak (ANO/NE).', scenarios: 'Aktivací příznaku spouštíte skupinovou povinnost. E-portálem balík neprojde, dokud v xml neuvedete fyzickou hodnotu peněz u minimálně jednoho ze specifických druhů odstupného.' },
+'belong': { label: 'Nárok na odstupné/odchodné/odbytné', desc: 'Příznak deklarující propouštěcí bonus oddalující Úřadem práce vyplácenou podporu (ID 10378).', format: 'Logický příznak (ANO/NE).', scenarios: 'Aktivací příznaku spouštíte skupinovou povinnost. E-portálem balík neprojde, dokud v xml neuvedete fyzickou hodnotu peněz u minimálně jednoho ze specifických druhů odstupného.' },
 
 
-'@fullpay': { label: 'Vyplaceno v plné výši', desc: 'Prokázání, že odstupné bylo nejen přiznáno, ale i reálně převedeno na účet pracovníka (ID 10379).', format: 'Logický příznak.', scenarios: 'Pokud neexistuje "Nárok", tato položka je uzamčena a vyhodnocena jako nadbytečná.' },
+'fullpay': { label: 'Vyplaceno v plné výši', desc: 'Prokázání, že odstupné bylo nejen přiznáno, ale i reálně převedeno na účet pracovníka (ID 10379).', format: 'Logický příznak.', scenarios: 'Pokud neexistuje "Nárok", tato položka je uzamčena a vyhodnocena jako nadbytečná.' },
 
 
-'@rsnterempl': { label: 'Důvod ukončení PPV', desc: 'Paragrafové zatřídění ze Zákoníku práce objasňující charakter výpovědi (ID 10380).', format: 'Číselný kód z CIS.', scenarios: 'Vynucuje se výhradně tam, kde je "Druh zaměstnání" roven 1 (pracovní poměr) a klient směřuje na Úřad práce.' },
+'rsnterempl': { label: 'Důvod ukončení PPV', desc: 'Paragrafové zatřídění ze Zákoníku práce objasňující charakter výpovědi (ID 10380).', format: 'Číselný kód z CIS.', scenarios: 'Vynucuje se výhradně tam, kde je "Druh zaměstnání" roven 1 (pracovní poměr) a klient směřuje na Úřad práce.' },
 
 
-'@rsnterrel': { label: 'Důvod ukončení služebního poměru', desc: 'Zákonná podoba důvodu konce PPV pro státní zaměstnance (ID 10381).', format: 'Číselný kód.', scenarios: 'Zcela vyhrazeno pro druh zaměstnání = 2 (ozbrojené, služební a bezpečnostní sbory).' },
+'rsnterrel': { label: 'Důvod ukončení služebního poměru', desc: 'Zákonná podoba důvodu konce PPV pro státní zaměstnance (ID 10381).', format: 'Číselný kód.', scenarios: 'Zcela vyhrazeno pro druh zaměstnání = 2 (ozbrojené, služební a bezpečnostní sbory).' },
 
 
-'@replacement': { label: 'Jednorázová náhrada §271ca', desc: 'Výše mimořádného odškodnění při tragických pracovních úrazech či nemocech (ID 10530).', format: 'Číselný, celé číslo.', scenarios: 'Lze vyplnit pouze, je-li přiznán nárok. Nahradilo dřívější pojetí odškodnění při poškození zdraví.' },
+'replacement': { label: 'Jednorázová náhrada §271ca', desc: 'Výše mimořádného odškodnění při tragických pracovních úrazech či nemocech (ID 10530).', format: 'Číselný, celé číslo.', scenarios: 'Lze vyplnit pouze, je-li přiznán nárok. Nahradilo dřívější pojetí odškodnění při poškození zdraví.' },
 
 
-'@goldenhandshake': { label: 'Odstupné §67', desc: 'Běžné byznysové odstupné vyplácené při organizačních změnách a rušení pozic z rozhodnutí firmy (ID 10531).', format: 'Číselný, celé číslo.', scenarios: 'Započítává se přímo do odkladu podpory na státních úřadech.' },
+'goldenhandshake': { label: 'Odstupné §67', desc: 'Běžné byznysové odstupné vyplácené při organizačních změnách a rušení pozic z rozhodnutí firmy (ID 10531).', format: 'Číselný, celé číslo.', scenarios: 'Započítává se přímo do odkladu podpory na státních úřadech.' },
 
 
-'@severancepay': { label: 'Odchodné', desc: 'Kompenzace dle Zákona o státní službě, zpravidla za odpracované roky u státního aparátu (ID 10532).', format: 'Číselný, celé číslo.', scenarios: 'Zadáno musí být striktně jen k druhu zaměstnání 2.' },
+'severancepay': { label: 'Odchodné', desc: 'Kompenzace dle Zákona o státní službě, zpravidla za odpracované roky u státního aparátu (ID 10532).', format: 'Číselný, celé číslo.', scenarios: 'Zadáno musí být striktně jen k druhu zaměstnání 2.' },
 
 
-'@disposal': { label: 'Odbytné', desc: 'Finanční vyrovnání pro úředníka, jehož služební místo stát zrušil bez náhrady (ID 10533).', format: 'Číselný, celé číslo.', scenarios: 'Jako odchodné, týká se exkluzivně jen veřejných a služebních poměrů.' },
+'disposal': { label: 'Odbytné', desc: 'Finanční vyrovnání pro úředníka, jehož služební místo stát zrušil bez náhrady (ID 10533).', format: 'Číselný, celé číslo.', scenarios: 'Jako odchodné, týká se exkluzivně jen veřejných a služebních poměrů.' },
 
 
-'@earlyterm': { label: 'Důvod předčasného ukončení', desc: 'Záznam pro Migrační policii (OAMP) týkající se přetržení kontraktu cizince (ID 10534).', format: 'Číselný (kódy 1-9).', scenarios: 'Kritické pravidlo: V odhlášce (A2) to účetní musí povinně udat v případech, kdy cizinec vlastnil Modrou, Zaměstnaneckou kartu nebo Povolení a končí ve firmě dříve, než mělo vypršet povolení dané státem!' },
+'earlyterm': { label: 'Důvod předčasného ukončení', desc: 'Záznam pro Migrační policii (OAMP) týkající se přetržení kontraktu cizince (ID 10534).', format: 'Číselný (kódy 1-9).', scenarios: 'Kritické pravidlo: V odhlášce (A2) to účetní musí povinně udat v případech, kdy cizinec vlastnil Modrou, Zaměstnaneckou kartu nebo Povolení a končí ve firmě dříve, než mělo vypršet povolení dané státem!' },
 
 
-'@ztp': { label: 'Držitel ZTP/P', desc: 'Logický příznak deklarující vlastnictví platného průkazu osoby se zdravotním postižením (ID 10090).', format: 'Logický příznak (ANO/NE).', scenarios: 'Položka není primárně nositelem daně, označuje statutaritu těžkého poškození / orientace s průvodcem pro potřeby agend státu.' },
+'ztp': { label: 'Držitel ZTP/P', desc: 'Logický příznak deklarující vlastnictví platného průkazu osoby se zdravotním postižením (ID 10090).', format: 'Logický příznak (ANO/NE).', scenarios: 'Položka není primárně nositelem daně, označuje statutaritu těžkého poškození / orientace s průvodcem pro potřeby agend státu.' },
 
 
-'@highedu': { label: 'Vzdělání KKOV', desc: 'Nejvyšší doložitelný stupeň certifikovaného formálního vzdělání (ID 10091).', format: 'Kód KKOV z číselníku.', scenarios: 'Zásadní kontrola pro migraci: Odbor azylové a migrační politiky na základě tohoto kódu cizince odmítne, pakliže je jeho dosažené vzdělání matematicky nižší, než firma vyžadovala při otevírání inzerátu na toto konkrétní pracovní místo.' },
+'highedu': { label: 'Vzdělání KKOV', desc: 'Nejvyšší doložitelný stupeň certifikovaného formálního vzdělání (ID 10091).', format: 'Kód KKOV z číselníku.', scenarios: 'Zásadní kontrola pro migraci: Odbor azylové a migrační politiky na základě tohoto kódu cizince odmítne, pakliže je jeho dosažené vzdělání matematicky nižší, než firma vyžadovala při otevírání inzerátu na toto konkrétní pracovní místo.' },
 
 
-'@type': { label: 'Typ zdravotního omezení', desc: 'Příznak přiznané a pravomocné invalidity I., II., nebo III. stupně, či OZZ (ID 10085).', format: 'Jednoznak z CIS Typ omezení.', scenarios: 'Při překlápění a změnách invalidity v čase (např. pacient se zhorší do III. stupně) se musí na živé smlouvě vyvolat akce Změny (A3).' },
+'type': { label: 'Typ zdravotního omezení', desc: 'Příznak přiznané a pravomocné invalidity I., II., nebo III. stupně, či OZZ (ID 10085).', format: 'Jednoznak z CIS Typ omezení.', scenarios: 'Při překlápění a změnách invalidity v čase (např. pacient se zhorší do III. stupně) se musí na živé smlouvě vyvolat akce Změny (A3).' },
 
 
 
 
 
 
-'@juris': { label: 'Cizí právní předpisy (Příslušnost)', desc: 'Indikátor z uzlu pro vyslané pracovníky, kteří z odvodů spadají mimo jurisdikci ČR (ID 10427).', format: 'Logický příznak.', scenarios: 'Typické pro detašované pracovníky vyslané na území ČR ze zahraničních firem, mající doložen certifikát o pojištění A1 z domovské země.' },
+'juris': { label: 'Cizí právní předpisy (Příslušnost)', desc: 'Indikátor z uzlu pro vyslané pracovníky, kteří z odvodů spadají mimo jurisdikci ČR (ID 10427).', format: 'Logický příznak.', scenarios: 'Typické pro detašované pracovníky vyslané na území ČR ze zahraničních firem, mající doložen certifikát o pojištění A1 z domovské země.' },
 
 
-'@state': { label: 'Kód státu (Jurisdikce)', desc: 'Párovací atribut k cizím předpisům určující z mezinárodního číselníku danou zemi (ID 10428).', format: 'Dvoumístný kód (např. DE, PL).', scenarios: 'Je-li logický indikátor příslušnosti zaslán, tento geografický kód státní suverenity jej musí ve větě okamžitě následovat.' },
+'state': { label: 'Kód státu (Jurisdikce)', desc: 'Párovací atribut k cizím předpisům určující z mezinárodního číselníku danou zemi (ID 10428).', format: 'Dvoumístný kód (např. DE, PL).', scenarios: 'Je-li logický indikátor příslušnosti zaslán, tento geografický kód státní suverenity jej musí ve větě okamžitě následovat.' },
             
 
 
@@ -837,7 +837,7 @@ window.JMHZ_INFO_DICTIONARY = {
     // --- 2. MAPOVÁNÍ SEKCÍ (Vloženo bezpečně přímo do slovníku) ---
     'sectionMap': {
         'hlavička': 'hlavicka',
-		'idformulare': 'idformulare',
+		'id formuláře': 'idformulare',
 		'daňové zvýhodnění': 'zvyhodnenidetimesic',
         'seznam eldp': 'eldpseznam',
         'záznam evidenčního listu': 'eldp',
