@@ -27,18 +27,46 @@ const MIME_TYPES = {
   '.xlsx': 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
 };
 
+const DENY_EXTENSIONS = new Set(['.php', '.env', '.ini', '.sh', '.sql', '.log', '.bak']);
+const DENY_PATH_SEGMENTS = new Set(['.git', '.github', '.agents', '.local', '.cache', 'node_modules']);
+
+function isDenied(relPath) {
+  const ext = path.extname(relPath).toLowerCase();
+  if (DENY_EXTENSIONS.has(ext)) return true;
+  const segments = relPath.split(path.sep);
+  for (const seg of segments) {
+    if (DENY_PATH_SEGMENTS.has(seg)) return true;
+  }
+  return false;
+}
+
 const server = http.createServer((req, res) => {
   let urlPath = req.url.split('?')[0];
+
+  try {
+    urlPath = decodeURIComponent(urlPath);
+  } catch (e) {
+    res.writeHead(400, { 'Content-Type': 'text/plain' });
+    res.end('Bad Request');
+    return;
+  }
 
   if (urlPath === '/' || urlPath === '') {
     urlPath = '/index.html';
   }
 
-  const filePath = path.join(ROOT, urlPath);
+  const filePath = path.resolve(ROOT, '.' + path.posix.normalize(urlPath));
+  const relPath = path.relative(ROOT, filePath);
 
-  if (!filePath.startsWith(ROOT)) {
-    res.writeHead(403);
+  if (relPath.startsWith('..') || path.isAbsolute(relPath)) {
+    res.writeHead(403, { 'Content-Type': 'text/plain' });
     res.end('Forbidden');
+    return;
+  }
+
+  if (relPath && isDenied(relPath)) {
+    res.writeHead(404, { 'Content-Type': 'text/plain' });
+    res.end('Not Found');
     return;
   }
 
