@@ -28,7 +28,14 @@
     <header class="header-section">
         <h1 class="header-title">SALARY Znalostní Knihovna</h1>
         <p class="header-subtitle">Znalostní báze pro metodiky a uživatele k implementaci legislativy JMHZ</p>
-        
+        <div class="hard-refresh-wrap">
+            <button class="hard-refresh-btn" id="hardRefreshBtn"
+                onclick="this.disabled=true; this.innerHTML='<span class=\'hr-spinner\'>⟳</span> Oživuji…'; window.hardRefreshKnihovna && window.hardRefreshKnihovna();"
+                title="Smaže mezipaměť a načte nové informace — záložky a studijní poznámky zůstanou zachovány (ekvivalent Ctrl+Shift+R)">
+                🔄 Oživit Knihovnu a načíst nové informace
+            </button>
+        </div>
+
         <div class="controls-container">
             <div class="search-row">
                 <div class="search-box">

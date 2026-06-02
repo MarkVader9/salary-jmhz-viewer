@@ -699,3 +699,45 @@ select:focus, .cat-input:focus { border-color: var(--accent); }
 @media (max-width: 600px) {
     .back-to-top { bottom: 20px; right: 16px; width: 40px; height: 40px; font-size: 1.1rem; }
 }
+
+/* ── Tlačítko "Oživit Knihovnu" (hard refresh) ─────────────────────────── */
+.hard-refresh-wrap {
+    margin: 14px auto 0;
+    text-align: center;
+}
+.hard-refresh-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 7px 18px;
+    background: transparent;
+    border: 1px solid var(--border);
+    border-radius: 999px;
+    font-size: 0.8125rem;
+    font-weight: 500;
+    color: var(--text-muted);
+    cursor: pointer;
+    transition: background 0.15s, color 0.15s, border-color 0.15s, opacity 0.15s;
+    white-space: nowrap;
+}
+.hard-refresh-btn:hover {
+    background: var(--bg-surface);
+    color: var(--text-primary);
+    border-color: var(--border-strong);
+}
+.hard-refresh-btn:disabled {
+    opacity: 0.6;
+    cursor: default;
+}
+.hr-spinner {
+    display: inline-block;
+    animation: hr-spin 0.7s linear infinite;
+    font-style: normal;
+}
+@keyframes hr-spin {
+    from { transform: rotate(0deg); }
+    to   { transform: rotate(360deg); }
+}
+@media print {
+    .hard-refresh-wrap { display: none !important; }
+}

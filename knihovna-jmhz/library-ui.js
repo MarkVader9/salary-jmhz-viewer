@@ -327,6 +327,28 @@ document.addEventListener("DOMContentLoaded", () => {
         modal.style.display = 'flex';
     };
 
+    // ── Tvrdé pročištění mezipaměti (zachovává localStorage) ─────────────
+    // Ekvivalent Ctrl+Shift+R: smaže SW cache + HTTP cache, zachová localStorage
+    window.hardRefreshKnihovna = async function(btnEl) {
+        try {
+            // 1. Smaž všechny Cache Storage záznamy (Service Worker cache)
+            if ('caches' in window) {
+                const keys = await caches.keys();
+                await Promise.all(keys.map(k => caches.delete(k)));
+            }
+            // 2. Vynutit update Service Workeru (stáhne novou verzi)
+            if ('serviceWorker' in navigator) {
+                try {
+                    const reg = await navigator.serviceWorker.getRegistration();
+                    if (reg) await reg.update();
+                } catch {}
+            }
+        } catch {}
+        // 3. Tvrdé přenačtení — vynucuje stažení čerstvých souborů ze serveru
+        //    localStorage NENÍ dotčeno → záložky, poznámky a studijní postup zůstávají
+        location.reload(true);
+    };
+
         // Globální správa témat - ujistěte se, že toto je na konci library-ui.js
 window.setTheme = function(theme) {
     if (theme === 'auto') {

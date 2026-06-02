@@ -10,5 +10,6 @@ window.LIBRARY_MENU_CONFIG = [
     { label: "🐛 Nahlásit problém", action: () => window.showSupportModal() }, 
     
     { label: "🌐 Web SALARY.cz", link: "https://www.salary.cz", external: true },
-        { divider: true }
+    { divider: true },
+    { label: "🔄 Oživit Knihovnu (načíst nové informace)", action: () => window.hardRefreshKnihovna && window.hardRefreshKnihovna() },
 ];
