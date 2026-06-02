@@ -43,6 +43,7 @@
             <div class="category-pills" id="categoryFilterContainer">
                 <button class="cat-pill active" data-id="all">Vše v Knihovně</button>
             </div>
+            <div id="resultCount" class="result-count" style="display:none"></div>
         </div>
     </header>
 
@@ -58,6 +59,28 @@
     let dbData = { categories: [], articles: [] };
     let activeCategoryId = 'all';
     let searchTimeout = null;
+
+    // ── Pomocné funkce ────────────────────────────────────────────────────
+    function norm(s) {
+        return (s || '').normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase();
+    }
+    function getBookmarks() {
+        try { return new Set(JSON.parse(localStorage.getItem('jmhz_bookmarks') || '[]')); }
+        catch { return new Set(); }
+    }
+    function saveBookmarks(set) {
+        localStorage.setItem('jmhz_bookmarks', JSON.stringify([...set]));
+    }
+    window.toggleBookmark = function(id, btn) {
+        const bm = getBookmarks();
+        const had = bm.has(String(id));
+        had ? bm.delete(String(id)) : bm.add(String(id));
+        saveBookmarks(bm);
+        btn.textContent = had ? '☆' : '★';
+        btn.title = had ? 'Přidat do záložek' : 'Odebrat ze záložek';
+        btn.classList.toggle('bookmarked', !had);
+        if (activeCategoryId === 'bookmarks') applyFiltersAndRender();
+    };
 
     const UI = {
         search: document.getElementById('searchInput'),
@@ -75,8 +98,8 @@ async function init() {
             const rawDb = await res.json();
             
             dbData.categories = rawDb.categories || [];
-			
-			
+                        
+                        
             
             // Sloučení "articles" a "lms" do jednoho pole pro jednotné vyhledávání
             const articles = rawDb.articles || [];
@@ -100,46 +123,40 @@ async function init() {
         }
     }
 
-function renderGrid(articles) {
+function renderGrid(articles, query) {
         UI.grid.innerHTML = '';
         if (articles.length === 0) {
-            // DYNAMICKÝ EMPTY STATE
-            const query = UI.search.value.trim();
-            const queryText = query ? `pro výraz "<strong>${query}</strong>"` : 'pro zvolené filtry';
-            
+            const emptyQuery = (query || UI.search.value).trim();
+            const isBookmarks = activeCategoryId === 'bookmarks';
+            const queryText = isBookmarks
+                ? 'v záložkách'
+                : emptyQuery ? `pro výraz "<strong>${emptyQuery}</strong>"` : 'pro zvolené filtry';
             UI.grid.innerHTML = `
                 <div class="empty-state" style="grid-column: 1/-1; padding: 60px 20px; background: var(--bg-surface); border-radius: var(--radius-lg); border: 2px dashed var(--border); text-align: center;">
-                    <div style="font-size: 3rem; margin-bottom: 15px;">🔎</div>
-                    <h3 style="color: var(--text-primary); font-size: 1.5rem; margin-bottom: 10px;">Bohužel jsme nenašli žádné články ${queryText}</h3>
-                    <p style="color: var(--text-muted); font-size: 1rem; margin-bottom: 25px;">Zkuste zkontrolovat překlepy, použít obecnější termín, nebo zrušte aktuální filtry.</p>
-                    <button class="btn primary" onclick="resetAllFilters()" style="padding: 12px 24px; font-size: 1rem; border-radius: 30px;">🔄 Zrušit všechny filtry a hledání</button>
+                    <div style="font-size: 3rem; margin-bottom: 15px;">${isBookmarks ? '🔖' : '🔎'}</div>
+                    <h3 style="color: var(--text-primary); font-size: 1.5rem; margin-bottom: 10px;">${isBookmarks ? 'Zatím nemáte žádné záložky' : `Bohužel jsme nenašli žádné články ${queryText}`}</h3>
+                    <p style="color: var(--text-muted); font-size: 1rem; margin-bottom: 25px;">${isBookmarks ? 'Klikněte na ☆ na libovolné kartě a článek se uloží sem.' : 'Zkuste zkontrolovat překlepy, použít obecnější termín, nebo zrušte aktuální filtry.'}</p>
+                    ${isBookmarks ? '' : `<button class="btn primary" onclick="resetAllFilters()" style="padding: 12px 24px; font-size: 1rem; border-radius: 30px;">🔄 Zrušit všechny filtry a hledání</button>`}
                 </div>
             `;
             return;
         }
 
-        // OPRAVENO: Jen jeden cyklus forEach
+        const bm = getBookmarks();
         articles.forEach((item, index) => {
-            // Rozcestník - jde o kurz nebo obyčejný článek?
             const url = item.isLms ? `lms.html?course=${item.id}` : `clanek.html?id=${item.id}`;
             const fUrl = window.location.origin + window.location.pathname.replace('index.html', '') + url;
-            
             const date = new Date(item.lastUpdated).toLocaleDateString('cs-CZ');
-           // Opraveno: Zobrazí všechny štítky, které u článku v JSONu máte
-const tags = (item.tags || []).map(t => `<span class="tag-pill">${t}</span>`).join('');
-            
-            const typeBadge = item.isLms 
-                ? `<span style="color:var(--accent); font-weight:800; font-size:0.8rem;">🎓 INTERAKTIVNÍ KURZ</span>` 
+            const tags = (item.tags || []).map(t => `<span class="tag-pill">${t}</span>`).join('');
+            const typeBadge = item.isLms
+                ? `<span style="color:var(--accent); font-weight:800; font-size:0.8rem;">🎓 INTERAKTIVNÍ KURZ</span>`
                 : `<span>📅 ${date}</span>`;
-            
             const excerpt = item.description || 'Klikněte pro zobrazení obsahu...';
+            const isBookmarked = bm.has(String(item.id));
 
             const card = document.createElement('div');
             card.className = 'article-card';
-            
-            // Kaskádová animace (každá karta má lehké zpoždění podle svého pořadí)
             card.style.animationDelay = `${index * 0.05}s`;
-
             card.innerHTML = `
                 <div class="card-meta">${typeBadge} <span>⏱️ ${item.readingTimeMin || 1} min</span></div>
                 <h3 class="card-title"><a href="${url}">${item.title || 'Neznámý obsah'}</a></h3>
@@ -147,6 +164,9 @@ const tags = (item.tags || []).map(t => `<span class="tag-pill">${t}</span>`).jo
                 <p class="card-excerpt">${excerpt}</p>
                 <div class="card-footer">
                     <a href="${url}" class="btn primary">${item.isLms ? 'Spustit kurz →' : 'Přečíst článek →'}</a>
+                    <button class="btn bookmark-btn${isBookmarked ? ' bookmarked' : ''}"
+                        onclick="toggleBookmark('${item.id}', this)"
+                        title="${isBookmarked ? 'Odebrat ze záložek' : 'Přidat do záložek'}">${isBookmarked ? '★' : '☆'}</button>
                     <button class="btn" style="border:none; padding:4px 8px; font-size:1.1rem; background:transparent;" onclick="copyLink('${fUrl}')" title="Kopírovat odkaz">📋</button>
                 </div>
             `;
@@ -179,9 +199,18 @@ const tags = (item.tags || []).map(t => `<span class="tag-pill">${t}</span>`).jo
         btnAll.className = 'cat-pill active';
         btnAll.textContent = 'Vše v Knihovně';
         btnAll.onclick = () => selectCategory(btnAll, 'all');
-        
+
+        // Tlačítko ZÁLOŽKY
+        const btnBm = document.createElement('button');
+        btnBm.className = 'cat-pill cat-pill-bookmarks';
+        btnBm.id = 'bookmarksPill';
+        btnBm.textContent = '⭐ Záložky';
+        btnBm.title = 'Zobrazit uložené záložky';
+        btnBm.onclick = () => selectCategory(btnBm, 'bookmarks');
+
         UI.catContainer.innerHTML = '';
         UI.catContainer.appendChild(btnAll);
+        UI.catContainer.appendChild(btnBm);
 
         // Rozdělení na hlavní a podkategorie
         const mainCats = dbData.categories.filter(c => !c.parentId && categoriesInUse.has(c.id));
@@ -217,34 +246,36 @@ const tags = (item.tags || []).map(t => `<span class="tag-pill">${t}</span>`).jo
     }
 
     function applyFiltersAndRender() {
-        const query = UI.search.value.toLowerCase().trim();
+        const rawQuery = UI.search.value.trim();
+        const query = norm(rawQuery);
         const sortBy = UI.sort.value;
         let filtered = dbData.articles;
 
-        if (activeCategoryId !== 'all') {
-            // Najdeme všechny podkategorie, pokud uživatel klikl na Hlavní kategorii
+        // Záložky nebo kategorie
+        if (activeCategoryId === 'bookmarks') {
+            const bm = getBookmarks();
+            filtered = filtered.filter(a => bm.has(String(a.id)));
+        } else if (activeCategoryId !== 'all') {
             const subCategoryIds = dbData.categories
                 .filter(c => c.parentId === activeCategoryId)
                 .map(c => c.id);
-            
-            // Povolíme články z vybrané kategorie A ZÁROVEŇ ze všech jejích podkategorií
             const allowedCategoryIds = new Set([activeCategoryId, ...subCategoryIds]);
-
             filtered = filtered.filter(a => allowedCategoryIds.has(a.categoryId));
         }
 
+        // Vyhledávání — normalizace diakritiky + prohledává název, štítky i popis
         if (query) {
-            if(sortBy === 'newest') UI.sort.value = 'relevance';
-            const kws = query.split(' ');
-            
+            if (sortBy === 'newest') UI.sort.value = 'relevance';
+            const kws = query.split(/\s+/).filter(Boolean);
             filtered = filtered.map(art => {
                 let score = 0;
-                const title = (art.title || '').toLowerCase();
-                const tags = (art.tags || []).join(' ').toLowerCase();
-
+                const title = norm(art.title);
+                const tags  = norm((art.tags || []).join(' '));
+                const desc  = norm(art.description);
                 kws.forEach(kw => {
                     if (title.includes(kw)) score += 10;
-                    if (tags.includes(kw)) score += 5;
+                    if (tags.includes(kw))  score += 5;
+                    if (desc.includes(kw))  score += 2;
                 });
                 return { ...art, score };
             }).filter(art => art.score > 0);
@@ -256,7 +287,21 @@ const tags = (item.tags || []).map(t => `<span class="tag-pill">${t}</span>`).jo
             filtered.sort((a, b) => new Date(b.lastUpdated) - new Date(a.lastUpdated));
         }
 
-        renderGrid(filtered);
+        // Počet výsledků
+        const rc = document.getElementById('resultCount');
+        if (rc) {
+            if (rawQuery || activeCategoryId !== 'all') {
+                const n = filtered.length;
+                const label = n === 1 ? 'článek' : n < 5 ? 'články' : 'článků';
+                const total = dbData.articles.length;
+                rc.textContent = `Nalezeno ${n} ${label}${rawQuery ? ` pro „${rawQuery}"` : ''}${activeCategoryId !== 'all' && activeCategoryId !== 'bookmarks' ? '' : ''} z ${total}`;
+                rc.style.display = 'block';
+            } else {
+                rc.style.display = 'none';
+            }
+        }
+
+        renderGrid(filtered, rawQuery);
     }
 
     UI.search.addEventListener('input', () => {
@@ -264,6 +309,28 @@ const tags = (item.tags || []).map(t => `<span class="tag-pill">${t}</span>`).jo
         searchTimeout = setTimeout(applyFiltersAndRender, 300);
     });
     UI.sort.addEventListener('change', applyFiltersAndRender);
+
+    // Klávesová zkratka: / = zaostřit vyhledávač, Escape = vymazat
+    document.addEventListener('keydown', (e) => {
+        const active = document.activeElement;
+        const inInput = active && (active.tagName === 'INPUT' || active.tagName === 'TEXTAREA' || active.isContentEditable);
+        if (e.key === '/' && !inInput && !e.ctrlKey && !e.metaKey) {
+            e.preventDefault();
+            UI.search.focus();
+            UI.search.select();
+        }
+        if (e.key === 'Escape' && active === UI.search) {
+            UI.search.value = '';
+            UI.search.blur();
+            applyFiltersAndRender();
+        }
+    });
+
+    // Tlačítko "zpět nahoru" — zobrazí se po 400px rolování
+    window.addEventListener('scroll', () => {
+        const btn = document.getElementById('backToTop');
+        if (btn) btn.classList.toggle('visible', window.scrollY > 400);
+    }, { passive: true });
 
     function copyLink(url) {
         navigator.clipboard.writeText(url).then(() => {
@@ -290,5 +357,6 @@ const tags = (item.tags || []).map(t => `<span class="tag-pill">${t}</span>`).jo
         });
     }
 </script>
+<button id="backToTop" class="back-to-top" aria-label="Zpět nahoru" title="Zpět na začátek stránky" onclick="window.scrollTo({top:0,behavior:'smooth'})">↑</button>
 </body>
 </html>
