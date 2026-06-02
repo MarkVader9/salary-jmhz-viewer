@@ -7,9 +7,9 @@
 
 const KB_CONFIG = {
     LOCAL_BACKUP_KEY: 'jmhz_kb_offline_backup',
-    API_URL: 'data/api.php',
-    ADMIN_TOKEN: 'SuperTajneHesloSalary2026',
-    
+    // Publikovaná data jsou statický soubor na FTP – žádná databáze ani backend.
+    DB_URL: 'databaze-knihovny.json',
+
     // Daty řízená pravidla (Rule Engine)
     rules: [
 
@@ -29,8 +29,8 @@ const KB_Toaster = {
         document.body.appendChild(this.container);
     },
     show(title, desc = '', type = 'info') {
-		
-		
+                
+                
         if (!this.container) this.init();
         const t = document.createElement('div');
         t.className = `kb-toast kb-toast-${type}`;
@@ -67,13 +67,13 @@ const MOCK_NOTIFICATIONS = [
         id: "notif_002",
         date: "2026-05-12T17:15:00Z",
         title: "Nový kurz pro Mzdové Účetní přidán do sekce Školení",
-        content: "Přidali jsme nový interaktivní kurz zaměřený na Používání Webové Aplikace SALARY Prohlížeče JMHZ Formulářů. <br><br>Kurz si můžete spustit v hlavní nabídce knihovny, a nebo na tomto odkaze <a href=\"https://www.salary.cz/jmhz2026/knihovna-jmhz/lms.html?course=kurz_jmhz_prohlizec\">Přejít na Kurz</a>",
+        content: "Přidali jsme nový interaktivní kurz zaměřený na Používání Webové Aplikace SALARY Prohlížeče JMHZ Formulářů. <br><br>Kurz si můžete spustit v hlavní nabídce knihovny, a nebo na tomto odkaze <a href=\"lms.html?course=kurz_jmhz_prohlizec\">Přejít na Kurz</a>",
         tags: ["Kurzy", "Nové"]
     },{
         id: "notif_004",
         date: "2026-05-13T07:26:33Z",
         title: "Byl Přidán Nový JMHZ Číselník",
-        content: "Nově byl do knihovny přidán nový JMHZ Číselník Okresů. <br><br>Je možné si jej přečíst na tomto odkaze <a href=\"https://www.salary.cz/jmhz2026/knihovna-jmhz/clanek.html?id=jmhz_ciselnik_okresu\">Přejít na Nový Číselník</a>",
+        content: "Nově byl do knihovny přidán nový JMHZ Číselník Okresů. <br><br>Je možné si jej přečíst na tomto odkaze <a href=\"clanek.html?id=jmhz_ciselnik_okresu\">Přejít na Nový Číselník</a>",
         tags: ["JMHZ","Číselníky", "Nové"]
     }
 ];
@@ -231,8 +231,9 @@ const KB_Notifications = {
 
     parseContentHtml(text) {
         let html = text;
-        const mediaBase = "https://www.salary.cz/jmhz2026/knihovna-jmhz/media/";
-        const docxBase = "https://www.salary.cz/jmhz2026/knihovna-jmhz/dokumenty/";
+        // Relativní cesty – funguje z FTP i z jakéhokoli jiného hostingu bez úprav.
+        const mediaBase = "media/";
+        const docxBase = "dokumenty/";
 
         html = html.replace(/\[VIDEO:\s*(.+?)\]/gi, (m, src) => {
             src = src.trim(); if(!src.startsWith('http')) src = mediaBase + src;
@@ -369,37 +370,12 @@ const KB_Validator = {
     }
 };
 
-// --- CENTRÁLNÍ API KLIENT ---
+// --- CENTRÁLNÍ DATOVÝ KLIENT (pouze čtení statického JSON z FTP) ---
 const KB_API = {
     async fetchDB() {
-        const res = await fetch(KB_CONFIG.API_URL + '?t=' + Date.now());
+        const res = await fetch(KB_CONFIG.DB_URL);
         if (!res.ok) throw new Error("HTTP " + res.status);
         return await res.json();
-    },
-    async ping() {
-        const res = await fetch(KB_CONFIG.API_URL + '?ping=' + Date.now(), { method: 'GET' });
-        if (!res.ok) throw new Error("DB Offline");
-        return true;
-    },
-    saveDB(dbData, onProgress) {
-        return new Promise((resolve, reject) => {
-            const xhr = new XMLHttpRequest();
-            xhr.open('POST', KB_CONFIG.API_URL, true);
-            xhr.setRequestHeader('Content-Type', 'application/json');
-            
-            if (onProgress) {
-                xhr.upload.onprogress = (e) => {
-                    if(e.lengthComputable) onProgress(Math.round((e.loaded / e.total) * 100));
-                };
-            }
-
-            xhr.onload = () => {
-                if (xhr.status === 200) resolve(true);
-                else reject(new Error("Chyba DB"));
-            };
-            xhr.onerror = () => reject(new Error("Ztráta sítě"));
-            xhr.send(JSON.stringify({ token: KB_CONFIG.ADMIN_TOKEN, dbData: dbData }));
-        });
     }
 };
 

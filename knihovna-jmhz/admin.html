@@ -3,17 +3,26 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval' blob: https://cdn.ckeditor.com https://cdnjs.cloudflare.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com https://cdn.ckeditor.com; font-src 'self' data: https://fonts.gstatic.com https://cdn.ckeditor.com; img-src 'self' data: blob: https:; media-src 'self' blob: https:; connect-src 'self' data: blob: https:; worker-src 'self' blob:; child-src 'self' blob:; object-src 'none'; base-uri 'self'">
+    <meta name="robots" content="noindex, nofollow">
     <title>SALARY - Administrace Knihovny (Enterprise)</title>
+    <meta name="theme-color" content="#0f172a">
+    <link rel="icon" href="../icon.svg" type="image/svg+xml">
 
     <script src="https://cdnjs.cloudflare.com/ajax/libs/mammoth/1.4.21/mammoth.browser.min.js"></script>
-	<link rel="stylesheet" href="library-style.css">
+        <link rel="stylesheet" href="library-style.css">
     
 </head>
 <body>
 
 <div class="admin-grid">
     <aside class="panel border-r">
-        <div class="panel-header"><button class="btn-main" onclick="createNewArticle()" style="width: 100%;">Napsat nový článek</button></div>
+        <div class="panel-header">
+            <button class="btn-main" onclick="createNewArticle()" style="width: 100%;">Napsat nový článek</button>
+            <button class="btn-main btn-save" onclick="exportDatabase()" style="width: 100%; margin-top: 8px;">⬇ Stáhnout JSON pro FTP</button>
+            <input type="file" id="importJsonInput" accept=".json" style="display:none;" onchange="importDatabase(this)">
+            <button class="btn-main" onclick="document.getElementById('importJsonInput').click()" style="width: 100%; margin-top: 8px;">⬆ Načíst JSON ze souboru</button>
+        </div>
         <div class="article-list" id="articleList"></div>
     </aside>
 
@@ -23,7 +32,7 @@
                 <span style="font-weight: 800; color: var(--accent); font-size: 0.85rem; letter-spacing: 0.05em;">EDITOR ČLÁNKŮ</span>
                 <div style="display: flex; align-items: center; gap: 10px;">
                     <div id="unsavedIndicator" title="Máte neuložené změny"></div>
-                    <span id="saveStatus" style="font-size: 0.85rem; font-weight: 600; color: var(--text-muted);">Připojování k databázi...</span>
+                    <span id="saveStatus" style="font-size: 0.85rem; font-weight: 600; color: var(--text-muted);">Načítání knihovny...</span>
                 </div>
             </div>
             
@@ -86,8 +95,8 @@
 
 <script>
     // --- NASTAVENÍ URL PRO MÉDIA ---
-    // Toto je absolutní webová cesta na vašem hostingu pro složku s médii
-    const MEDIA_BASE_URL = "/wwwroot/jmhz2026/knihovna-jmhz/media/";
+    // Relativní cesta – média se načítají ze složky knihovna-jmhz/media/ na FTP.
+    const MEDIA_BASE_URL = "media/";
 
     // --- FUNKCE PRO ZPRACOVÁNÍ VLOŽENÉHO FTP ODKAZU ---
     // Převádí neplatné ftp:// odkazy na korektní HTTPS odkazy přímo na vašem serveru
@@ -265,6 +274,7 @@
     let heartbeatTimer;
 
     const LOCAL_BACKUP_KEY = 'jmhz_kb_offline_backup';
+    const KB_DB_URL = 'databaze-knihovny.json'; // publikovaný statický soubor na FTP
 
     // --- BOOTSTRAP A OFFLINE DETEKCE ---
     document.addEventListener('DOMContentLoaded', initApp);
@@ -278,14 +288,7 @@
 
     function updateNetworkStatus() {
         const statusEl = document.getElementById('saveStatus');
-        if (!navigator.onLine) {
-            statusEl.textContent = "⚠ Bez internetu (Zálohuji lokálně)";
-            statusEl.classList.add('status-offline');
-            statusEl.classList.remove('status-blinking');
-        } else {
-            statusEl.classList.remove('status-offline');
-            if (!isDirty && isDbReady) statusEl.textContent = "Vše aktuální (Online)";
-        }
+        if (!isDirty) statusEl.classList.remove('status-blinking');
     }
 
     async function initApp() {
@@ -310,30 +313,40 @@
     }
 
     async function fetchDatabase() {
+        const statusEl = document.getElementById('saveStatus');
+        let loaded = false;
+
+        // 1) Načteme publikovaný statický soubor z FTP jako základ.
         try {
-            const res = await fetch('data/api.php?t=' + Date.now());
-            if (!res.ok) throw new Error("HTTP " + res.status);
-            
-            const data = await res.json();
-            if (data.categories) { dbData = data; isDbReady = true; }
-        } catch (e) { 
-            const statusEl = document.getElementById('saveStatus');
-            statusEl.textContent = "⚠ MSSQL nedostupná";
-            statusEl.classList.add('status-blinking');
-            
-            const localBackup = localStorage.getItem(LOCAL_BACKUP_KEY);
-            if (localBackup) {
-                dbData = JSON.parse(localBackup);
-                isDbReady = true;
-                statusEl.textContent = "⚠ Načtena lokální záloha";
-                statusEl.classList.remove('status-blinking');
-                statusEl.classList.add('status-offline');
-                Toaster.show('Offline režim', 'Byla načtena data uložená ve vašem prohlížeči.', 'warning');
-            } else {
-                startHeartbeat(); 
-                return;
+            const res = await fetch(KB_DB_URL + '?t=' + Date.now());
+            if (res.ok) {
+                const data = await res.json();
+                if (data && data.categories) { dbData = data; loaded = true; }
             }
+        } catch (e) { /* Soubor nemusí při prvním spuštění existovat – to nevadí. */ }
+
+        // 2) Pracovní verze v prohlížeči (rozdělaná práce) má přednost před publikovanou.
+        const localBackup = localStorage.getItem(LOCAL_BACKUP_KEY);
+        if (localBackup) {
+            try {
+                const draft = JSON.parse(localBackup);
+                if (draft && draft.categories) {
+                    dbData = draft;
+                    loaded = true;
+                    statusEl.textContent = "Pracovní verze (neexportováno na FTP)";
+                    statusEl.classList.add('status-offline');
+                    Toaster.show('Pracovní verze', 'Načetli jsme vaši rozdělanou práci uloženou v prohlížeči.', 'info');
+                }
+            } catch (e) { /* poškozená záloha – ignorujeme */ }
         }
+
+        if (!loaded) {
+            dbData = { categories: [], articles: [] };
+            statusEl.textContent = "Nová prázdná knihovna";
+        } else if (!localBackup) {
+            statusEl.textContent = "Načteno z publikovaného souboru";
+        }
+        isDbReady = true;
 
         renderCategories();
         renderSidebarList();
@@ -344,48 +357,6 @@
         } else {
             createNewArticle();
         }
-        
-        if (navigator.onLine && isDbReady) {
-            const statusEl = document.getElementById('saveStatus');
-            statusEl.classList.remove('status-blinking', 'status-offline');
-            statusEl.textContent = "Vše aktuální";
-        }
-
-        startHeartbeat();
-    }
-
-    // --- REAL-TIME DB HEARTBEAT ---
-    function startHeartbeat() {
-        heartbeatTimer = setInterval(async () => {
-            if (!navigator.onLine) return; 
-            
-            try {
-                const res = await fetch('data/api.php?ping=' + Date.now(), { method: 'GET' });
-                const statusEl = document.getElementById('saveStatus');
-                
-                if (res.ok) {
-                    isDbReady = true;
-                    if (statusEl.classList.contains('status-blinking') || statusEl.textContent.includes("Načtena")) {
-                        statusEl.classList.remove('status-blinking', 'status-offline');
-                        statusEl.textContent = "Spojení s MSSQL obnoveno";
-                        Toaster.show('Spojení obnoveno', 'Spojení s MSSQL databází bylo navázáno.', 'success');
-                        setTimeout(() => { if (!isDirty) statusEl.textContent = "Vše aktuální"; }, 3000);
-                        
-                        if (localStorage.getItem(LOCAL_BACKUP_KEY)) executeSave(false);
-                    }
-                } else {
-                    throw new Error("DB Offline");
-                }
-            } catch (e) {
-                isDbReady = false;
-                const statusEl = document.getElementById('saveStatus');
-                if (!isDirty && !statusEl.classList.contains('status-blinking')) {
-                    statusEl.textContent = "⚠ Ztráta spojení s MSSQL";
-                    statusEl.classList.add('status-blinking');
-                    statusEl.classList.remove('status-offline');
-                }
-            }
-        }, 20000);
     }
 
     // --- GUI ENGINE ---
@@ -456,31 +427,25 @@
     }
 
     async function publishArticle() {
-        if(!navigator.onLine || !isDbReady) {
-            Toaster.show('Nelze publikovat', 'Pro publikaci musíte být plně připojeni k MSSQL databázi. Práce je uložena v prohlížeči.', 'warning');
-            return;
-        }
-        
         const isValid = await executeSave(true);
         if (!isValid) return;
-        
+
         const status = document.getElementById('publishStatus').value;
         Toaster.show(
-            status === 'public' ? 'Publikováno' : 'Skryto v archivu',
-            status === 'public' ? 'Článek je nyní online pro veřejnost a objeví se čtenářům!' : 'Článek byl úspěšně skryt před veřejností.',
+            status === 'public' ? 'Nastaveno: Veřejné' : 'Nastaveno: Archiv',
+            'Změna je uložena v prohlížeči. Pro zveřejnění čtenářům stáhněte JSON tlačítkem vlevo a nahrajte jej na FTP.',
             'success'
         );
     }
 
     function executeSave(isManual) {
         return new Promise((resolve) => {
-            if (!isDbReady && !localStorage.getItem(LOCAL_BACKUP_KEY) && dbData.articles.length === 0) return resolve(false);
-            if (isSwitching || !isDirty && !isManual) return resolve(true);
+            if (isSwitching || (!isDirty && !isManual)) return resolve(true);
             clearTimeout(autoSaveTimer);
 
             let idx = dbData.articles.findIndex(a => a.id === currentId);
             const content = editorObj ? editorObj.getData() : '';
-            
+
             // OŠETŘENÍ PRÁZDNÉHO NADPISU - Důležité pro to, aby se import nezasekl na Validaci
             let titleVal = document.getElementById('articleTitle').value.trim();
             if (!titleVal) {
@@ -509,65 +474,59 @@
             else dbData.articles.push(dataObj);
 
             renderSidebarList();
+
+            // Vše běží v prohlížeči – žádný backend. Ukládáme do prohlížeče (pracovní verze).
             localStorage.setItem(LOCAL_BACKUP_KEY, JSON.stringify(dbData));
+            clearDirty();
 
-            if (!navigator.onLine || !isDbReady) {
-                clearDirty();
-                return resolve(true); 
-            }
-
-            const xhr = new XMLHttpRequest();
-            xhr.open('POST', 'data/api.php', true);
-            xhr.setRequestHeader('Content-Type', 'application/json');
-
-            const pBox = document.getElementById('progressBox');
-            const pBar = document.getElementById('progressBar');
-            const pLbl = document.getElementById('progressLabel');
-            
-            pBox.style.display = 'block';
-            pBar.style.width = '0%';
-            pBar.style.background = 'var(--accent)';
-            pLbl.textContent = 'Zápis do MSSQL...';
-            pLbl.style.color = 'var(--accent)';
-
-            document.getElementById('btnSave').disabled = true;
-
-            xhr.upload.onprogress = (e) => {
-                if(e.lengthComputable) pBar.style.width = Math.round((e.loaded / e.total) * 100) + '%';
-            };
-
-            xhr.onload = () => {
-                document.getElementById('btnSave').disabled = false;
-                if (xhr.status === 200) {
-                    pBar.style.background = 'var(--success)';
-                    pLbl.textContent = '✓ Zapsáno bezpečně do DB';
-                    pLbl.style.color = 'var(--success)';
-                    clearDirty();
-                    localStorage.removeItem(LOCAL_BACKUP_KEY); 
-                    setTimeout(() => pBox.style.display = 'none', 1500);
-                    resolve(true);
-                } else {
-                    pBar.style.background = 'var(--danger)';
-                    pLbl.textContent = '⚠ Chyba DB (Uloženo lokálně)';
-                    pLbl.style.color = 'var(--danger)';
-                    isDbReady = false; 
-                    clearDirty();
-                    resolve(false);
-                }
-            };
-
-            xhr.onerror = () => {
-                document.getElementById('btnSave').disabled = false;
-                pBar.style.background = 'var(--warning)';
-                pLbl.textContent = '⚠ DB nedostupná (Uloženo u vás)';
-                pLbl.style.color = 'var(--warning)';
-                isDbReady = false;
-                clearDirty();
-                resolve(false);
-            };
-
-            xhr.send(JSON.stringify({ token: "SuperTajneHesloSalary2026", dbData: dbData }));
+            const statusEl = document.getElementById('saveStatus');
+            statusEl.textContent = "Uloženo v prohlížeči (neexportováno na FTP)";
+            statusEl.classList.remove('status-blinking');
+            statusEl.classList.add('status-offline');
+            resolve(true);
         });
+    }
+
+    // --- EXPORT / IMPORT PUBLIKAČNÍHO SOUBORU (databaze-knihovny.json) ---
+    async function exportDatabase() {
+        await executeSave(true);
+        const blob = new Blob([JSON.stringify(dbData, null, 2)], { type: 'application/json' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = 'databaze-knihovny.json';
+        document.body.appendChild(a);
+        a.click();
+        a.remove();
+        URL.revokeObjectURL(url);
+        Toaster.show('Soubor připraven', 'Nahrajte stažený soubor databaze-knihovny.json na FTP do složky knihovna-jmhz/ – tím se obsah zveřejní čtenářům.', 'success');
+    }
+
+    function importDatabase(input) {
+        const file = input.files && input.files[0];
+        if (!file) return;
+        const reader = new FileReader();
+        reader.onload = () => {
+            try {
+                const data = JSON.parse(reader.result);
+                if (!data || !data.categories || !data.articles) throw new Error('Neplatná struktura souboru (chybí categories/articles).');
+                dbData = data;
+                localStorage.setItem(LOCAL_BACKUP_KEY, JSON.stringify(dbData));
+                renderCategories();
+                renderSidebarList();
+                if (dbData.articles.length > 0) {
+                    const latest = [...dbData.articles].sort((a,b) => new Date(b.lastUpdated) - new Date(a.lastUpdated))[0];
+                    openArticle(latest.id);
+                } else {
+                    createNewArticle();
+                }
+                Toaster.show('Načteno', 'Databáze byla načtena ze souboru. Pokračujte v úpravách.', 'success');
+            } catch (e) {
+                Toaster.show('Chyba importu', e.message, 'error');
+            }
+        };
+        reader.readAsText(file);
+        input.value = '';
     }
 
     // --- SIDEBAR A KATEGORIE ---

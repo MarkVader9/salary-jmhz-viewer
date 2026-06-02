@@ -3,7 +3,19 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval' 'wasm-unsafe-eval' blob:; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob:; font-src 'self' data:; connect-src 'self' blob: data:; worker-src 'self' blob:; child-src 'self' blob:; object-src 'none'; base-uri 'self'; form-action 'self'">
     <title>Prohlížeč JMHZ</title>
+    <meta name="description" content="Validace a vizualizace mzdových dat JMHZ a REGZEC přímo ve vašem prohlížeči. Žádná data nikdy neopouštějí vaše zařízení.">
+    <meta name="theme-color" content="#0f172a">
+    <link rel="icon" href="icon.svg" type="image/svg+xml">
+    <link rel="apple-touch-icon" href="icon.svg">
+    <link rel="manifest" href="app.webmanifest">
+    <meta property="og:type" content="website">
+    <meta property="og:title" content="Prohlížeč JMHZ Formulářů">
+    <meta property="og:description" content="Validace a vizualizace mzdových dat JMHZ a REGZEC přímo ve vašem prohlížeči.">
+    <meta property="og:image" content="icon.svg">
+    <meta property="og:locale" content="cs_CZ">
+    <meta name="twitter:card" content="summary">
     <style>
 /* ==========================================================================
    1. STYLOPIS: Sonner Toaster (Notifikace)
@@ -1323,6 +1335,12 @@ body {
   cursor: pointer; transition: all var(--duration) var(--ease);
 }
 .drop-zone button:hover { background: var(--accent-bg-hover); border-color: var(--accent-bg-hover); }
+.drop-zone button:focus-visible,
+.drop-zone:focus-visible {
+  outline: 3px solid var(--accent);
+  outline-offset: 3px;
+  border-radius: var(--radius-lg);
+}
 
 /* === Sections (Accordion) inside card === */
 .section-card { border-bottom: 1px solid var(--border-subtle); }
@@ -2589,6 +2607,34 @@ body {
           console.warn("JMHZ Marquee Info: Nepodařilo se načíst zpravy.json", e);
         }
       })();
+
+      // Progresivní vylepšení přístupnosti drop-zóny (SolidJS ji vykresluje dynamicky)
+      (function enhanceDropzoneA11y() {
+        function enhance(dz) {
+          if (dz.dataset.a11yReady) return;
+          dz.dataset.a11yReady = '1';
+          dz.setAttribute('role', 'group');
+          dz.setAttribute('aria-label', 'Oblast pro načtení XML souboru JMHZ – přetáhněte soubor sem nebo použijte tlačítko Nahrát XML Soubor.');
+          const btn = dz.querySelector('button');
+          if (btn) {
+            if (!btn.getAttribute('type')) btn.setAttribute('type', 'button');
+            if (!btn.getAttribute('aria-label')) btn.setAttribute('aria-label', 'Nahrát XML soubor JMHZ nebo REGZEC z vašeho zařízení');
+          }
+        }
+        const apply = () => document.querySelectorAll('.drop-zone').forEach(enhance);
+        new MutationObserver(apply).observe(document.body, { childList: true, subtree: true });
+        if (document.readyState !== 'loading') apply();
+        else document.addEventListener('DOMContentLoaded', apply);
+      })();
+
+      // Registrace Service Workeru (offline režim / PWA)
+      if ('serviceWorker' in navigator) {
+        window.addEventListener('load', () => {
+          navigator.serviceWorker.register('sw.js').catch((err) =>
+            console.warn('Service Worker se nepodařilo zaregistrovat:', err)
+          );
+        });
+      }
 </script>
 </body>
 </html>

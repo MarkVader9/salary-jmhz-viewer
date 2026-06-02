@@ -1,0 +1,1 @@
+- [JMHZ Viewer is a compiled SolidJS bundle](jmhz-viewer-compiled.md) — root viewer source is NOT in repo; DOM is runtime-rendered, customize via progressive enhancement, not HTML/JS edits.

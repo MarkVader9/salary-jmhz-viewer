@@ -1,0 +1,15 @@
+{
+  "name": "Prohlížeč JMHZ Formulářů",
+  "short_name": "JMHZ Viewer",
+  "description": "Validace a vizualizace mzdových dat JMHZ a REGZEC – vše ve vašem prohlížeči, žádná data neopouštějí vaše zařízení.",
+  "start_url": "./index.html",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "any",
+  "background_color": "#0f172a",
+  "theme_color": "#0f172a",
+  "lang": "cs",
+  "icons": [
+    { "src": "icon.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "any maskable" }
+  ]
+}

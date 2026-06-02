@@ -3,20 +3,28 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval' blob: https://cdn.ckeditor.com https://cdnjs.cloudflare.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com https://cdn.ckeditor.com; font-src 'self' data: https://fonts.gstatic.com https://cdn.ckeditor.com; img-src 'self' data: blob: https:; media-src 'self' blob: https:; connect-src 'self' data: blob: https:; worker-src 'self' blob:; child-src 'self' blob:; object-src 'none'; base-uri 'self'">
     <title>Interaktivní Kurz - SALARY s.r.o. KNIHOVNA JMHZ</title>
-    
+    <meta name="description" content="Interaktivní vzdělávací kurzy SALARY k legislativě a metodikám JMHZ.">
+    <meta name="theme-color" content="#0f172a">
+    <link rel="icon" href="../icon.svg" type="image/svg+xml">
+    <link rel="apple-touch-icon" href="../icon.svg">
+    <link rel="manifest" href="app.webmanifest">
+    <meta property="og:image" content="../icon.svg">
+    <meta property="og:locale" content="cs_CZ">
+    <meta name="twitter:card" content="summary">
     <meta property="og:title" content="Interaktivní Kurz - SALARY s.r.o. KNIHOVNA JMHZ">
     <meta property="og:description" content="Znalostní Knihovna Legislativy JMHZ a Interaktivní Vzdělávací Kurzy SALARY s.r.o.">
     <meta property="og:type" content="website">
     
     <script src="https://cdnjs.cloudflare.com/ajax/libs/mammoth/1.4.21/mammoth.browser.min.js"></script>
-	
-	
-	<script src="kb-core.js"></script>
+        
+        
+        <script src="kb-core.js"></script>
     <script src="library-menu.js"></script>
     <script src="library-ui.js"></script>
     <script src="kb-video.js"></script> 
-	<link rel="stylesheet" href="library-style.css?v=3">
+        <link rel="stylesheet" href="library-style.css?v=3">
 
 </head>
 
@@ -79,8 +87,8 @@
     };
 
     const DB_URL = "databaze-knihovny.json"; 
-    const MEDIA_BASE_URL = "https://www.salary.cz/jmhz2026/knihovna-jmhz/media/";
-    const DOCX_BASE_URL = "https://www.salary.cz/jmhz2026/knihovna-jmhz/dokumenty/";
+    const MEDIA_BASE_URL = "media/";
+    const DOCX_BASE_URL = "dokumenty/";
 
     const urlParams = new URLSearchParams(window.location.search);
     const courseId = urlParams.get('course');
@@ -174,8 +182,8 @@
         document.getElementById('articleMeta').innerHTML = `Aktualizace: <strong>${dateObj.toLocaleDateString('cs-CZ')}</strong><br>Délka kurzu: <strong>${courseData.readingTimeMin || 1} min</strong>`;
         document.getElementById('articleTags').innerHTML = (courseData.tags || []).map(t => `<span class="tag-pill">${t}</span>`).join('');
     }
-	
-	// Funkce pro otevření/zavření infohlášky
+        
+        // Funkce pro otevření/zavření infohlášky
     window.toggleInfoBubble = function(e) {
         e.stopPropagation(); // Zabrání tomu, aby se kliknutí propsalo hned do dokumentu a okamžitě okno zavřelo
         const wrap = document.getElementById('infoBubbleWrap');
@@ -695,7 +703,7 @@
         // <--- ZDE JE TO SPRÁVNÉ MÍSTO PRO INICIALIZACI VIDEA (až po ukončení cyklu forEach) --->
         if (window.KB_VideoManager) KB_VideoManager.init(); 
     }
-	// =========================================================
+        // =========================================================
     // VÝPOČET ČASU (Čtení + Délka Videí a Audia)
     // =========================================================
     window.calculateLessonTime = function(container) {
@@ -712,7 +720,6 @@
         let loadedCount = 0;
 
         // Funkce pro vykreslení finálního výsledku
-        c// Funkce pro vykreslení finálního výsledku
         const updateUI = () => {
             const mins = Math.ceil(totalSeconds / 60);
             let minText = 'minut';
@@ -769,6 +776,15 @@
     };
 
     document.addEventListener('DOMContentLoaded', initLms);
+
+    // Registrace Service Workeru (offline režim / PWA)
+    if ('serviceWorker' in navigator) {
+        window.addEventListener('load', () => {
+            navigator.serviceWorker.register('sw.js').catch((err) =>
+                console.warn('Service Worker se nepodařilo zaregistrovat:', err)
+            );
+        });
+    }
 </script>
 </body>
 </html>
