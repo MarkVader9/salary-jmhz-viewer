@@ -378,6 +378,7 @@
 
             document.title = `${article.title} - SALARY Knihovna Znalostí`;
             document.getElementById('articleTitle').textContent = article.title;
+            if (window.trackRecentVisit) window.trackRecentVisit(article.title, location.href, '📄');
             
             const dateObj = new Date(article.lastUpdated);
             document.getElementById('articleMeta').innerHTML = `Aktualizace: <strong>${dateObj.toLocaleDateString('cs-CZ')}</strong><br>Původní odhad: <strong>${article.readingTimeMin || 1} min</strong>`;

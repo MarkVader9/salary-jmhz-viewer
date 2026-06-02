@@ -108,6 +108,7 @@
             if (!courseData) throw new Error("Tento kurz nebyl nalezen.");
 
             document.title = `${courseData.title} - SALARY LMS`;
+            if (window.trackRecentVisit) window.trackRecentVisit(courseData.title, location.href, '🎓');
             document.getElementById('courseTitleSidebar').textContent = courseData.title;
 
             const savedProgress = localStorage.getItem(`jmhz_lms_progress_${courseId}`);

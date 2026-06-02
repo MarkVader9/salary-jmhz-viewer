@@ -29,52 +29,76 @@ document.addEventListener("DOMContentLoaded", () => {
         /* ==========================================================
            AUTORITATIVNÍ MOBILNÍ CELOOBRAZOVKOVÉ MENU (Pod 900px)
            ========================================================== */
+        /* ── Vyhledávání v drawer ─────────────────────────────────────── */
+        .drawer-search-wrap {
+            padding: 10px 12px;
+            border-bottom: 1px solid var(--border-subtle, #eee);
+            flex-shrink: 0;
+        }
+        #drawerSearch {
+            width: 100%; box-sizing: border-box;
+            padding: 8px 12px;
+            border: 1px solid var(--border, #ddd);
+            border-radius: var(--radius-md, 6px);
+            font-size: 0.875rem;
+            background: var(--bg-surface, #f5f5f5);
+            color: var(--text-primary, #111);
+            outline: none; transition: border-color 0.15s;
+        }
+        #drawerSearch:focus { border-color: var(--accent, #1e5fa3) !important; }
+
+        /* ── Naposledy navštíveno ─────────────────────────────────────── */
+        .drawer-recent {
+            border-top: 1px solid var(--border-subtle, #eee);
+            padding: 10px 12px 16px; flex-shrink: 0;
+        }
+        .drawer-recent-label {
+            font-size: 0.6875rem; text-transform: uppercase; font-weight: 700;
+            letter-spacing: 0.06em; color: var(--text-faint, #aaa);
+            padding: 4px 4px 8px;
+        }
+        .drawer-recent-item {
+            width: 100%; text-align: left; padding: 7px 8px;
+            background: none; border: none; border-radius: var(--radius-md, 6px);
+            cursor: pointer; display: flex; align-items: center; gap: 8px;
+            transition: background 0.15s; color: var(--text-secondary, #555);
+        }
+        .drawer-recent-item:hover { background: var(--bg-hover, #f5f5f5); color: var(--text-primary, #111); }
+        .drawer-recent-icon { font-size: 0.9rem; flex-shrink: 0; }
+        .drawer-recent-text { font-size: 0.8125rem; font-weight: 500; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+
+        /* ── Drawer scroll fix — body bere zbývající prostor ──────────── */
+        .drawer { display: flex !important; flex-direction: column !important; }
+        .drawer-body { flex: 1 !important; overflow-y: auto !important; min-height: 0 !important; }
+
         @media (max-width: 900px) {
-            /* Skryje text "Možnosti" v hlavičce na mobilech a tabletech */
             .drawer-toggle-text { display: none !important; }
-
-            .drawer-backdrop {
-                position: fixed !important;
-                inset: 0 !important;
-                z-index: 999998 !important; 
-            }
-
+            .drawer-backdrop { position: fixed !important; inset: 0 !important; z-index: 999998 !important; }
             .drawer { 
-                position: fixed !important;
-                top: 0 !important;
-                right: 0 !important;
-                bottom: 0 !important;
-                left: auto !important;
-                width: 100vw !important; 
-                max-width: 100vw !important; 
-                height: 100vh !important;
-                border-left: none !important; 
-                z-index: 999999 !important; 
+                position: fixed !important; top: 0 !important; right: 0 !important;
+                bottom: 0 !important; left: auto !important;
+                width: 100vw !important; max-width: 100vw !important;
+                height: 100dvh !important; border-left: none !important; z-index: 999999 !important;
             }
-            
-            .drawer-header { padding: 25px 30px !important; }
-            .drawer-header span { font-size: 1.3rem !important; font-weight: 800 !important; }
-            .drawer-close { font-size: 2.2rem !important; padding: 10px !important; margin: -10px !important; }
-            
-            .drawer-body { 
-                padding: 30px 20px !important; 
-                gap: 15px !important; 
-            }
+            .drawer-header { padding: 22px 24px !important; }
+            .drawer-header span { font-size: 1.25rem !important; font-weight: 800 !important; }
+            .drawer-close { font-size: 2rem !important; padding: 10px !important; margin: -10px !important; min-width: 44px; min-height: 44px; }
+            .drawer-search-wrap { padding: 14px 20px !important; }
+            #drawerSearch { padding: 12px 16px !important; font-size: 1.05rem !important; border-radius: 12px !important; }
+            .drawer-body { padding: 16px 16px !important; gap: 10px !important; }
             .drawer-body button { 
-                font-size: 1.3rem !important; 
-                padding: 22px 20px !important; 
-                text-align: center !important; 
-                border-radius: var(--radius-lg, 12px) !important;
-                background: var(--bg-hover) !important;
-                font-weight: 600 !important;
-                box-shadow: 0 2px 5px rgba(0,0,0,0.02) !important;
+                font-size: 1.15rem !important; padding: 18px 16px !important;
+                text-align: left !important; border-radius: var(--radius-lg, 12px) !important;
+                background: var(--bg-hover) !important; font-weight: 600 !important;
+                min-height: 56px !important;
             }
             .drawer-body button:hover, .drawer-body button:active { 
-                background: var(--accent-subtle) !important; 
-                color: var(--accent) !important; 
-                transform: scale(0.98);
+                background: var(--accent-subtle) !important; color: var(--accent) !important; transform: scale(0.98);
             }
-            .drawer-body hr { margin: 20px 0 !important; border-color: var(--border) !important;}
+            .drawer-body hr { margin: 12px 0 !important; border-color: var(--border) !important; }
+            .drawer-recent { padding: 14px 16px 24px !important; }
+            .drawer-recent-item { padding: 14px 10px !important; min-height: 52px !important; }
+            .drawer-recent-text { font-size: 1rem !important; }
         }
     `;
     document.head.appendChild(style);
@@ -110,7 +134,14 @@ document.addEventListener("DOMContentLoaded", () => {
             <span style="font-weight:600;font-size:0.875rem">Možnosti</span>
             <button class="drawer-close" id="menuClose" aria-label="Zavřít">✕</button>
         </div>
+        <div class="drawer-search-wrap">
+            <input type="search" id="drawerSearch" placeholder="🔍 Hledat v menu…" autocomplete="off" spellcheck="false" aria-label="Hledat v menu">
+        </div>
         <div class="drawer-body" id="drawerMenuContent"></div>
+        <div class="drawer-recent" id="drawerRecentSection" style="display:none">
+            <div class="drawer-recent-label">Naposledy navštíveno</div>
+            <div id="drawerRecentList"></div>
+        </div>
     `;
     document.body.appendChild(backdrop);
     document.body.appendChild(drawer);
@@ -137,17 +168,85 @@ document.addEventListener("DOMContentLoaded", () => {
         });
     }
 
-    // 4. Globální zachytávání kliknutí (Event Delegation)
-    document.addEventListener("click", (e) => {
-        if (e.target.closest('#menuToggle')) {
-            drawer.classList.add('open');
-            backdrop.classList.add('show');
-        } 
-        else if (e.target.closest('#menuClose') || e.target.id === 'menuBackdrop') {
-            drawer.classList.remove('open');
-            backdrop.classList.remove('show');
+    // 4. Pomocné funkce otevření / zavření draweru
+    function openDrawer() {
+        drawer.classList.add('open');
+        backdrop.classList.add('show');
+        renderRecentItems();
+        setTimeout(() => document.getElementById('drawerSearch')?.focus(), 80);
+    }
+    function closeDrawer() {
+        drawer.classList.remove('open');
+        backdrop.classList.remove('show');
+        const ds = document.getElementById('drawerSearch');
+        if (ds) {
+            ds.value = '';
+            menuContent.querySelectorAll('button, hr').forEach(el => el.style.display = '');
         }
+    }
+
+    // Sledování naposledy navštívených — volá se z clanek.html a lms.html
+    window.trackRecentVisit = function(title, url, icon) {
+        try {
+            const recent = JSON.parse(localStorage.getItem('jmhz_recent') || '[]');
+            const filtered = recent.filter(r => r.url !== url).slice(0, 4);
+            filtered.unshift({ title: title, url: url, icon: icon || '📄' });
+            localStorage.setItem('jmhz_recent', JSON.stringify(filtered));
+        } catch {}
+    };
+
+    function renderRecentItems() {
+        const section = document.getElementById('drawerRecentSection');
+        const list = document.getElementById('drawerRecentList');
+        if (!section || !list) return;
+        try {
+            const recent = JSON.parse(localStorage.getItem('jmhz_recent') || '[]');
+            if (recent.length === 0) { section.style.display = 'none'; return; }
+            section.style.display = 'block';
+            list.innerHTML = '';
+            recent.forEach(item => {
+                const btn = document.createElement('button');
+                btn.className = 'drawer-recent-item';
+                btn.title = item.title;
+                btn.innerHTML = `<span class="drawer-recent-icon">${item.icon}</span><span class="drawer-recent-text">${item.title}</span>`;
+                btn.onclick = () => { window.location.href = item.url; };
+                list.appendChild(btn);
+            });
+        } catch { section.style.display = 'none'; }
+    }
+
+    // Vyhledávání v menu (live filtr)
+    const drawerSearch = document.getElementById('drawerSearch');
+    if (drawerSearch) {
+        drawerSearch.addEventListener('input', () => {
+            const q = drawerSearch.value.toLowerCase().trim();
+            menuContent.querySelectorAll('button').forEach(btn => {
+                btn.style.display = (!q || btn.textContent.toLowerCase().includes(q)) ? '' : 'none';
+            });
+            menuContent.querySelectorAll('hr').forEach(hr => { hr.style.display = q ? 'none' : ''; });
+            // Skrytí sekce "Naposledy navštíveno" při hledání
+            const recentSection = document.getElementById('drawerRecentSection');
+            if (recentSection) recentSection.style.visibility = q ? 'hidden' : '';
+        });
+    }
+
+    // Globální zachytávání kliknutí (Event Delegation)
+    document.addEventListener("click", (e) => {
+        if (e.target.closest('#menuToggle')) openDrawer();
+        else if (e.target.closest('#menuClose') || e.target.id === 'menuBackdrop') closeDrawer();
     });
+
+    // Klávesa Escape zavírá drawer
+    document.addEventListener('keydown', (e) => {
+        if (e.key === 'Escape' && drawer.classList.contains('open')) closeDrawer();
+    });
+
+    // Swipe doprava zavírá drawer na dotykových zařízeních
+    let _swipeStartX = 0;
+    drawer.addEventListener('touchstart', e => { _swipeStartX = e.touches[0].clientX; }, { passive: true });
+    drawer.addEventListener('touchend', e => {
+        if (e.changedTouches[0].clientX - _swipeStartX > 60) closeDrawer();
+    }, { passive: true });
     // 5. Modal "Nahlásit problém" — stejná podoba jako v JMHZ VIEWER
     window.showSupportModal = function() {
         let modal = document.getElementById('jmhz-report-modal');
