@@ -3,17 +3,212 @@
     { "id": "cat_1", "name": "Měsíční hlášení", "parentId": null },
     { "id": "cat_2", "name": "REGZEC", "parentId": null },
     { "id": "cat_3", "name": "Školení", "parentId": null },
-    { "id": "cat_4", "name": "Používání Prohlížeče JMHZ Formulářů", "parentId": "cat_3" }
+    { "id": "cat_4", "name": "Používání Prohlížeče JMHZ Formulářů", "parentId": "cat_3" },
+    { "id": "cat_5", "name": "Legislativa JMHZ", "parentId": null },
+    { "id": "cat_6", "name": "Číselníky JMHZ", "parentId": "cat_5" },
+    { "id": "cat_7", "name": "PREZEC", "parentId": "cat_5" },
+	{ "id": "cat_8", "name": "Otázky a Odpovědi • SALARY", "parentId": null },
+	{ "id": "cat_9", "name": "Otázky a Odpovědi • ČSSZ", "parentId": null },
+	{ "id": "cat_10", "name": "Legislativa Pojišťovny • HOZ a PPPZ", "parentId": null }
   ],
   "articles": [
     {
       "id": "art_regzec_mapa",
-      "title": "Kompletní Topologická Mapa Podprojektu JMHZ  •  REGZEC",
-      "tags": ["Pro Vývojáře", "REGZEC", "Topologie", "Mapa"],
-      "categoryId": "cat_2",
+      "title": "Kompletní Topologická Mapa Podprojektu JMHZ  •  REGZEC",
+      "tags": ["Pro Vývojáře", "REGZEC", "Topologie", "JMHZ", "Mapa"],
+      "categoryId": "cat_5",
+      "readingTimeMin": 26,
+      "lastUpdated": "2026-05-23T11:47:00Z",
+      "docxFile": "(23-KVĚTNA-2026-_-REVIZE_008)---Kompletní topologická mapa podprojektu JMHZ - Registrace Zaměstnance (REGZEC).docx"
+    },
+    {
+      "id": "jmhz_ciselnik_okresu",
+      "title": "JMHZ  •  Číselník Okresů",
+      "tags": ["Pro Mzdové Účetní", "JMHZ", "Číselníky"],
+      "categoryId": "cat_6",
+      "readingTimeMin": 3,
+      "lastUpdated": "2026-05-13T07:05:00Z",
+      "docxFile": "jmhz_ciselnik_okresu.docx"
+    },
+	{
+      "id": "jmhz_ciselnik_gfr_pracoviste",
+      "title": "JMHZ  •  Číselník GFŘ Pracoviště",
+      "tags": ["Pro Mzdové Účetní", "JMHZ", "Číselníky"],
+      "categoryId": "cat_6",
+      "readingTimeMin": 4,
+      "lastUpdated": "2026-05-15T11:44:00Z",
+      "docxFile": "jmhz_ciselnik_gfr_pracoviste.docx"
+    },
+	{
+      "id": "jmhz_ciselnik_duvod_odmitnuti",
+      "title": "JMHZ  •  Číselník Důvod Odmítnutí",
+      "tags": ["Pro Mzdové Účetní", "JMHZ", "Číselníky"],
+      "categoryId": "cat_6",
+      "readingTimeMin": 2,
+      "lastUpdated": "2026-05-15T11:44:00Z",
+      "docxFile": "jmhz_ciselnik_duvod_odmitnuti.docx"
+    },
+	{
+      "id": "jmhz_ciselnik_typ_odlozeneho_prijmu",
+      "title": "JMHZ  •  Číselník Typ Odloženého Příjmu",
+      "tags": ["Pro Mzdové Účetní", "JMHZ", "Číselníky"],
+      "categoryId": "cat_6",
+      "readingTimeMin": 2,
+      "lastUpdated": "2026-05-15T11:44:00Z",
+      "docxFile": "jmhz_ciselnik_typ_odlozeneho_prijmu.docx"
+    },
+	{
+      "id": "jmhz_ciselnik_typ_zdravotniho_omezeni",
+      "title": "JMHZ  •  Číselník Typ Zdravotního Omezení",
+      "tags": ["Pro Mzdové Účetní", "JMHZ", "Číselníky"],
+      "categoryId": "cat_6",
+      "readingTimeMin": 2,
+      "lastUpdated": "2026-05-18T08:36:00Z",
+      "docxFile": "jmhz_ciselnik_typ_zdravotniho_omezeni.docx"
+    },
+	{
+      "id": "jmhz_ciselnik_dosazene_vzdelani",
+      "title": "JMHZ  •  Číselník BADV Kategorie Dosaženého Vzdělání Podle KKOV",
+      "tags": ["Pro Mzdové Účetní", "JMHZ", "Číselníky"],
+      "categoryId": "cat_6",
+      "readingTimeMin": 2,
+      "lastUpdated": "2026-05-23T09:33:00Z",
+      "docxFile": "jmhz_ciselnik_dosazene_vzdelani.docx"
+    },
+	{
+      "id": "jmhz_ciselnik_specifikace_cizozemskeho_nositele_pojisteni",
+      "title": "JMHZ  •  Číselník Specifikace Cizozemského Nositele Pojištění",
+      "tags": ["Pro Mzdové Účetní", "JMHZ", "Číselníky"],
+      "categoryId": "cat_6",
+      "readingTimeMin": 7,
+      "lastUpdated": "2026-05-23T09:36:00Z",
+      "docxFile": "jmhz_ciselnik_specifikace_cizozemskeho_nositele_pojisteni.docx"
+    },
+	{
+      "id": "jmhz_ciselnik_ciselnik_eessi_sektor_pro_zahranicni_pin",
+      "title": "JMHZ  •  Číselník EESSI - Sektor (Pro Zahraniční PIN)",
+      "tags": ["Pro Mzdové Účetní", "JMHZ", "Číselníky"],
+      "categoryId": "cat_6",
+      "readingTimeMin": 4,
+      "lastUpdated": "2026-05-23T19:39:00Z",
+      "docxFile": "jmhz_ciselnik_ciselnik_eessi_sektor_pro_zahranicni_pin_(rev.002).docx"
+    },
+	{
+      "id": "DIR-HR-IT-PREZEC-2026-(R1.1)",
+      "title": "JMHZ  •  PREZEC - Předregistrace Zaměstnanců",
+      "tags": ["Pro Mzdové Účetní", "JMHZ", "PREZEC"],
+      "categoryId": "cat_7",
+      "readingTimeMin": 10,
+      "lastUpdated": "2026-05-27T22:03:22Z",
+      "docxFile": "DIR-HR-IT-PREZEC-2026-(Revize-002---R1.1)__.docx"
+    },
+	{
+      "id": "jmhz_ciselnik_duvod_pro_volny_pristup_na_trh_prace",
+      "title": "JMHZ ČÍSELNÍKY  •  Důvod Pro Volný Přístup Na Trh Práce",
+      "tags": ["Pro Mzdové Účetní", "JMHZ", "Číselníky"],
+      "categoryId": "cat_6",
+      "readingTimeMin": 3,
+      "lastUpdated": "2026-05-27T22:24:03Z",
+      "docxFile": "jmhz_ciselnik_duvod_pro_volny_pristup_na_trh_prace.docx"
+    },
+	{
+      "id": "jmhz_ciselnik_druh_pracovniho_opravneni",
+      "title": "JMHZ ČÍSELNÍKY  •  Druh Pracovního Oprávnění",
+      "tags": ["Pro Mzdové Účetní", "JMHZ", "Číselníky"],
+      "categoryId": "cat_6",
+      "readingTimeMin": 1,
+      "lastUpdated": "2026-05-28T13:06:03Z",
+      "docxFile": "jmhz_ciselnik_druh_pracovniho_opravneni.docx"
+    },
+	{
+      "id": "jmhz_ciselnik_kody_krajskych_pobocek_uradu_prace",
+      "title": "JMHZ ČÍSELNÍKY  •  Kódy Krajských Poboček ÚP ČR",
+      "tags": ["Pro Mzdové Účetní", "JMHZ", "Číselníky"],
+      "categoryId": "cat_6",
+      "readingTimeMin": 1,
+      "lastUpdated": "2026-05-28T13:17:00Z",
+      "docxFile": "jmhz_ciselnik_kody_krajskych_pobocek_uradu_prace.docx"
+    },
+	{
+      "id": "jmhz_ciselnik_kody_druhu_duchodu",
+      "title": "JMHZ ČÍSELNÍKY  •  Kódy Pro Druh Důchodu",
+      "tags": ["Pro Mzdové Účetní", "JMHZ", "Číselníky"],
+      "categoryId": "cat_6",
+      "readingTimeMin": 1,
+      "lastUpdated": "2026-05-28T13:24:00Z",
+      "docxFile": "jmhz_ciselnik_kody_druhu_duchodu.docx"
+    },
+	{
+      "id": "jmhz_ciselnik_kody_bank_cr",
+      "title": "JMHZ ČÍSELNÍKY  •  Kódy Platebního Styku V ČR (ČKPS)",
+      "tags": ["Pro Mzdové Účetní", "JMHZ", "Číselníky"],
+      "categoryId": "cat_6",
       "readingTimeMin": 5,
-      "lastUpdated": "2026-03-26T12:00:00Z",
-      "docxFile": "(12-KVĚTNA-2026-_-REVIZE_007)---Kompletní topologická mapa podprojektu JMHZ - Registrace Zaměstnance (REGZEC).docx"
+      "lastUpdated": "2026-05-28T13:29:00Z",
+      "docxFile": "jmhz_ciselnik_kody_bank_cr.docx"
+    },
+	{
+      "id": "jmhz_ciselnik_klasifikace_ekonomických_cinnosti_csu",
+      "title": "JMHZ ČÍSELNÍKY  •  Klasifikace Ekonomických Činností (ČSÚ)",
+      "tags": ["Pro Mzdové Účetní", "JMHZ", "Číselníky"],
+      "categoryId": "cat_6",
+      "readingTimeMin": 45,
+      "lastUpdated": "2026-05-28T13:51:00Z",
+      "docxFile": "jmhz_ciselnik_klasifikace_ekonomických_cinnosti_csu_.docx"
+    },
+	{
+      "id": "jmhz_ciselnik_forma_hospodarske_a_financni_kontroly_ispv",
+      "title": "JMHZ ČÍSELNÍKY  •  ISPV – Forma Hospodářské A Finanční Kontroly",
+      "tags": ["Pro Mzdové Účetní", "JMHZ", "Číselníky"],
+      "categoryId": "cat_6",
+      "readingTimeMin": 1,
+      "lastUpdated": "2026-05-28T20:48:00Z",
+      "docxFile": "jmhz_ciselnik_forma_hospodarske_a_financni_kontroly_ispv.docx"
+    },
+	{
+      "id": "jmhz_ciselnik_sesti-mistne_kody_obci",
+      "title": "JMHZ ČÍSELNÍKY  •  Šestimístné Kódy Obcí (GFŘ)",
+      "tags": ["Pro Mzdové Účetní", "JMHZ", "Číselníky"],
+      "categoryId": "cat_6",
+      "readingTimeMin": 82,
+      "lastUpdated": "2026-05-29T06:12:36Z",
+      "docxFile": "jmhz_ciselnik_sesti-mistne_kody_obci.docx"
+    },
+	{
+      "id": "dotazy_smerem_k_salary",
+      "title": "Dotazy Směrem K Salary  •  Vaše Dotazy K Legislativě JMHZ",
+      "tags": ["Pro Mzdové Účetní", "JMHZ", "Otázky a Odpovědi Salary"],
+      "categoryId": "cat_8",
+      "readingTimeMin": 5,
+      "lastUpdated": "2026-05-29T16:18:36Z",
+      "docxFile": "dotazy_smerem_k_salary.docx"
+    },
+	{
+      "id": "dotazy_smerem_k_cssz_a_mpsv",
+      "title": "Dotazy Směrem K ČSSZ A MPSV  •  Vaše Dotazy K Legislativě JMHZ",
+      "tags": ["Pro Mzdové Účetní", "JMHZ", "Otázky a Odpovědi ČSSZ a MPSV"],
+      "categoryId": "cat_9",
+      "readingTimeMin": 122,
+      "lastUpdated": "2026-05-29T16:18:36Z",
+      "docxFile": "dotazy_smerem_k_cssz_a_mpsv.docx"
+    },
+	{
+      "id": "jmhz_ciselnik_klasifikace_zamestnani_cz-isco",
+      "title": "JMHZ ČÍSELNÍKY  •  Klasifikace Zaměstnání CZ-ISCO",
+      "tags": ["Pro Mzdové Účetní", "JMHZ", "Číselníky"],
+      "categoryId": "cat_6",
+      "readingTimeMin": 47,
+      "lastUpdated": "2026-06-01T21:20:00Z",
+      "docxFile": "jmhz_ciselnik_klasifikace_zamestnani_cz-isco_.docx"
+    },
+	{
+      "id": "Nová_Legislativa_Pojišťovny_PPPZ(PPZ)_a_HOZ_2026",
+      "title": "Otázky a Odpovědi k SALARY  •  Nová Legislativa Pojišťoven HOZ a PPPZ 2026",
+      "tags": ["Pro Mzdové Účetní", "Pojišťovny PPPZ a HOZ 2026"],
+      "categoryId": "cat_10",
+      "readingTimeMin": 21,
+      "lastUpdated": "2026-06-02T06:36:36Z",
+      "docxFile": "Nová_Legislativa_Pojišťovny_PPPZ_(PPZ)_a_HOZ_2026__(Revize-002---02_ČERVNA-2026).docx"
     }
   ],
   "lms": [
@@ -25,7 +220,7 @@
       "categoryId": "cat_4",
       "readingTimeMin": 45,
       "lastUpdated": "2026-05-10T10:00:00Z",
-      "docxFile": "skoleni_pouzivani_prohlizece_jmhz_formularu_004.docx"
+      "docxFile": "skoleni_pouzivani_prohlizece_jmhz_formularu_005.docx"
     }
   ]
 }

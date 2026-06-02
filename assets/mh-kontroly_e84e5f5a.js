@@ -71,7 +71,7 @@
       roundedHalf: 0.5,
       employeeInsuranceUpperRate: 0.07171,
       employeeDiscountUpperRate: 0.06565,
-      combinedInsuranceDiff: 1
+      combinedInsuranceDiff: 0
     }
   };
 
@@ -287,6 +287,25 @@
     return dc >= 'T' && dc <= 'ZC';
   }
 
+  const M321_REQUIRED_SOUHRN_FIELDS_BY_VARIANT = {
+    bezPriznaku: ['10286', '10419', '10344', '10116', '10482', '10371'],
+    odlozenyPrijem: ['10286', '10419', '10344', '10116', '10482', '10371'],
+    cinnostKS: ['10286', '10419', '10371'],
+    pestoun: ['10286', '10419', '10482', '10371'],
+    vezen: ['10286', '10419', '10344', '10116'],
+    mezinarodniPronajemSily: ['10286', '10419'],
+    jinyPrijem: ['10286', '10419'],
+    ozpTpp: [],
+  };
+
+  function getM321RequiredSouhrnFields(emp) {
+    var variant = emp && emp._formRoot ? emp._formRoot.localName : '';
+    if (Object.prototype.hasOwnProperty.call(M321_REQUIRED_SOUHRN_FIELDS_BY_VARIANT, variant)) {
+      return M321_REQUIRED_SOUHRN_FIELDS_BY_VARIANT[variant];
+    }
+    return M321_REQUIRED_SOUHRN_FIELDS_BY_VARIANT.bezPriznaku;
+  }
+
   // Get header field value (PVPOJ, souhrn, hlavicka) by csszId
   let _xmlDoc = null; // set during runKontroly
   function getHeaderVal(headerFields, csszId) {
@@ -304,6 +323,23 @@
     const n = parseFloat(String(v).replace(/\s/g, '').replace(',', '.'));
     return isNaN(n) ? null : n;
   }
+
+  // ── Storno whitelist – controls that should run even for storno ──
+  // For storno celého podání (typPodani=S): only these controls run
+  const STORNO_PODANI_WHITELIST = new Set([
+    'M190',  // storno lhůta (1.–20. následujícího měsíce)
+    'M308',  // storno nesmí mít pvpoj/souhrn/individualizovanou
+    'M129',  // mesic range 1-12
+    'M131',  // období >= leden 2026
+    'M31',   // období >= 01/2026
+    'M88',   // datum vyplnění <= aktuální datum
+    'M90',   // období < aktuální měsíc
+  ]);
+  // For storno zaměstnance (typFormulare=S): only these emp-scope controls run
+  const STORNO_EMP_WHITELIST = new Set([
+    'M204',  // storno lhůta per zaměstnanec
+    'M332',  // primarniPpv (handles storno itself)
+  ]);
 
   // ── Control Definitions ──────────────────────────────────────
   // Scope: 'emp' = per-employee, 'header' = document header, 'cross' = cross-employee aggregation
@@ -410,20 +446,6 @@
       target: '10029', parts: ['10027', '10028'],
       msg: 'Vykázané pojistné celkem neodpovídá vykázanému pojistnému za zaměstnance a pojistnému za zaměstnavatele.' },
 
-    // M15: Odpracované hodiny max 240 for pracovní/služební poměr
-    { id: 'M15', scope: 'emp', sev: 'error', type: 'custom',
-      msg: 'Překročen maximální možný počet odpracovaných hodin, zkontrolujte položku.',
-      check: function(ctx) {
-        const druh = ctx.getVal('10239');
-        if (!druh) return [];
-        const d = parseInt(druh);
-        if (d < 1 || d > 9) return [];
-        const hodiny = ctx.getNum('10268');
-        if (hodiny === null) return [];
-        if (hodiny > KONTROLY_CONSTANTS.limits.maxWorkedHours) return [{ fieldCsszId: '10268', message: ctx.rule.msg }];
-        return [];
-      }},
-
     // M20: Odpracované hodiny >= přesčasové hodiny
     { id: 'M20', scope: 'emp', sev: 'error', type: 'gte', a: '10268', b: '10269',
       msg: 'Přesčasové hodiny převyšují odpracované hodiny.' },
@@ -454,34 +476,11 @@
         return [];
       }},
 
-    // M34: Pokud neodpracované hodiny DPN > 0, pak náhrady DPN > 0
-    { id: 'M34', scope: 'emp', sev: 'error', type: 'custom',
-      msg: 'Pokud je vyplněn počet neodpracovaných hodin z důvodu DPN, musí být zároveň vyplněna náhrada při DPN.',
-      check: function(ctx) {
-        const hodiny = ctx.getNum('10278');
-        if (hodiny === null || hodiny <= 0) return [];
-        const nahrada = ctx.getNum('10342');
-        if (nahrada === null || nahrada <= 0)
-          return [{ fieldCsszId: '10342', message: ctx.rule.msg }];
-        return [];
-      }},
-
-    // M35: Pokud neodpracované hodiny dovolená > 0, pak náhrady za dovolenou > 0
-    { id: 'M35', scope: 'emp', sev: 'error', type: 'custom',
-      msg: 'Chybí údaj k náhradě za dovolenou.',
-      check: function(ctx) {
-        const hodiny = ctx.getNum('10279');
-        if (hodiny === null || hodiny <= 0) return [];
-        const nahrada = ctx.getNum('10338');
-        if (nahrada === null || nahrada <= 0)
-          return [{ fieldCsszId: '10338', message: ctx.rule.msg }];
-        return [];
-      }},
-
     // M36: Pokud přesčasové hodiny > 0, pak příplatky za přesčas >= 0
     { id: 'M36', scope: 'emp', sev: 'error', type: 'custom',
       msg: 'Chybí údaj k příplatkům za přesčas.',
       check: function(ctx) {
+        if (ctx.emp._formRoot?.localName === 'vezen') return [];
         const prescas = ctx.getNum('10269');
         if (prescas === null || prescas <= 0) return [];
         const priplatky = ctx.getNum('10333');
@@ -490,21 +489,6 @@
         return [];
       }},
 
-    // M37: IK MPSV format check (10 digits, modulo 11)
-    // Source: mh-kontroly.csv M37 — 10th digit = remainder of first 9 digits divided by 11
-    { id: 'M37', scope: 'emp', sev: 'error', type: 'custom',
-      msg: 'IK MPSV neodpovídá formátu.',
-      check: function(ctx) {
-        const ik = ctx.getVal('10051');
-        if (!ik) return [];
-        if (!/^\d{10}$/.test(ik)) return [{ fieldCsszId: '10051', message: ctx.rule.msg }];
-        var num = parseInt(ik.substring(0, 9), 10);
-        if (isNaN(num)) return [{ fieldCsszId: '10051', message: ctx.rule.msg }];
-        var remainder = num % 11;
-        var check = remainder >= 10 ? 0 : remainder;
-        if (parseInt(ik.charAt(9), 10) !== check) return [{ fieldCsszId: '10051', message: ctx.rule.msg }];
-        return [];
-      }},
 
     // M42: Sleva na pojistném zaměstnavatele jen pro druh činnosti 1-9
     //   a 10502 není "výkon trestu odnětí svobody" ani "pracovní vztah specifické skupiny"
@@ -652,7 +636,7 @@
               var kodJ = ctx.getVal('10240', j) || '';
               if (kodJ.length < 2 || kodJ.charAt(1) !== 'D') continue;
               var dnyJ = ctx.getNum('10356', j);
-              if (dnyJ === null) continue;
+              if (dnyJ === null || dnyJ === 0) continue;
               if (kod.charAt(0) !== kodJ.charAt(0)) continue; // same activity type
               var doI = ctx.getVal('10242', i);
               var odJ = ctx.getVal('10241', j);
@@ -736,7 +720,9 @@
       check: function(ctx) {
         const proved = ctx.getVal('10320');
         if (!isTrueValue(proved)) return [];
-        const required = ['10321', '10322', '10323', '10420', '10454'];
+        const required = ctx.getVal('10239') === '12'
+          ? ['10321']
+          : ['10321', '10322', '10323', '10420', '10454'];
         const missing = required.filter(id => !ctx.isFilled(id));
         if (missing.length > 0)
           return [{ fieldCsszId: missing[0], message: ctx.rule.msg }];
@@ -765,9 +751,9 @@
         const typ = readSouhrnField(_xmlDoc, ['souhrn', 'specifickaSkutecnost', 'typ']);
         if (!typ) return [];
         const errors = [];
-        ctx.allEmps.forEach(e => {
+        ctx.allEmps.forEach((e, idx) => {
           if (!isFilled(e, '10410'))
-            errors.push({ fieldCsszId: '10410', message: ctx.rule.msg });
+            errors.push({ fieldCsszId: '10410', empIndex: idx, message: ctx.rule.msg });
         });
         return errors;
       }},
@@ -1103,20 +1089,6 @@
         return [];
       }},
 
-    // M125: Pokud sleva na partnera + ZTP/P, pak měsíce ZTP/P v [1,12]
-    { id: 'M125', scope: 'emp', sev: 'error', type: 'custom',
-      msg: 'Počet měsíců musí být roven nebo nižší než počet měsíců uplatnění slevy na ZTP/P.',
-      check: function(ctx) {
-        const sleva = ctx.getVal('10420');
-        if (!isTrueValue(sleva)) return [];
-        const ztpp = ctx.getVal('10425');
-        if (!isTrueValue(ztpp)) return [];
-        const mesice = ctx.getNum('10430');
-        if (mesice === null || mesice < 1 || mesice > 12)
-          return [{ fieldCsszId: '10430', message: ctx.rule.msg }];
-        return [];
-      }},
-
     // ═══ Phase 3: Controls 126-194 ═══
     // Skipped: M140 (requires previous month data), M164 (requires splatnost calendar)
 
@@ -1315,15 +1287,18 @@
         return [];
       }},
 
-    // M138: Pokud sleva + důvod A/F, pak kratší rozsah vyplněn
+    // M138: Pokud sleva + důvod A/F, pak kratší rozsah vyplněn, jinak prázdný
     { id: 'M138', scope: 'emp', sev: 'error', type: 'custom',
-      msg: 'Kratší rozsah služební doby musí být vyplněn.',
+      msg: 'Kratší rozsah služební doby musí odpovídat důvodu uplatnění slevy na pojistném zaměstnavatele.',
       check: function(ctx) {
         const sleva = ctx.getVal('10372');
         if (!isTrueValue(sleva)) return [];
         const duvod = ctx.getVal('10374');
-        if (duvod < 'A' || duvod > 'F') return [];
-        if (!ctx.isFilled('10373'))
+        const requiresRozsah = duvod >= 'A' && duvod <= 'F';
+        const hasRozsah = ctx.isFilled('10373');
+        if (requiresRozsah && !hasRozsah)
+          return [{ fieldCsszId: '10373', message: ctx.rule.msg }];
+        if (!requiresRozsah && hasRozsah)
           return [{ fieldCsszId: '10373', message: ctx.rule.msg }];
         return [];
       }},
@@ -1336,17 +1311,6 @@
         if (header === null) return [];
         const sum = ctx.allEmps.reduce((s, e) => s + (getNum(e, '10480') || 0), 0);
         if (Math.abs(header - sum) > 0.5) return [{ fieldCsszId: '10483', message: ctx.rule.msg }];
-        return [];
-      }},
-
-    // M143: Variabilní symbol format check
-    { id: 'M143', scope: 'header', sev: 'error', type: 'custom',
-      msg: 'Variabilní symbol není platný.',
-      check: function(ctx) {
-        const vs = ctx.getHeaderVal('10221');
-        if (!vs) return [];
-        if (!/^\d{8,10}$/.test(vs))
-          return [{ fieldCsszId: '10221', message: ctx.rule.msg }];
         return [];
       }},
 
@@ -1376,10 +1340,7 @@
     mkMhCodelistRule('M153', '10231', 'C_STAT', 'Kód státu'),
     mkMhCodelistRule('M155', '10239', 'C_DRCI', 'Druh činnosti'),
     mkMhCodelistRule('M302', '10492', 'C_STAT', 'Kód státu zahraniční PO/FO'),
-    // M335: Obec — name lookup against CISOB nazev index (case-insensitive).
-    //   XML carries <form:obec>Bykoš</form:obec> (the municipality name); CISOB has
-    //   `nazev` alongside `kod`. codelists-client.js builds the byNazev Map alongside byKod.
-    mkMhCodelistRule('M335', '10229', 'CISOB',  'Obec', { lookupBy: 'nazev' }),
+    // M335 intentionally not implemented: <form:obec> is free text; M152 validates kodObce.
 
     // Inline enums (codes enumerated in pokyny):
     //   M150: 10214 typ kolektivní smlouvy — allowed 0-5 (pokyny ř. 991-1000).
@@ -1517,26 +1478,6 @@
         return [];
       }},
 
-    // M188: Sleva na pojistném zaměstnavatele max 1× per zaměstnanec
-    { id: 'M188', scope: 'cross', sev: 'error', type: 'custom',
-      msg: 'Slevu na pojistném zaměstnavatele může zaměstnavatel uplatnit za zaměstnance pouze z jednoho zaměstnání.',
-      check: function(ctx) {
-        const slevaByIk = {};
-        ctx.allEmps.forEach(e => {
-          const sleva = getVal(e, '10372');
-          if (!isTrueValue(sleva)) return;
-          const ik = getVal(e, '10051');
-          if (!ik) return;
-          slevaByIk[ik] = (slevaByIk[ik] || 0) + 1;
-        });
-        const errors = [];
-        Object.entries(slevaByIk).forEach(function(entry) {
-          if (entry[1] > 1)
-            errors.push({ fieldCsszId: '10372', message: ctx.rule.msg });
-        });
-        return errors;
-      }},
-
     // M190: Storno jen 1.-20. následujícího měsíce
     { id: 'M190', scope: 'header', sev: 'error', type: 'custom',
       msg: 'Zaměstnavatel nesmí stornovat řádné podání mimo stanovenou lhůtu.',
@@ -1625,20 +1566,6 @@
     // Skipped: M211 (structural storno remnant check),
     //          M253 (duplicate of M251 for single submission)
 
-    // M201: Datum úhrady mzdy <= datum vyplnění podání
-    { id: 'M201', scope: 'emp', sev: 'error', type: 'custom',
-      msg: 'Datum úhrady musí být menší rovno datu vyplnění.',
-      check: function(ctx) {
-        var uhrada = ctx.getVal('10347');
-        var vyplneni = ctx.getHeaderVal('10005');
-        if (!uhrada || !vyplneni) return [];
-        var dp1 = parseDate(uhrada);
-        var dp2 = parseDate(vyplneni);
-        if (!dp1 || !dp2) return [];
-        if (compareDates(dp1, dp2) > 0) return [{ fieldCsszId: '10347', message: ctx.rule.msg }];
-        return [];
-      }},
-
     // M204: Storno součásti individualizované části jen 1.-20. následujícího měsíce
     { id: 'M204', scope: 'emp', sev: 'error', type: 'custom',
       msg: 'Zaměstnavatel nesmí stornovat součásti individualizované části jindy než v intervalu od 1. do 20. dne v měsíci, který bezprostředně následuje po měsíci, za který bylo učiněno podání.',
@@ -1657,7 +1584,7 @@
       }},
 
     // M207: Sum VZ (10477) where sleva zaměstnavatele (10372)=ANO = úhrn VZ slev (10031)
-    { id: 'M207', scope: 'cross', sev: 'error', type: 'custom',
+    { id: 'M207', scope: 'cross', sev: 'warning', type: 'custom',
       msg: 'Vykázaný úhrn vyměřovacích základů zaměstnanců, za které zaměstnavatel uplatňuje slevu na pojistném zaměstnavatele, neodpovídá součtu vyměřovacích základů těchto zaměstnanců.',
       check: function(ctx) {
         var uhrn = ctx.getHeaderNum('10031');
@@ -1686,7 +1613,7 @@
       }},
 
     // M209: Sum slev zaměstnanců (10491) = úhrn slev (10487)
-    { id: 'M209', scope: 'cross', sev: 'error', type: 'custom',
+    { id: 'M209', scope: 'cross', sev: 'warning', type: 'custom',
       msg: 'Vykázaný úhrn slev na pojistném zaměstnanců neodpovídá součtu slev na pojistném těchto zaměstnanců.',
       check: function(ctx) {
         var uhrn = ctx.getHeaderNum('10487');
@@ -1855,10 +1782,10 @@
         var typ = ctx.getHeaderVal('10007');
         if (typ !== 'R') return [];
         var errors = [];
-        ctx.allEmps.forEach(function(e) {
+        ctx.allEmps.forEach(function(e, idx) {
           var typForm = getVal(e, '10016');
           if (typForm && typForm !== 'R')
-            errors.push({ fieldCsszId: '10016', message: ctx.rule.msg });
+            errors.push({ fieldCsszId: '10016', empIndex: idx, message: ctx.rule.msg });
         });
         return errors;
       }},
@@ -1870,7 +1797,7 @@
         var typ = ctx.getHeaderVal('10007');
         if (typ !== 'O') return [];
         var errors = [];
-        ctx.allEmps.forEach(function(e) {
+        ctx.allEmps.forEach(function(e, idx) {
           var typForm = getVal(e, '10016');
           if (typForm !== 'S') return;
           if (!e._formRoot) return;
@@ -1879,7 +1806,7 @@
             'mezinarodniPronajemSily', 'jinyPrijem', 'ozpTpp', 'odlozenyPrijem'];
           for (var vi = 0; vi < formVariants.length; vi++) {
             if (findChildEl(formRoot.parentElement || formRoot, formVariants[vi]))
-              errors.push({ fieldCsszId: '10016', message: ctx.rule.msg });
+              errors.push({ fieldCsszId: '10016', empIndex: idx, message: ctx.rule.msg });
           }
         });
         return errors;
@@ -1942,13 +1869,15 @@
       }},
 
     // M242: Prohlášení=ANO + rezident CZ → srážková daň fields empty
+    // Field 10068 (Stát rezidentství) is not available in MH, so skip entirely
     { id: 'M242', scope: 'emp', sev: 'error', type: 'custom',
       msg: 'Pokud je učiněno prohlášení poplatníka k dani, pak nelze uplatnit srážkovou daň podle zvláštní sazby daně.',
       check: function(ctx) {
         var p = ctx.getVal('10419');
         if (!isTrueValue(p)) return [];
         var stat = ctx.getVal('10068');
-        if (stat && stat !== 'CZ') return [];
+        if (!stat) return []; // 10068 not available in MH → cannot evaluate
+        if (stat !== 'CZ') return [];
         var fields = ['10307','10416','10309','10310'];
         for (var j = 0; j < fields.length; j++) {
           if (ctx.isFilled(fields[j]))
@@ -1991,63 +1920,6 @@
         return [];
       }},
 
-    // M245: Prohlášení=NE + income below threshold (záloha territory does NOT apply) → no zálohová/slevy fields
-    // Aggregates 10535 across all forms of the same employee at the employer:
-    //   1a) sum of DPP forms (druhCinnosti = "T".."Z" — codes T,U,V,W,X,Y,Z) < 12000 AND
-    //   1b) sum of non-DPP forms (druhCinnosti not a DPP code) < 4500
-    // Then 10297..10306 (zálohová/slevy) must be empty.
-    // Note: CSV spec writes the DPP codelist range as "T-ZC" (i.e. "T" až "ZC" → "T" through "Z");
-    // the actual XML druhCinnosti is a single letter from T–Z (XSD pattern forbids the hyphen).
-    { id: 'M245', scope: 'emp', sev: 'error', type: 'custom',
-      msg: 'Nebylo-li učiněno prohlášení poplatníka a příjem podléhá srážkové dani, nelze vyplnit atribut(y) související se zálohovou daní.',
-      check: function(ctx) {
-        var p = ctx.getVal('10419');
-        if (!isFalseValue(p)) return [];
-
-										 
-													   
-										   
-        var fields = ['10297','10298','10299','10300','10301','10302','10303','10453',
-          '10431','10432','10433','10434','10435','10436','10437','10438','10439',
-          '10440','10304','10305','10306'];
-        var firstFilled = null;
-        for (var k = 0; k < fields.length; k++) {
-          if (ctx.isFilled(fields[k])) { firstFilled = fields[k]; break; }
-																	   
-        }
-        if (firstFilled === null) return [];
-
-        function personKey(e) {
-          var ik = getVal(e, '10051');
-          if (ik) return 'ik:' + ik;
-          var pn = getVal(e, '10053');
-          var jm = getVal(e, '10054');
-          var dn = getVal(e, '10056');
-          if (pn || jm || dn) return 'name:' + pn + '|' + jm + '|' + dn;
-          return null;
-        }
-
-        var key = personKey(ctx.emp);
-        if (!key) return [];
-
-        var dppSum = 0;
-        var nonDppSum = 0;
-        for (var i = 0; i < ctx.allEmps.length; i++) {
-          var other = ctx.allEmps[i];
-          if (personKey(other) !== key) continue;
-          var z = getNum(other, '10535');
-          if (z === null) continue;
-          var dc = getVal(other, '10239');
-          if (isDppCode(dc)) dppSum += z;
-          else nonDppSum += z;
-        }
-
-        if (dppSum >= 12000) return [];
-        if (nonDppSum >= 4500) return [];
-
-        return [{ fieldCsszId: firstFilled, message: ctx.rule.msg }];
-      }},
-
     // M248: Primární PPV=NE → souhrnná data fields empty
     { id: 'M248', scope: 'emp', sev: 'error', type: 'custom',
       msg: 'Atributy souhrnné vrstvy za zaměstnance mohou být vyplněny pouze u primárního pracovněprávního vztahu.',
@@ -2080,12 +1952,21 @@
       check: function(ctx) {
         var seen = {};
         var errors = [];
-        ctx.allEmps.forEach(function(e) {
+        ctx.allEmps.forEach(function(e, idx) {
           if (getVariantMetaVal(e, '10548')) return; // skip odložený příjem
           var id = getVal(e, '10228');
           if (!id) return;
-          if (seen[id]) errors.push({ fieldCsszId: '10228', message: ctx.rule.msg });
-          else seen[id] = true;
+          if (seen[id] !== undefined) {
+            // Mark the current (later) occurrence
+            errors.push({ fieldCsszId: '10228', empIndex: idx, message: ctx.rule.msg });
+            // Mark the first occurrence (only once)
+            if (seen[id] >= 0) {
+              errors.push({ fieldCsszId: '10228', empIndex: seen[id], message: ctx.rule.msg });
+              seen[id] = -1; // sentinel: first already reported
+            }
+          } else {
+            seen[id] = idx;
+          }
         });
         return errors;
       }},
@@ -2095,16 +1976,21 @@
       msg: 'Neexistuje žádné primární PPV za OIČ v rámci podání.',
       check: function(ctx) {
         var byOic = {};
-        ctx.allEmps.forEach(function(e) {
+        ctx.allEmps.forEach(function(e, idx) {
           var oic = getVal(e, '10051');
           if (!oic) return;
-          if (!byOic[oic]) byOic[oic] = false;
+          if (!byOic[oic]) byOic[oic] = { hasPrimary: false, indices: [] };
+          byOic[oic].indices.push(idx);
           var prim = getRowHeaderVal(e, '10495');
-          if (isTrueValue(prim)) byOic[oic] = true;
+          if (isTrueValue(prim)) byOic[oic].hasPrimary = true;
         });
         var errors = [];
         Object.keys(byOic).forEach(function(oic) {
-          if (!byOic[oic]) errors.push({ fieldCsszId: '10495', message: ctx.rule.msg });
+          if (!byOic[oic].hasPrimary) {
+            byOic[oic].indices.forEach(function(idx) {
+              errors.push({ fieldCsszId: '10495', empIndex: idx, message: ctx.rule.msg });
+            });
+          }
         });
         return errors;
       }},
@@ -2131,26 +2017,29 @@
       }},
 
     // M260: Max one primary PPV (10495=ANO) per OIČ
-    { id: 'M260', scope: 'emp', sev: 'error', type: 'custom',
+    // Catalog poznámka: result is an informative message ("informativní hláška"),
+    // not blocking — DIS/cJMHZ does not run this check (n/a). Hence warning, not error.
+    { id: 'M260', scope: 'cross', sev: 'warning', type: 'custom',
       msg: 'Existuje více než jedno primární PPV za OIČ v rámci podání.',
       check: function(ctx) {
-        var prim = getRowHeaderVal(ctx.emp, '10495');
-        if (!isTrueValue(prim)) return [];
-        var oic = ctx.getVal('10051');
-        if (!oic) return [];
-        
-        // Spočítáme, kolikrát se toto konkrétní OIČ vyskytuje s primárním PPV napříč všemi zaměstnanci
-        var count = 0;
-        ctx.allEmps.forEach(function(e) {
-          var ePrim = getRowHeaderVal(e, '10495');
-          if (isTrueValue(ePrim) && getVal(e, '10051') === oic) count++;
+        var byOic = {};
+        ctx.allEmps.forEach(function(e, idx) {
+          var prim = getRowHeaderVal(e, '10495');
+          if (!isTrueValue(prim)) return;
+          var oic = getVal(e, '10051');
+          if (!oic) return;
+          if (!byOic[oic]) byOic[oic] = [];
+          byOic[oic].push(idx);
         });
-        
-        // Pokud je duplicitní, vyhodíme chybu svázanou PŘÍMO s aktuálním zaměstnancem a jeho IK MPSV (10051)
-        if (count > 1) {
-          return [{ fieldCsszId: '10051', message: ctx.rule.msg }];
-        }
-        return [];
+        var errors = [];
+        Object.keys(byOic).forEach(function(oic) {
+          if (byOic[oic].length > 1) {
+            byOic[oic].forEach(function(idx) {
+              errors.push({ fieldCsszId: '10495', empIndex: idx, message: ctx.rule.msg });
+            });
+          }
+        });
+        return errors;
       }},
 
     // M267: Při nulové Mzdě za práci zúčtovaná (10328) se nevyplňují podřazené atributy
@@ -2272,9 +2161,10 @@
 
     // ═══ Phase 5: Controls 278-342 ═══
     // Skipped: M156 (10274 Kategorizace rizika — pokyny do not enumerate codes; max 3 chars),
+    //          M335 (10229 Obec — free-text name; exact CISOB name match is too strict),
     //          M336/M337/M339/M340 (require PPV registry),
     //          M341/M342 (XSD handles required fields & data types)
-    // Implemented (this PR): M154 (10233 enum 1-4), M331 (10548 enum 1-4), M335 (10229 CISOB by name).
+    // Implemented (this PR): M154 (10233 enum 1-4), M331 (10548 enum 1-6).
 
     // M292: Kontrola věku dítěte pro uplatnění — měsíční kontrola po celý rok
     { id: 'M292', scope: 'emp', sev: 'error', type: 'custom',
@@ -2365,16 +2255,16 @@
         var validVariants = ['bezPriznaku', 'pestoun', 'cinnostKS', 'vezen',
           'mezinarodniPronajemSily', 'jinyPrijem', 'ozpTpp', 'odlozenyPrijem'];
         var errors = [];
-        ctx.allEmps.forEach(function(e) {
+        ctx.allEmps.forEach(function(e, idx) {
           var typForm = getVal(e, '10016');
           if (typForm !== 'R' && typForm !== 'O') return;
           if (!e._formRoot) {
-            errors.push({ fieldCsszId: '10016', message: ctx.rule.msg });
+            errors.push({ fieldCsszId: '10016', empIndex: idx, message: ctx.rule.msg });
             return;
           }
           var variant = e._formRoot.localName;
           if (validVariants.indexOf(variant) < 0)
-            errors.push({ fieldCsszId: '10016', message: ctx.rule.msg });
+            errors.push({ fieldCsszId: '10016', empIndex: idx, message: ctx.rule.msg });
         });
         return errors;
       }},
@@ -2486,7 +2376,7 @@
       }},
 
     // M280: Sum OvoZel slev (10547) across employees = úhrn (10545)
-    { id: 'M280', scope: 'cross', sev: 'error', type: 'custom',
+    { id: 'M280', scope: 'cross', sev: 'warning', type: 'custom',
       msg: 'Vykázaný úhrn slev na pojistném zaměstnanců neodpovídá součtu slev na pojistném těchto zaměstnanců.',
       check: function(ctx) {
         var uhrn = ctx.getHeaderNum('10545');
@@ -2623,7 +2513,7 @@
 
     // M304: Základ pro výpočet daně (10535) >= 0
     { id: 'M304', scope: 'emp', sev: 'error', type: 'non_neg', field: '10535',
-      msg: 'Hodnota musí být vyplněna i v případě nulového základu pro výpočet daně, zároveň nesmí být záporná.' },
+      msg: 'Hodnota musí být rovna nule nebo větší.' },
 
     // M307: If kód ELDP (10240) not filled, ELDP fields empty
     { id: 'M307', scope: 'emp', sev: 'error', type: 'custom',
@@ -2661,17 +2551,6 @@
         return [];
       }},
 
-    // M311: Roční zúčtování (10320)=ANO only in months 1-3
-    { id: 'M311', scope: 'emp', sev: 'error', type: 'custom',
-      msg: 'Roční zúčtování záloh je možné provádět právě jednou za kalendářní rok v měsíci: leden, únor nebo březen.',
-      check: function(ctx) {
-        var rz = ctx.getVal('10320');
-        if (!isTrueValue(rz)) return [];
-        var mesic = ctx.getHeaderNum('10010');
-        if (mesic !== null && mesic >= 1 && mesic <= 3) return [];
-        return [{ fieldCsszId: '10320', message: ctx.rule.msg }];
-      }},
-
     // M315: Pojistné = ceil(rate_A * A) + ceil(rate_B * B) + ceil(rate_C * C)
     { id: 'M315', scope: 'emp', sev: 'error', type: 'custom',
       msg: 'Pojistné na sociální zabezpečení neodpovídá vyměřovacímu základu zaměstnance.',
@@ -2702,11 +2581,13 @@
       check: function(ctx) {
         var prim = ctx.getVal('10495');
         if (!isTrueValue(prim)) return [];
-        // Check key mandatory souhrnná data fields
-        if (!ctx.isFilled('10286') && !ctx.isFilled('10297') && !ctx.isFilled('10419')
-            && !ctx.isFilled('10344') && !ctx.isFilled('10482') && !ctx.isFilled('10371'))
-          return [{ fieldCsszId: '10286', message: ctx.rule.msg }];
-        return [];
+        var requiredFields = getM321RequiredSouhrnFields(ctx.emp);
+        var errors = [];
+        for (var i = 0; i < requiredFields.length; i++) {
+          var fieldId = requiredFields[i];
+          if (!ctx.isFilled(fieldId)) errors.push({ fieldCsszId: fieldId, message: ctx.rule.msg });
+        }
+        return errors;
       }},
 
     // M328: If ELDP odečítané doby (10375)=0, sub-fields empty
@@ -2740,7 +2621,8 @@
           if (doby !== null && doby !== 0) continue;
           var fields = ['10358','10359','10360','10362','10536'];
           for (var j = 0; j < fields.length; j++) {
-            if (ctx.isFilled(fields[j], i)) {
+            var subValue = ctx.getNum(fields[j], i);
+            if (ctx.isFilled(fields[j], i) && subValue !== 0) {
               errors.push({ fieldCsszId: fields[j], instanceIndex: i, message: ctx.rule.msg });
             }
           }
@@ -2798,71 +2680,17 @@
         return [];
       }},
 
-    // M325: záloha territory (DPP/non-DPP income aggregated per employee above threshold) → no srážková fields
-    // Aggregates 10535 across all forms of the same employee at the employer:
-    //   1a) sum of DPP forms (druhCinnosti = "T".."Z" — codes T,U,V,W,X,Y,Z) >= 12 000
-    //   1b) AND sum of non-DPP forms (druhCinnosti not a DPP code) >= 4 500
-    // Then 10307 / 10309 must be empty on the (souhrn-bearing) form.
-    // Note: CSV spec writes the DPP codelist range as "T-ZC" (i.e. "T" až "ZC" → "T" through "Z");
-    // the actual XML druhCinnosti is a single letter from T–Z (XSD pattern forbids the hyphen).
-    { id: 'M325', scope: 'emp', sev: 'error', type: 'custom',
-      msg: 'Pro scénář, kdy je vybírána daň zálohou, nelze vyplnit atribut(y) související se srážkovou daní.',
-      check: function(ctx) {
-        var odmeny = ctx.getVal('10416');
-        if (odmeny && odmeny !== '0') return [];
-
-        // Short-circuit: if neither srážková field is filled, the rule cannot fail.
-        if (!ctx.isFilled('10307') && !ctx.isFilled('10309')) return [];
-
-        // Build a stable person key for cross-form aggregation.
-        // Prefer ikMpsv (10051); otherwise fall back to prijmeni|jmeno|datumNarozeni.
-        function personKey(e) {
-          var ik = getVal(e, '10051');
-          if (ik) return 'ik:' + ik;
-          var p = getVal(e, '10053');
-          var j = getVal(e, '10054');
-          var d = getVal(e, '10056');
-          if (p || j || d) return 'name:' + p + '|' + j + '|' + d;
-          return null;
-        }
-
-        var key = personKey(ctx.emp);
-        if (!key) return [];
-
-        var dppSum = 0;
-        var nonDppSum = 0;
-        for (var i = 0; i < ctx.allEmps.length; i++) {
-          var other = ctx.allEmps[i];
-          if (personKey(other) !== key) continue;
-          var z = getNum(other, '10535');
-          if (z === null) continue;
-          var dc = getVal(other, '10239');
-          if (isDppCode(dc)) dppSum += z;
-          else nonDppSum += z;
-        }
-
-        if (dppSum < 12000) return [];
-        if (nonDppSum < 4500) return [];
-
-        var fields = ['10307','10309'];
-        for (var k = 0; k < fields.length; k++) {
-          if (ctx.isFilled(fields[k]))
-            return [{ fieldCsszId: fields[k], message: ctx.rule.msg }];
-        }
-        return [];
-      }},
-
     // M331: Typ Odloženého příjmu — value enum check.
     //   XSD enforces string length=1; flexibee JmhzDataHelper.getTypOdlozenehoPrijmu
     //   uses values "1" (regular odložený příjem) and "4" (roční zúčtování). Defensively
-    //   allow 1-4 (pokyny ř. 3120-3133 do not enumerate codes, only "1 char").
+    //   allow 1-6 (pokyny ř. 3120-3133 do not enumerate codes, only "1 char").
     //   The field lives at <form:typ> on the odlozenyPrijem root; read via getVariantMetaVal.
     { id: 'M331', scope: 'emp', sev: 'error', type: 'custom',
       msg: 'Typ Odloženého příjmu: hodnota není z povolené množiny.',
       check: function(ctx) {
         var v = getVariantMetaVal(ctx.emp, '10548');
         if (!v) return [];
-        var allowed = ['1','2','3','4'];
+        var allowed = ['1','2','3','4','5','6'];
         if (allowed.indexOf(String(v).trim()) >= 0) return [];
         return [{ fieldCsszId: '10548',
           message: 'Typ Odloženého příjmu: hodnota „' + v + '" není povolená (povolené: ' +
@@ -2898,6 +2726,12 @@
         var blizsi = (ctx.getVal('10502') || '').trim();
         if (!druh || !ctx.emp._formRoot) return [];
         var variant = ctx.emp._formRoot.localName;
+        // Odložený příjem is allowed for all activity types except 10 (ozpTpp)
+        if (variant === 'odlozenyPrijem') {
+          if (druh === '10')
+            return [{ fieldCsszId: '10239', message: 'Odložený příjem není povolen pro druh činnosti 10 (OZP/TPP).' }];
+          return [];
+        }
         var expected = null;
         // Activity codes 1-9
         if (/^[1-9]$/.test(druh)) {
@@ -2926,19 +2760,6 @@
         return [];
       }},
 
-    // M352: Minimální délka identifikačních údajů
-    { id: 'M352', scope: 'emp', sev: 'error', type: 'custom',
-      msg: 'Identifikační údaje musí obsahovat alespoň 1 znak.',
-      check: function(ctx) {
-        var fields = ['10053', '10054', '10228', '10274'];
-        var errors = [];
-        for (var i = 0; i < fields.length; i++) {
-          var v = ctx.getVal(fields[i]);
-          if (v !== undefined && v !== '' && v.trim().length < 1)
-            errors.push({ fieldCsszId: fields[i], message: getFieldLabel(fields[i]) + ' musí obsahovat alespoň 1 znak.' });
-        }
-        return errors;
-      }},
   ];
 
   // Helper: parse birth date from datum narození or rodné číslo
@@ -2963,6 +2784,10 @@
     _xmlDoc = xmlDoc;
 
     const results = [];
+
+    // Detect storno podání (typPodani=S) — skip most controls
+    const typPodani = getHeaderVal(headerFields, '10007');
+    const isStornoPodani = typPodani === 'S';
 
     // Build header pseudo-employee for header-scope controls
     const pseudoEmp = { fields: {} };
@@ -3003,6 +2828,9 @@
     };
 
     KONTROLY.forEach(rule => {
+      // Skip controls not relevant for storno podání
+      if (isStornoPodani && !STORNO_PODANI_WHITELIST.has(rule.id)) return;
+
       if (rule.scope === 'header') {
         const errs = evalRule(rule, pseudoEmp, headerFields, employees, evalOpts);
         errs.forEach(pushHeaderError);
@@ -3022,19 +2850,40 @@
           const errs = rule.check(ctx);
           if (errs && errs.length > 0) {
             errs.forEach(ce => {
-              pushHeaderError({
-                severity: ce.severity || rule.sev || 'error',
-                controlId: rule.id,
-                fieldCsszId: ce.fieldCsszId || '',
-                message: ce.message || rule.msg
-              });
+              if (typeof ce.empIndex === 'number' && ce.empIndex >= 0) {
+                // Employee-level error from a cross-scope check
+                var emp = employees[ce.empIndex];
+                var fd = getFieldDef(ce.fieldCsszId || '');
+                var fk = fd ? fieldKeyFor(fd, ce.instanceIndex) : '';
+                results.push({
+                  severity: ce.severity || rule.sev || 'error',
+                  controlId: rule.id,
+                  empIndex: ce.empIndex,
+                  employeeName: emp && emp.surname ? (emp.surname + ' ' + (emp.firstName || '')).trim() : ('Řádek ' + (ce.empIndex + 1)),
+                  sectionLabel: getSectionLabel(ce.fieldCsszId || ''),
+                  fieldLabel: getFieldLabel(ce.fieldCsszId || ''),
+                  fieldKey: fk, headerKey: '',
+                  canNavigate: !!fd,
+                  message: ce.message || rule.msg
+                });
+              } else {
+                pushHeaderError({
+                  severity: ce.severity || rule.sev || 'error',
+                  controlId: rule.id,
+                  fieldCsszId: ce.fieldCsszId || '',
+                  message: ce.message || rule.msg
+                });
+              }
             });
           }
         }
 
       } else {
         // Employee-level control: evaluate for each employee
+        const skipStornoEmp = !STORNO_EMP_WHITELIST.has(rule.id);
         employees.forEach((emp, empIdx) => {
+          // Skip storno employees for controls that don't handle storno
+          if (skipStornoEmp && getVal(emp, '10016') === 'S') return;
           const errs = evalRule(rule, emp, headerFields, employees, evalOpts);
           errs.forEach(e => {
             const fd = getFieldDef(e.fieldCsszId);

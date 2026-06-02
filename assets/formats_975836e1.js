@@ -179,20 +179,20 @@ const REGZEC_CONFIG = {
     { section: 'forin', attr: 'cur', csszId: '10092', label: 'Specifikace', type: 'text', maxLength: 1 },
     { section: 'forin', attr: 'nam', csszId: '10093', label: 'Název nositele', type: 'text', maxLength: 100 },
     { section: 'forin', attr: 'str', csszId: '10094', label: 'Ulice', type: 'text', maxLength: 50 },
-    { section: 'forin', attr: 'num', csszId: '10095', label: 'Číslo Popisné', type: 'text', maxLength: 12 },
-    { section: 'forin', attr: 'onum', csszId: '10096', label: 'Číslo Orientační', type: 'text', maxLength: 12 },
+    { section: 'forin', attr: 'num', csszId: '10095', label: 'Č.p.', type: 'text', maxLength: 12 },
+    { section: 'forin', attr: 'onum', csszId: '10096', label: 'Č.o.', type: 'text', maxLength: 12 },
     { section: 'forin', attr: 'pnu', csszId: '10098', label: 'PSČ', type: 'text', maxLength: 11 },
     { section: 'forin', attr: 'cit', csszId: '10097', label: 'Obec', type: 'text', maxLength: 50 },
     { section: 'forin', attr: 'cnt', csszId: '10099', label: 'Stát', type: 'text', maxLength: 2 },
-    { section: 'forin', attr: 'id', csszId: '10100', label: 'Číslo Pojištění', type: 'text', maxLength: 25 },
+    { section: 'forin', attr: 'id', csszId: '10100', label: 'Číslo pojištění', type: 'text', maxLength: 25 },
     { section: 'forin', attr: 'sec', csszId: '10101', label: 'Sektor pojištění', type: 'text', maxLength: 2 },
-    { section: 'nocitizen', attr: 'freeacc', csszId: '10414', label: 'Volný Přístup na Trh Práce', type: 'boolean' },
-    { section: 'nocitizen', attr: 'perm', csszId: '10105', label: 'Důvod Volného Přístupu', type: 'number' },
-    { section: 'nocitizen', attr: 'permtype', csszId: '10106', label: 'Druh Pracovního Oprávnění', type: 'number' },
-    { section: 'nocitizen', attr: 'issue', csszId: '10107', label: 'Krajská Pobočka Úřadu Práce', type: 'text', maxLength: 3 },
-    { section: 'nocitizen', attr: 'permid', csszId: '10108', label: 'Identifikátor Oprávnění', type: 'text', maxLength: 20 },
-    { section: 'nocitizen', attr: 'permfro', csszId: '10109', label: 'Oprávnění Od (Datum)', type: 'date' },
-    { section: 'nocitizen', attr: 'permto', csszId: '10110', label: 'Oprávnění Do (Datum)', type: 'date' },
+    { section: 'nocitizen', attr: 'freeacc', csszId: '10414', label: 'Volný přístup na trh práce', type: 'boolean' },
+    { section: 'nocitizen', attr: 'perm', csszId: '10105', label: 'Důvod volného přístupu', type: 'number' },
+    { section: 'nocitizen', attr: 'permtype', csszId: '10106', label: 'Druh pracovního oprávnění', type: 'number' },
+    { section: 'nocitizen', attr: 'issue', csszId: '10107', label: 'Krajská pobočka ÚP', type: 'text', maxLength: 3 },
+    { section: 'nocitizen', attr: 'permid', csszId: '10108', label: 'Identifikátor oprávnění', type: 'text', maxLength: 20 },
+    { section: 'nocitizen', attr: 'permfro', csszId: '10109', label: 'Oprávnění od', type: 'date' },
+    { section: 'nocitizen', attr: 'permto', csszId: '10110', label: 'Oprávnění do', type: 'date' },
   ],
   actionLabels: { '1': 'A1 Přihláška', '2': 'A2 Odhláška', '3': 'A3 Změna', '4': 'A4 Oprava', '8': 'A8 Storno' },
   actionSections: {
@@ -391,6 +391,43 @@ const REGZEC_CONFIG = {
     if (sec.child) { const p = getChildByLocalName(empEl, sec.element); return p ? getChildByLocalName(p, sec.child) : null; }
     return getChildByLocalName(empEl, sec.element);
   },
+  ensureSectionPath: function(empEl, sec) {
+    if (sec.id === 'employee') return empEl;
+    const employeeChildOrder = ['client', 'comp', 'job', 'forin', 'pens', 'insh', 'inso', 'insp', 'unemplcomp', 'fact', 'nocitizen', 'forinreg', 'attachs'];
+    const parts = sec.child ? [sec.element, sec.child] : [sec.element];
+    let el = empEl;
+    const ns = empEl.namespaceURI || empEl.ownerDocument.documentElement.namespaceURI || null;
+    const prefix = empEl.prefix || empEl.ownerDocument.documentElement.prefix || '';
+    function createLikeSource(doc, localName) {
+      if (!ns) return doc.createElement(localName);
+      return doc.createElementNS(ns, prefix ? prefix + ':' + localName : localName);
+    }
+    for (let i = 0; i < parts.length; i++) {
+      const part = parts[i];
+      let child = getChildByLocalName(el, part);
+      if (!child) {
+        child = createLikeSource(el.ownerDocument, part);
+        // Insert in schema order when adding direct children of employee
+        if (el === empEl) {
+          const idx = employeeChildOrder.indexOf(part);
+          if (idx !== -1) {
+            let insertBefore = null;
+            for (const sibling of el.children) {
+              const sibIdx = employeeChildOrder.indexOf(sibling.localName);
+              if (sibIdx > idx) { insertBefore = sibling; break; }
+            }
+            el.insertBefore(child, insertBefore);
+          } else {
+            el.appendChild(child);
+          }
+        } else {
+          el.appendChild(child);
+        }
+      }
+      el = child;
+    }
+    return el;
+  },
   resolveSectionInstances: function(empEl, sec) {
     if (!sec.repeating && !sec.parentRepeating) return null;
     const sectionId = sec.parentRepeating || sec.id;
@@ -519,8 +556,238 @@ const REGZEC_CONFIG = {
   },
 };
 
+const JMHZ_SECTION_DENY_BY_VARIANT = {
+  bezPriznaku: ['teoretickaPraktickaPriprava'],
+  cinnostKS: [
+    'souhrnDataZec/mzdaCista',
+    'souhrnDataZec/zdravPojZamestnavatel',
+    'pojisteni/vymerovaciZakladParagraf5',
+    'pojisteni/slevaZamestnavatele',
+    'prubehZamestnani',
+    'mzda',
+    'teoretickaPraktickaPriprava',
+  ],
+  odlozenyPrijem: [
+    'pojisteni/trvani',
+    'pojisteni/eldpSeznam',
+    'vykonavanaPozice',
+    'prubehZamestnani',
+    'mzda',
+    'teoretickaPraktickaPriprava',
+  ],
+  pestoun: [
+    'souhrnDataZec/prijmy/prispevekZamestnavatele',
+    'souhrnDataZec/mzdaCista',
+    'pojisteni/vymerovaciZakladParagraf5',
+    'pojisteni/slevaZamestnavatele',
+    'vykonavanaPozice',
+    'prubehZamestnani',
+    'mzda',
+    'teoretickaPraktickaPriprava',
+  ],
+  vezen: [
+    'souhrnDataZec/prijmy/prispevekZamestnavatele',
+    'souhrnDataZec/mzdaCista/vydelekOZP',
+    'souhrnDataZec/mzdaCista/srazky',
+    'souhrnDataZec/zdravPojZamestnavatel',
+    'souhrnDataZec/zdravPojZamestnanec',
+    'pojisteni/vymerovaciZaklad',
+    'pojisteni/vymerovaciZakladParagraf5',
+    'pojisteni/pojisteniZamestnanec',
+    'pojisteni/pojisteniZamestnavatel',
+    'pojisteni/slevaZamestnavatele',
+    'vykonavanaPozice',
+    'prubehZamestnani/odpracovaneDny',
+    'prubehZamestnani/neodpracovaneHodiny',
+    'prubehZamestnani/prekazkyVPraci',
+    'mzda/mzdaRozpad',
+    'mzda/odmeny',
+    'mzda/vydelek',
+    'teoretickaPraktickaPriprava',
+  ],
+  mezinarodniPronajemSily: [
+    'souhrnDataZec/prijmy/prispevekZamestnavatele',
+    'souhrnDataZec/prohlaseniPoplatnikaDane/zvyhodneniDetiMesic',
+    'souhrnDataZec/rocniUhrny/vysledekRocnihoZuctovani/slevaNaPartnera',
+    'souhrnDataZec/rocniUhrny/vysledekRocnihoZuctovani/zvyhodneniNaDeti',
+    'souhrnDataZec/mzdaCista',
+    'souhrnDataZec/zdravPojZamestnavatel',
+    'souhrnDataZec/zdravPojZamestnanec',
+    'pojisteni',
+    'vykonavanaPozice',
+    'prubehZamestnani',
+    'mzda',
+    'teoretickaPraktickaPriprava',
+  ],
+  jinyPrijem: [
+    'souhrnDataZec/prijmy/prispevekZamestnavatele',
+    'souhrnDataZec/mzdaCista',
+    'souhrnDataZec/zdravPojZamestnavatel',
+    'souhrnDataZec/zdravPojZamestnanec',
+    'pojisteni',
+    'vykonavanaPozice',
+    'prubehZamestnani',
+    'mzda',
+    'teoretickaPraktickaPriprava',
+  ],
+  ozpTpp: ['souhrnDataZec', 'pojisteni', 'vykonavanaPozice', 'prubehZamestnani', 'prijem', 'mzda'],
+};
+
+const JMHZ_FIELD_DENY_BY_VARIANT = {
+  mezinarodniPronajemSily: [
+    'souhrnDataZec/prijmy/osvobozenoCelkem',
+    'souhrnDataZec/prijmy/odmenyNerezident',
+    'souhrnDataZec/prijmy/prispevekZamestnavatele',
+    'souhrnDataZec/zalohaNaDan/danBonus',
+    'souhrnDataZec/prohlaseniPoplatnikaDane/zakladniSlevaInvalidita12',
+    'souhrnDataZec/prohlaseniPoplatnikaDane/rozsirenaSlevaInvalidita3',
+    'souhrnDataZec/prohlaseniPoplatnikaDane/slevaZTPP',
+    'souhrnDataZec/prohlaseniPoplatnikaDane/danoveZvyhodneniDetiMesic',
+    'souhrnDataZec/prohlaseniPoplatnikaDane/slevaDite',
+    'souhrnDataZec/prohlaseniPoplatnikaDane/zvyhodneniDetiMesic',
+    'souhrnDataZec/rocniUhrny/prijemZdanitelnyDoplatek',
+    'souhrnDataZec/rocniUhrny/zalohaDoplatky',
+    'souhrnDataZec/rocniUhrny/vysledekRocnihoZuctovani/danPreplatekRok',
+    'souhrnDataZec/rocniUhrny/vysledekRocnihoZuctovani/danBonusPreplatekRok',
+    'souhrnDataZec/rocniUhrny/vysledekRocnihoZuctovani/uplatnenaSlevaNaPartnera',
+    'souhrnDataZec/rocniUhrny/vysledekRocnihoZuctovani/uplatnenoZvyhodneniNaDeti',
+    'souhrnDataZec/rocniUhrny/vysledekRocnihoZuctovani/slevaNaPartnera',
+    'souhrnDataZec/rocniUhrny/vysledekRocnihoZuctovani/zvyhodneniNaDeti',
+  ],
+  jinyPrijem: [
+    'souhrnDataZec/prijmy/odmenyNerezident',
+    'souhrnDataZec/prijmy/prispevekZamestnavatele',
+  ],
+};
+
+function sectionMatchesPrefix(sectionId, prefix) {
+  return sectionId === prefix || sectionId.indexOf(prefix + '/') === 0;
+}
+
+function getJmhzSectionId(sec) {
+  return sec && (sec._resolvePath || sec.parentRepeating || sec.id);
+}
+
+function isJmhzSectionAllowed(formRoot, sec) {
+  if (!sec) return false;
+  if (sec._resolveFromRow) return true;
+  if (!formRoot) return false;
+  const variant = formRoot.localName;
+  const sectionId = getJmhzSectionId(sec);
+  if (!sectionId || sectionId === 'hlavicka') return true;
+  const denied = JMHZ_SECTION_DENY_BY_VARIANT[variant] || [];
+  return !denied.some(prefix => sectionMatchesPrefix(sectionId, prefix));
+}
+
+function getJmhzFormRootFromElement(el) {
+  let node = el;
+  while (node && node.nodeType === 1) {
+    if (JMHZ_CONFIG.formVariants.indexOf(node.localName) !== -1) return node;
+    node = node.parentNode;
+  }
+  return null;
+}
+
+function getJmhzFieldPath(field) {
+  if (!field) return '';
+  const elName = field.element || field.attr;
+  return field.section && elName ? field.section + '/' + elName : '';
+}
+
+function isJmhzFieldAllowed(sectionEl, field) {
+  const formRoot = getJmhzFormRootFromElement(sectionEl);
+  if (!formRoot) return true;
+  const fieldPath = getJmhzFieldPath(field);
+  if (!fieldPath) return true;
+  const denied = JMHZ_FIELD_DENY_BY_VARIANT[formRoot.localName] || [];
+  return !denied.some(prefix => sectionMatchesPrefix(fieldPath, prefix));
+}
+
+const JMHZ_EXPLICIT_CHILD_ORDER = {
+  'bezPriznaku': ['identifikace', 'souhrnDataZec', 'pojisteni', 'vykonavanaPozice', 'prubehZamestnani', 'prijem', 'mzda'],
+  'cinnostKS': ['identifikace', 'souhrnDataZec', 'pojisteni', 'vykonavanaPozice', 'prijem'],
+  'odlozenyPrijem': ['typ', 'identifikace', 'souhrnDataZec', 'pojisteni', 'prijem'],
+  'pestoun': ['identifikace', 'souhrnDataZec', 'pojisteni', 'prijem'],
+  'vezen': ['identifikace', 'souhrnDataZec', 'pojisteni', 'prubehZamestnani', 'prijem', 'mzda'],
+  'mezinarodniPronajemSily': ['identifikace', 'souhrnDataZec', 'prijem'],
+  'jinyPrijem': ['identifikace', 'souhrnDataZec', 'prijem'],
+  'ozpTpp': ['identifikace', 'teoretickaPraktickaPriprava'],
+  'souhrnDataZec': [
+    'prijmy',
+    'zalohaNaDan',
+    'zvlastniSazbaDane',
+    'prohlaseniPoplatnika',
+    'prohlaseniPoplatnikaDane',
+    'rocniUhrny',
+    'mzdaCista',
+    'zdravPojZamestnavatel',
+    'zdravPojZamestnanec',
+  ],
+  'souhrnDataZec/prijmy': ['zuctovanoCelkem', 'osvobozenoCelkem', 'odmenyNerezident', 'prispevekZamestnavatele'],
+  'souhrnDataZec/zalohaNaDan': ['zakladDane', 'vypoctenaZaloha', 'danZalohaPoSleve', 'danBonus'],
+  'souhrnDataZec/zvlastniSazbaDane': ['zakladDane', 'srazenaDan', 'odmenaNerezident', 'srazenaDanNerezident'],
+  'souhrnDataZec/prohlaseniPoplatnikaDane': ['zakladniSleva', 'zakladniSlevaInvalidita12', 'rozsirenaSlevaInvalidita3', 'slevaZTPP', 'danoveZvyhodneniDetiMesic', 'slevaDite', 'zvyhodneniDetiMesic'],
+  'souhrnDataZec/rocniUhrny': ['prijemSrazkDanZvlSazba', 'danSrazenaZvlSazba', 'prijemZdanitelnyCelkem', 'prijemZdanitelnyDoplatek', 'zalohaPrijmy', 'zalohaDoplatky', 'rocniZuctovaniZadost', 'rocniZuctovaniProvedeno', 'vysledekRocnihoZuctovani'],
+  'souhrnDataZec/rocniUhrny/vysledekRocnihoZuctovani': ['preplatekRok', 'danPreplatekRok', 'danBonusPreplatekRok', 'uplatnenaSlevaNaPartnera', 'uplatnenoZvyhodneniNaDeti', 'slevaNaPartnera', 'zvyhodneniNaDeti'],
+  'souhrnDataZec/mzdaCista': ['mzdaCista', 'srazkyZeMzdyEvidovany', 'vydelekOZP', 'srazky'],
+  'pojisteni': ['trvani', 'vymerovaciZaklad', 'vymerovaciZakladParagraf5', 'eldpObdobi', 'eldpSeznam', 'pojisteniZamestnanec', 'pojisteniZamestnavatel', 'slevaZamestnance', 'slevaZamestnavatele'],
+  'pojisteni/trvani': ['pojisteniOd', 'pojisteniDo'],
+  'pojisteni/eldpSeznam/eldp': ['kod', 'platnostOd', 'platnostDo', 'pocetDnu', 'vylouceneDny', 'odecitaneDny', 'vymerovaciZaklad'],
+  'vykonavanaPozice': ['mistoVykonuPrace', 'uplatnujiPrispevekApz', 'funkcniPozitky', 'docasnePrideleniEvidovano', 'docasnePrideleni', 'nastrojApzKod', 'fondPracovniDoby'],
+  'vykonavanaPozice/mistoVykonuPrace': ['obec', 'kodObce', 'kodStatu'],
+  'vykonavanaPozice/fondPracovniDoby': ['stanovenyFond', 'sjednanyFond', 'stanovenaTydenniDoba'],
+  'prubehZamestnani': ['odpracovaneDny', 'odpracovaneHodiny', 'neodpracovaneHodiny', 'prekazkyVPraci'],
+  'prubehZamestnani/odpracovaneDny': ['dnyEvidencniStav', 'dnyOdpracovanePocet'],
+  'prubehZamestnani/odpracovaneHodiny': ['pocet', 'rozpad'],
+  'mzda': ['mzdaZuctovana', 'mzdaRozpad', 'nahrady', 'odmeny', 'vydelek'],
+  'mzda/mzdaRozpad': ['tarif', 'odmenyPravidelne', 'odmenyNepravidelne', 'priplatky'],
+  'mzda/nahrady': ['mzdyZuctovane', 'docasnaNeschopnost', 'dovolena', 'prekazkyZamestnanec', 'prekazkyZamestnavatel', 'svatky'],
+};
+
+function addJmhzOrderPath(order, path) {
+  const parts = path.split('/').filter(Boolean);
+  for (let i = 0; i < parts.length; i++) {
+    const parentKey = parts.slice(0, i).join('/');
+    const childName = parts[i];
+    if (!order[parentKey]) order[parentKey] = [];
+    if (order[parentKey].indexOf(childName) === -1) order[parentKey].push(childName);
+  }
+}
+
+function buildJmhzChildOrder(config) {
+  const order = {};
+  for (const s of config.sections || []) {
+    addJmhzOrderPath(order, s._resolvePath || s.id);
+  }
+  for (const f of config.fields || []) {
+    const elName = f.element || f.attr;
+    if (!f.section || !elName) continue;
+    addJmhzOrderPath(order, f.section + '/' + elName);
+  }
+  for (const key in JMHZ_EXPLICIT_CHILD_ORDER) {
+    order[key] = JMHZ_EXPLICIT_CHILD_ORDER[key].slice();
+  }
+  return order;
+}
+
+function findSchemaOrderRef(parent, child, order) {
+  if (!order) return null;
+  const idx = order.indexOf(child.localName);
+  if (idx === -1) return null;
+  for (const sib of parent.children) {
+    const si = order.indexOf(sib.localName);
+    if (si > idx) return sib;
+  }
+  return null;
+}
+
+function insertInSchemaOrder(parent, child, order) {
+  const ref = findSchemaOrderRef(parent, child, order);
+  parent.insertBefore(child, ref);
+}
+
 const JMHZ_CONFIG = {
-  name: 'Měsíční Hlášení',
+  name: 'Měsíční hlášení',
   ns: 'http://schemas.cssz.cz/JMHZ/podani/1.0',
   formNs: 'http://schemas.cssz.cz/JMHZ/form/1.0',
   rootElement: 'jmhz',
@@ -534,6 +801,7 @@ const JMHZ_CONFIG = {
   mainSchema: 'jmhzPodani.xsd',
   sections: [
     { id: 'hlavickaFormulare', label: 'Hlavička formuláře', _resolvePath: 'hlavicka', _resolveFromRow: true },
+    { id: 'typOdlozenehoPrijmu', label: 'Typ odloženého příjmu', _resolveSelf: true },
     { id: 'identifikace', label: 'Identifikace zaměstnance' },
     { id: 'souhrnDataZec', label: 'Souhrnná data ZEC' },
     { id: 'souhrnDataZec/prijmy', label: 'Příjmy' },
@@ -560,6 +828,7 @@ const JMHZ_CONFIG = {
     { id: 'pojisteni/trvani', label: 'Trvání pojištění' },
     { id: 'pojisteni/vymerovaciZaklad', label: 'Vyměřovací základ' },
     { id: 'pojisteni/vymerovaciZakladParagraf5', label: 'Vyměřovací základ § 5a' },
+    { id: 'pojisteni/eldpObdobi/obdobi', label: 'ELDP - Období', repeating: true },
     { id: 'pojisteni/eldpSeznam/eldp', label: 'ELDP', repeating: true },
     { id: 'pojisteni/eldpSeznam/eldp/vylouceneDny', label: 'ELDP - Vyloučené dny', parentRepeating: 'pojisteni/eldpSeznam/eldp' },
     { id: 'pojisteni/eldpSeznam/eldp/odecitaneDny', label: 'ELDP - Odečítané dny', parentRepeating: 'pojisteni/eldpSeznam/eldp' },
@@ -699,8 +968,11 @@ const JMHZ_CONFIG = {
     return fields;
   },
   fields: [
-    { section: 'hlavickaFormulare', element: 'typFormulare', csszId: '10016', label: 'Typ formuláře', type: 'text' },
-    { section: 'hlavickaFormulare', element: 'primarniPpv', csszId: '10495', label: 'Primární pracovněprávní vztah', type: 'boolean' },
+   { section: 'hlavickaFormulare', element: 'idFormulare', csszId: '10012', label: 'ID formuláře', type: 'text' },
+   { section: 'hlavickaFormulare', element: 'typFormulare', csszId: '10016', label: 'Typ formuláře', type: 'text' },
+   { section: 'hlavickaFormulare', element: 'primarniPpv', csszId: '10495', label: 'Primární pracovněprávní vztah', type: 'boolean' },
+
+    { section: 'typOdlozenehoPrijmu', element: 'typ', csszId: '10548', label: 'Typ odloženého příjmu', type: 'text' },
 
     { section: 'identifikace', element: 'ikMpsv', csszId: '10051', label: 'IK MPSV', type: 'text' },
     { section: 'identifikace', element: 'idPpv', csszId: '10228', label: 'ID pracovněprávního vztahu', type: 'text' },
@@ -773,6 +1045,9 @@ const JMHZ_CONFIG = {
     { section: 'pojisteni/vymerovaciZakladParagraf5', element: 'pismenoA', csszId: '10478', label: 'VZ § 5a odst. 1 písm. a)', type: 'number' },
     { section: 'pojisteni/vymerovaciZakladParagraf5', element: 'pismenoB', csszId: '10479', label: 'VZ § 5a odst. 1 písm. b)', type: 'number' },
     { section: 'pojisteni/vymerovaciZakladParagraf5', element: 'pismenoC', csszId: '10480', label: 'VZ § 5a odst. 1 písm. c)', type: 'number' },
+
+    { section: 'pojisteni/eldpObdobi/obdobi', element: 'mesic', csszId: '10537', label: 'Měsíc ELDP období', type: 'number' },
+    { section: 'pojisteni/eldpObdobi/obdobi', element: 'rok', csszId: '10538', label: 'Rok ELDP období', type: 'number' },
 
     { section: 'pojisteni/eldpSeznam/eldp', element: 'kod', csszId: '10240', label: 'Kód ELDP', type: 'text' },
     { section: 'pojisteni/eldpSeznam/eldp', element: 'platnostOd', csszId: '10241', label: 'Platnost kódu od', type: 'date' },
@@ -951,11 +1226,34 @@ const JMHZ_CONFIG = {
   },
   formVariants: ['bezPriznaku', 'odlozenyPrijem', 'pestoun', 'cinnostKS', 'vezen', 'mezinarodniPronajemSily', 'jinyPrijem', 'ozpTpp'],
   resolveSection: function(formRoot, sec, rowEl) {
+    if (sec._resolveSelf) return formRoot;
+    if (!isJmhzSectionAllowed(formRoot, sec)) return null;
     const parts = (sec._resolvePath || sec.id).split('/');
     let el = sec._resolveFromRow ? (rowEl || (formRoot && formRoot.parentElement) || null) : formRoot;
     for (const part of parts) {
       if (!el) return null;
       el = getChildByLocalNameNS(el, part, 'http://schemas.cssz.cz/JMHZ/form/1.0') || getChildByLocalName(el, part);
+    }
+    return el;
+  },
+  isSectionAllowed: isJmhzSectionAllowed,
+  isFieldAllowed: isJmhzFieldAllowed,
+  ensureSectionPath: function(formRoot, sec, rowEl) {
+    if (!isJmhzSectionAllowed(formRoot, sec)) return null;
+    const ns = 'http://schemas.cssz.cz/JMHZ/form/1.0';
+    const parts = (sec._resolvePath || sec.id).split('/');
+    let el = sec._resolveFromRow ? (rowEl || (formRoot && formRoot.parentElement) || null) : formRoot;
+    const sectionChildOrder = buildJmhzChildOrder(this);
+    let pathSoFar = '';
+    for (const part of parts) {
+      if (!el) return null;
+      let child = getChildByLocalNameNS(el, part, ns) || getChildByLocalName(el, part);
+      if (!child) {
+        child = el.ownerDocument.createElementNS(ns, 'form:' + part);
+        insertInSchemaOrder(el, child, sectionChildOrder[pathSoFar]);
+      }
+      pathSoFar = pathSoFar ? pathSoFar + '/' + part : part;
+      el = child;
     }
     return el;
   },
@@ -972,12 +1270,14 @@ const JMHZ_CONFIG = {
         const eldpObdobi = getChildByLocalNameNS(pojisteni, 'eldpObdobi', ns) || getChildByLocalName(pojisteni, 'eldpObdobi');
         if (eldpObdobi) {
           const collected = [];
-          const obdobiEls = getAllChildrenByLocalNameNS(eldpObdobi, 'obdobi', ns).concat(getAllChildrenByLocalNameNS(eldpObdobi, 'obdobi', null));
+          let obdobiEls = getAllChildrenByLocalNameNS(eldpObdobi, 'obdobi', ns);
+          if (!obdobiEls.length) obdobiEls = getAllChildrenByLocalNameNS(eldpObdobi, 'obdobi', null);
           obdobiEls.forEach(obd => {
             const eldpSeznam = getChildByLocalNameNS(obd, 'eldpSeznam', ns) || getChildByLocalName(obd, 'eldpSeznam');
             if (!eldpSeznam) return;
-            collected.push(...getAllChildrenByLocalNameNS(eldpSeznam, 'eldp', ns));
-            collected.push(...getAllChildrenByLocalNameNS(eldpSeznam, 'eldp', null));
+            let eldpEls = getAllChildrenByLocalNameNS(eldpSeznam, 'eldp', ns);
+            if (!eldpEls.length) eldpEls = getAllChildrenByLocalNameNS(eldpSeznam, 'eldp', null);
+            collected.push(...eldpEls);
           });
           instances = collected;
         }
@@ -1033,22 +1333,26 @@ const JMHZ_CONFIG = {
     return instances.map((inst, i) => ({ index: i, el: inst, _orderValue: orderEl ? (getChildByLocalName(inst, orderEl)?.textContent || '') : null }));
   },
   createRepeatingInstance: function(formRoot, sec) {
+    if (!isJmhzSectionAllowed(formRoot, sec)) return null;
     const ns = 'http://schemas.cssz.cz/JMHZ/form/1.0';
+    const childOrder = buildJmhzChildOrder(this);
     const sectionId = sec.parentRepeating || sec.id;
     const parts = sectionId.split('/');
     const childName = parts[parts.length - 1];
     const containerParts = parts.slice(0, -1);
     let container = formRoot;
-    for (const part of containerParts) {
+    for (let i = 0; i < containerParts.length; i++) {
+      const part = containerParts[i];
       let next = getChildByLocalNameNS(container, part, ns) || getChildByLocalName(container, part);
       if (!next) {
         next = container.ownerDocument.createElementNS(ns, 'form:' + part);
-        container.appendChild(next);
+        const parentPath = containerParts.slice(0, i).join('/');
+        insertInSchemaOrder(container, next, childOrder[parentPath]);
       }
       container = next;
     }
     const newEl = container.ownerDocument.createElementNS(ns, 'form:' + childName);
-    container.appendChild(newEl);
+    insertInSchemaOrder(container, newEl, childOrder[containerParts.join('/')]);
     return newEl;
   },
   headerFields: [],
@@ -1081,10 +1385,15 @@ const JMHZ_CONFIG = {
     return field.type === 'boolean' ? this.normalizeBooleanForUi(value) : value;
   },
   writeField: function(fieldRef, value) {
+    if (!isJmhzFieldAllowed(fieldRef.el, fieldRef._field)) {
+      throw new Error('Field is not allowed for this JMHZ form variant');
+    }
     const ns = 'http://schemas.cssz.cz/JMHZ/form/1.0';
     const elName = fieldRef._field?.element || fieldRef._field?.attr || fieldRef.attr;
     const parts = elName.split('/');
     let el = fieldRef.el;
+    const childOrder = buildJmhzChildOrder(this);
+    let pathSoFar = fieldRef._field?.section || '';
     for (const part of parts) {
       let child = getChildByLocalName(el, part);
       if (!child) {
@@ -1102,7 +1411,10 @@ const JMHZ_CONFIG = {
         }
         var childIndent = indent ? indent + '\t' : '';
         child = el.ownerDocument.createElementNS(ns, 'form:' + part);
-        if (trailingTextNode) {
+        const ref = findSchemaOrderRef(el, child, childOrder[pathSoFar]);
+        if (ref) {
+          el.insertBefore(child, ref);
+        } else if (trailingTextNode) {
           el.insertBefore(el.ownerDocument.createTextNode('\n' + childIndent), trailingTextNode);
           el.insertBefore(child, trailingTextNode);
         } else if (childIndent) {
@@ -1113,6 +1425,7 @@ const JMHZ_CONFIG = {
           el.appendChild(child);
         }
       }
+      pathSoFar = pathSoFar ? pathSoFar + '/' + part : part;
       el = child;
     }
     const xmlValue = fieldRef._field?.type === 'boolean' ? this.normalizeBooleanForXml(value) : value;
@@ -1139,7 +1452,7 @@ const JMHZ_CONFIG = {
       'cinnostKS': ['souhrnDataZec'],
       'jinyPrijem': ['souhrnDataZec'],
       'mezinarodniPronajemSily': ['souhrnDataZec'],
-      'odlozenyPrijem': ['souhrnDataZec'],
+      'odlozenyPrijem': ['souhrnDataZec', 'typOdlozenehoPrijmu'],
       'pestoun': ['souhrnDataZec'],
       'vezen': ['souhrnDataZec'],
       'souhrnDataZec': ['prohlaseniPoplatnikaDane','rocniUhrny','zalohaNaDan','zvlastniSazbaDane'],

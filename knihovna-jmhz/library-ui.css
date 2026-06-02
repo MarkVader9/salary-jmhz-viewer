@@ -85,5 +85,34 @@ document.addEventListener("DOMContentLoaded", () => {
             drawer.classList.remove('open');
             backdrop.classList.remove('show');
         }
+		
+		
+		
+	/* Container pro články a LMS */
+.library-container {
+  display: grid;
+	/* Mobile first: 1 sloupec (4 sloupce z grid systému sloučené do 1) */
+  grid-template-columns: 1fr;
+  gap: var(--grid-gap);
+  width: 100%;
+  max-width: 1200px; /* Omezení šířky na obřích monitorech */
+  margin: 0 auto;
+}
+
+/* Desktop: Sidebar + Hlavní obsah (12 sloupců: 3 a 9) */
+@media (min-width: 64rem) {
+  .library-container {
+    grid-template-columns: 3fr 9fr; 
+  }
+}
+
+/* Ošetření Layout Shiftu u obrázků v článcích */
+.clanek-content img {
+  width: 100%;
+  height: auto;
+  aspect-ratio: 16 / 9; /* Výchozí poměr pro zamezení CLS */
+  object-fit: cover;
+}
     });
+	
 });

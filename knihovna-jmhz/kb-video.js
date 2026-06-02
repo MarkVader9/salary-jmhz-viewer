@@ -109,6 +109,8 @@ const KB_VideoManager = {
             videoEl.onerror = null; // Vyčistíme starý chyták chyb
         };
 
+
+
         // ZÁCHRANNÁ BRZDA: Pokud 4K video na FTP neexistuje (404), vrátí to bezpečně na výchozí 1080p
         videoEl.onerror = () => {
             if (qualityId === '4k') {
@@ -125,4 +127,27 @@ const KB_VideoManager = {
 
         if (btn) btn.innerHTML = `⚙️ ${qualityId.toUpperCase()}`;
     }
+	
+	
+	// ==========================================================================
+// GLOBÁLNÍ DETEKCE KONCE VIDEA PRO LMS (Anti-Skip Funkce)
+// ==========================================================================
+document.addEventListener('DOMContentLoaded', () => {
+    // Nasloucháme události 'ended' (konec přehrávání) na jakémkoliv videu
+    // Používáme 'true' (capture phase), abychom událost bezpečně chytili
+    document.addEventListener('ended', (e) => {
+        if (e.target && e.target.tagName && e.target.tagName.toLowerCase() === 'video') {
+            
+            // Video bylo dokoukáno! Vystřelíme speciální signál do celé aplikace
+            window.dispatchEvent(new CustomEvent('kb-video-completed'));
+            
+            // Volitelný vizuální efekt - ukážeme malou notifikaci
+            if (window.KB_Toaster) {
+                KB_Toaster.show('Video dokončeno', 'Nyní můžete pokračovat v lekci.', 'success');
+            }
+        }
+    }, true);
+});
+
+
 };

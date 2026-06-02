@@ -411,6 +411,7 @@
         if (node && node.nodeType === 1) node.setAttribute(TOUCHED_ATTR, '1');
       });
     }
+
     var clone = doc.cloneNode(true);
 
     // Remove transient markers from the original immediately
@@ -419,8 +420,10 @@
         if (node && node.nodeType === 1) node.removeAttribute(TOUCHED_ATTR);
       });
     }
+
     var optChildren = meta.optionalChildren || {};
     var optAttrs = meta.optionalAttrs || null;
+    var reqChildren = meta.requiredChildren || {};
 
     // Pre-build Sets for O(1) lookup
     var optChildSets = {};
@@ -429,6 +432,15 @@
         optChildSets[key] = {};
         for (var ci = 0; ci < optChildren[key].length; ci++) {
           optChildSets[key][optChildren[key][ci]] = true;
+        }
+      }
+    }
+    var reqChildSets = {};
+    for (var rkey in reqChildren) {
+      if (reqChildren.hasOwnProperty(rkey)) {
+        reqChildSets[rkey] = {};
+        for (var ri = 0; ri < reqChildren[rkey].length; ri++) {
+          reqChildSets[rkey][reqChildren[rkey][ri]] = true;
         }
       }
     }
@@ -453,11 +465,43 @@
       return result;
     }
 
+    function getElementPath(el) {
+      var parts = [];
+      var node = el;
+      while (node && node.nodeType === 1) {
+        parts.unshift(node.localName);
+        node = node.parentNode;
+      }
+      return parts.join('/');
+    }
+
+    function getScopedSet(sets, el) {
+      return sets[getElementPath(el)] || sets[el.localName] || null;
+    }
+
     function isOptionalChild(el) {
       var parent = el.parentNode;
       if (!parent || parent.nodeType !== 1) return false;
-      var set = optChildSets[parent.localName];
+      var set = getScopedSet(optChildSets, parent);
       return set ? (set[el.localName] === true) : false;
+    }
+
+    // Check if an element is listed as a required child that should be kept
+    // when its parent survives (has at least one non-empty sibling).
+    function isProtectedRequiredChild(el) {
+      var parent = el.parentNode;
+      if (!parent || parent.nodeType !== 1) return false;
+      var set = getScopedSet(reqChildSets, parent);
+      if (!set || !set[el.localName]) return false;
+      // Empty simple required values should be pruned so validation reports a
+      // missing child/value instead of preserving an invalid empty value.
+      if (getChildElements(el).length === 0) return false;
+      // Only protect if the parent has at least one non-empty sibling
+      var siblings = getChildElements(parent);
+      for (var s = 0; s < siblings.length; s++) {
+        if (siblings[s] !== el && !isSubtreeEmpty(siblings[s])) return true;
+      }
+      return false;
     }
 
     // Check whether an element (in the clone) or any of its ancestors was
@@ -471,9 +515,10 @@
       }
       return false;
     }
+
     function pruneEmptyAttrs(el) {
       if (!optAttrSets) return;
-      var set = optAttrSets[el.localName];
+      var set = getScopedSet(optAttrSets, el);
       if (!set) return;
       // In touched mode, only prune attrs on touched elements
       if (hasTouched && !el.hasAttribute(TOUCHED_ATTR)) return;
@@ -497,7 +542,7 @@
       // Check own direct text nodes (not child element text)
       for (var t = 0; t < el.childNodes.length; t++) {
         var node = el.childNodes[t];
-        if (node.nodeType === 3 && node.nodeValue && node.nodeValue.trim() !== '') return false;
+        if ((node.nodeType === 3 || node.nodeType === 4) && node.nodeValue && node.nodeValue.trim() !== '') return false;
       }
       // Check attributes (ignore the transient touched marker)
       for (var a = 0; a < el.attributes.length; a++) {
@@ -524,9 +569,13 @@
       if (isSubtreeEmpty(el)) {
         // In touched mode, skip pruning elements not in the editing scope
         if (hasTouched && !isInTouchedScope(el)) return;
+
         if (isOptionalChild(el)) {
           // Always prune optional empty elements (leaf or container).
           el.parentNode.removeChild(el);
+        } else if (isProtectedRequiredChild(el)) {
+          // Keep XSD-required children when their parent has other non-empty
+          // content.  Removing them would create schema validation errors.
         } else {
           // For required elements, only prune empty LEAF elements that are
           // pure value holders (no child elements, no non-xmlns attributes).
@@ -555,6 +604,7 @@
         tagged[ti].removeAttribute(TOUCHED_ATTR);
       }
     }
+
     return clone;
   }
 

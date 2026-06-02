@@ -1,0 +1,53 @@
+/* core-responsive.css */
+:root {
+  /* 1. Breakpointy (koncepční, pro media queries v preprocesorech) */
+  --bp-tablet: 48rem;   /* 768px */
+  --bp-desktop: 62rem;  /* 1024px */
+
+  /* 2. Fluidní Typografie (clamp: min, preferovaná, max) */
+  --text-base: clamp(1rem, 0.9rem + 0.5vw, 1.125rem); /* Pro plynulé čtení */
+  --text-h1: clamp(1.75rem, 1.5rem + 1.25vw, 2.5rem);
+  --line-height-mobile: 1.6;
+  --line-height-desktop: 1.5;
+
+  /* 3. Safe Areas (pro iOS notch a home bar) */
+  --safe-top: env(safe-area-inset-top, 0px);
+  --safe-bottom: env(safe-area-inset-bottom, 0px);
+  --safe-left: env(safe-area-inset-left, 16px);
+  --safe-right: env(safe-area-inset-right, 16px);
+
+  /* 4. Touch Targets a Grid */
+  --min-touch-target: 44px;
+  --grid-gap: clamp(1rem, 2vw, 1.5rem);
+}
+
+/* Základní reset pro responzivitu */
+*, *::before, *::after {
+  box-sizing: border-box;
+}
+
+body {
+  font-size: var(--text-base);
+  line-height: var(--line-height-mobile);
+  padding: var(--safe-top) var(--safe-right) var(--safe-bottom) var(--safe-left);
+  /* Zabrání pull-to-refresh na nežádoucích místech v aplikaci */
+  overscroll-behavior-y: none; 
+}
+
+@media (min-width: 64rem) {
+  body { line-height: var(--line-height-desktop); }
+}
+
+/* 5. Ošetření Hover stavů pouze pro zařízení s myší */
+@media (hover: hover) and (pointer: fine) {
+  .btn:hover, .menu-link:hover {
+    /* Vaše hover efekty */
+    filter: brightness(0.9);
+  }
+}
+
+/* Aktivní stav pro dotyková zařízení (okamžitá odezva) */
+.btn:active, .menu-link:active {
+  transform: scale(0.98);
+  transition: transform 0.1s;
+}
