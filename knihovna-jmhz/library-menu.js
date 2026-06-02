@@ -7,8 +7,8 @@ window.LIBRARY_MENU_CONFIG = [
     { label: "🖥️ Otevřít Prohlížeč JMHZ Formulářů", link: "../index.html", external: true },
     { divider: true },
     // ZMĚNA: Tlačítko nyní volá funkci pro zobrazení Pop-Up okna místo přímého odkazu
-    { label: "📧 Technická podpora", action: () => window.showSupportModal() }, 
+    { label: "🐛 Nahlásit problém", action: () => window.showSupportModal() }, 
     
     { label: "🌐 Web SALARY.cz", link: "https://www.salary.cz", external: true },
-	{ divider: true }
+        { divider: true }
 ];

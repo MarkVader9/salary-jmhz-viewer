@@ -148,7 +148,87 @@ document.addEventListener("DOMContentLoaded", () => {
             backdrop.classList.remove('show');
         }
     });
-	// Globální správa témat - ujistěte se, že toto je na konci library-ui.js
+    // 5. Modal "Nahlásit problém" — stejná podoba jako v JMHZ VIEWER
+    window.showSupportModal = function() {
+        let modal = document.getElementById('jmhz-report-modal');
+        if (!modal) {
+            modal = document.createElement('div');
+            modal.id = 'jmhz-report-modal';
+            modal.style.cssText = 'position:fixed;inset:0;z-index:99999;display:flex;align-items:center;justify-content:center;background:rgba(0,0,0,.35)';
+            modal.innerHTML = `
+                <div style="background:var(--bg-elevated,#fff);border:1px solid var(--border,#ddd);border-radius:var(--radius-lg,8px);padding:var(--sp-6,24px);min-width:420px;max-width:560px;width:90%;display:flex;flex-direction:column;gap:var(--sp-4,16px);box-shadow:0 8px 32px rgba(0,0,0,.18)">
+                    <div style="display:flex;justify-content:space-between;align-items:center">
+                        <div style="font-weight:600;font-size:.9375rem">Nahlásit problém</div>
+                        <button id="jmhz-report-close" aria-label="Zavřít" style="background:none;border:none;cursor:pointer;font-size:1.25rem;color:var(--text-muted,#888);padding:0 4px">&times;</button>
+                    </div>
+                    <div style="display:flex;flex-direction:column;gap:var(--sp-3,12px)">
+                        <label style="display:flex;flex-direction:column;gap:4px">
+                            <span style="font-size:0.8125rem;color:var(--text-muted,#888)">Popis problému</span>
+                            <textarea id="jmhz-report-desc" rows="4" placeholder="Popište prosím co nejpodrobněji, jaký problém jste zaznamenali…" style="resize:vertical;padding:var(--sp-2,8px);border:1px solid var(--border,#ddd);border-radius:var(--radius-md,6px);font-family:inherit;font-size:0.8125rem;background:var(--bg-surface,#fff);color:var(--text-primary,#111)"></textarea>
+                        </label>
+                        <label style="display:flex;flex-direction:column;gap:4px">
+                            <span style="font-size:0.8125rem;color:var(--text-muted,#888)">Zákaznické číslo SALARY s.r.o.</span>
+                            <input id="jmhz-report-cust" type="text" placeholder="Nepovinné" style="padding:var(--sp-2,8px);border:1px solid var(--border,#ddd);border-radius:var(--radius-md,6px);font-family:inherit;font-size:0.8125rem;background:var(--bg-surface,#fff);color:var(--text-primary,#111)">
+                        </label>
+                        <label style="display:flex;flex-direction:column;gap:4px;margin-top:var(--sp-1,4px)">
+                            <span style="font-size:0.75rem;color:var(--text-muted,#888);font-weight:500">Diagnostické informace (budou přiloženy):</span>
+                            <textarea id="jmhz-report-diag" rows="5" readonly style="width:100%;box-sizing:border-box;padding:var(--sp-2,8px);background:var(--bg-base,#f5f5f5);border:1px solid var(--border-subtle,#eee);border-radius:var(--radius-md,6px);font-size:0.6875rem;color:var(--text-muted,#888);white-space:pre-wrap;max-height:140px;overflow:auto;line-height:1.45;font-family:monospace;resize:vertical"></textarea>
+                        </label>
+                    </div>
+                    <div style="display:flex;align-items:center;gap:var(--sp-3,12px);justify-content:flex-end;flex-wrap:wrap">
+                        <span style="font-size:0.6875rem;color:var(--text-muted,#888);margin-right:auto">Otevře se e-mailový klient s předvyplněnou zprávou na slsavek@salary.cz</span>
+                        <button id="jmhz-report-send" style="padding:8px 18px;background:var(--accent,#1e5fa3);color:#fff;border:none;border-radius:var(--radius-md,6px);font-size:0.875rem;font-weight:600;cursor:pointer">Odeslat</button>
+                    </div>
+                </div>
+            `;
+            document.body.appendChild(modal);
+
+            // Diagnostická data
+            const diag = [
+                'Aplikace : JMHZ KNIHOVNA',
+                'Stránka  : ' + document.title,
+                'URL      : ' + location.href,
+                'Datum    : ' + new Date().toLocaleString('cs-CZ'),
+                'Prohlížeč: ' + navigator.userAgent,
+                'Rozlišení: ' + screen.width + 'x' + screen.height + ' (viewport ' + window.innerWidth + 'x' + window.innerHeight + ')',
+            ].join('\n');
+            modal.querySelector('#jmhz-report-diag').value = diag;
+
+            // Zavření
+            modal.querySelector('#jmhz-report-close').addEventListener('click', () => { modal.style.display = 'none'; });
+            modal.addEventListener('click', (e) => { if (e.target === modal) modal.style.display = 'none'; });
+            document.addEventListener('keydown', (e) => { if (e.key === 'Escape' && modal.style.display !== 'none') modal.style.display = 'none'; });
+
+            // Odeslání přes mailto
+            modal.querySelector('#jmhz-report-send').addEventListener('click', () => {
+                const desc = modal.querySelector('#jmhz-report-desc').value.trim();
+                const cust = modal.querySelector('#jmhz-report-cust').value.trim();
+                const diag = modal.querySelector('#jmhz-report-diag').value;
+                const subject = encodeURIComponent('Nahlášení problému – JMHZ KNIHOVNA');
+                const body = encodeURIComponent(
+                    (desc || '(popis nevyplněn)') + '\n\n' +
+                    (cust ? 'Zákaznické číslo: ' + cust + '\n\n' : '') +
+                    '--- Diagnostické informace ---\n' + diag
+                );
+                window.location.href = 'mailto:slsavek@salary.cz?subject=' + subject + '&body=' + body;
+            });
+        }
+
+        // Aktualizace diagnostiky při každém otevření (čas se mění)
+        modal.querySelector('#jmhz-report-diag').value = [
+            'Aplikace : JMHZ KNIHOVNA',
+            'Stránka  : ' + document.title,
+            'URL      : ' + location.href,
+            'Datum    : ' + new Date().toLocaleString('cs-CZ'),
+            'Prohlížeč: ' + navigator.userAgent,
+            'Rozlišení: ' + screen.width + 'x' + screen.height + ' (viewport ' + window.innerWidth + 'x' + window.innerHeight + ')',
+        ].join('\n');
+        modal.querySelector('#jmhz-report-desc').value = '';
+        modal.querySelector('#jmhz-report-cust').value = '';
+        modal.style.display = 'flex';
+    };
+
+        // Globální správa témat - ujistěte se, že toto je na konci library-ui.js
 window.setTheme = function(theme) {
     if (theme === 'auto') {
         const isDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
