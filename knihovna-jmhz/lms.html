@@ -78,9 +78,9 @@
         PANELS_POSITION: 'bottom-left'
     };
 
-    const DB_URL = "databaze-knihovny.json"; 
-    const MEDIA_BASE_URL = "https://www.salary.cz/jmhz2026/knihovna-jmhz/media/";
-    const DOCX_BASE_URL = "https://www.salary.cz/jmhz2026/knihovna-jmhz/dokumenty/";
+	const DB_URL = "databaze-knihovny.json"; 
+    const MEDIA_BASE_URL = "media/";
+    const DOCX_BASE_URL = "dokumenty/";
 
     const urlParams = new URLSearchParams(window.location.search);
     const courseId = urlParams.get('course');
@@ -712,7 +712,7 @@
         let loadedCount = 0;
 
         // Funkce pro vykreslení finálního výsledku
-        c// Funkce pro vykreslení finálního výsledku
+        // Funkce pro vykreslení finálního výsledku
         const updateUI = () => {
             const mins = Math.ceil(totalSeconds / 60);
             let minText = 'minut';

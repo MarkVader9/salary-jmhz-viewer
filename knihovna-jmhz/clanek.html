@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Čtení článku - SALARY KB</title>
+    <title>Čtení článku - SALARY Knihovna Znalostí</title>
     
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -27,12 +27,12 @@
 
     <div id="loader" style="text-align: center; padding: 100px; color: var(--text-muted);">
         <h2 id="loaderText">Stahuji a konvertuji dokument...</h2>
-        <p style="font-size: 0.9rem;">To může trvat několik vteřin podle velikosti .docx souboru.</p>
+        <p style="font-size: 0.9rem;">To může trvat několik vteřin podle velikosti článku.</p>
     </div>
 
     <div class="layout" id="layoutContainer" style="display: none;">
         <aside class="toc-aside">
-            <div class="toc-title">Obsah článku</div>
+            <div class="toc-title">Obsah Článku</div>
             <nav id="tocList"></nav>
         </aside>
 
@@ -48,7 +48,7 @@
 
         <aside class="right-sidebar">
             <div class="info-box" id="externalControlPanel">
-                <span class="sidebar-label">Ovládací menu</span>
+                <span class="sidebar-label">Ovládací Menu</span>
                 <div id="dynamicButtonsContainer" style="display:flex; flex-direction:column; gap:8px;"></div>
             </div>
             <div class="info-box">
@@ -60,76 +60,48 @@
     </div>
 
 <script>
+    // ==========================================
+    // 1. KONFIGURACE A KONSTANTY
+    // ==========================================
     const DB_URL = "databaze-knihovny.json"; 
-    const MEDIA_BASE_URL = "https://www.salary.cz/jmhz2026/knihovna-jmhz/media/";
-    const DOCX_BASE_URL = "https://www.salary.cz/jmhz2026/knihovna-jmhz/dokumenty/";
+    const MEDIA_BASE_URL = "media/";
+    const DOCX_BASE_URL = "dokumenty/";
 
     const urlParams = new URLSearchParams(window.location.search);
     const articleId = urlParams.get('id');
 
-    async function loadArticle() {
-        if (!articleId) return location.href = 'index.html';
-        try {
-            const res = await fetch(DB_URL + "?t=" + Date.now());
-            if (!res.ok) throw new Error("Nelze načíst databázi JSON");
-            const db = await res.json();
-            
-            const allItems = [...(db.articles || []), ...(db.lms || [])];
-            const article = allItems.find(a => a.id === articleId);
-            
-            if (!article || !article.docxFile) {
-                document.getElementById('loader').innerHTML = '<h2>Článek nenalezen</h2><p>V databázi chybí vazba na .docx soubor.</p><a href="index.html" class="btn">Zpět</a>';
-                return;
+    // ==========================================
+    // 2. FUNKCE PRO VZHLED A UI
+    // ==========================================
+    function fixDocumentFormatting(container) {
+        // A. Oprava zarovnání odstavců z MS Word
+        const paragraphs = container.querySelectorAll('p');
+        paragraphs.forEach(p => {
+            const style = p.getAttribute('style') || '';
+            if (style.includes('text-align: justify') || style.includes('text-align:both')) {
+                p.classList.add('align-justify');
+            } else if (style.includes('text-align: center')) {
+                p.classList.add('align-center');
+            } else if (style.includes('text-align: right')) {
+                p.classList.add('align-right');
             }
+        });
 
-            document.title = `${article.title} - SALARY KB`;
-            document.getElementById('articleTitle').textContent = article.title;
-            const dateObj = new Date(article.lastUpdated);
-            document.getElementById('articleMeta').innerHTML = `Aktualizace: <strong>${dateObj.toLocaleDateString('cs-CZ')}</strong><br>Původní odhad: <strong>${article.readingTimeMin || 1} min</strong>`;
-            document.getElementById('articleTags').innerHTML = (article.tags || []).map(t => `<span class="tag-pill">${t}</span>`).join('');
-
-            populateControlPanel();
-
-            const docxUrl = DOCX_BASE_URL + encodeURIComponent(article.docxFile);
-            const docRes = await fetch(docxUrl);
-            if (!docRes.ok) throw new Error(`Dokument "${article.docxFile}" nenalezen.`);
-            
-            const arrayBuffer = await docRes.arrayBuffer();
-            const mammothOptions = { ignoreEmptyParagraphs: false };
-            const result = await mammoth.convertToHtml({ arrayBuffer: arrayBuffer }, mammothOptions);
-            
-            let rawHtml = replaceMediaTags(result.value);
-
-            const contentContainer = document.getElementById('articleContent');
-            contentContainer.innerHTML = rawHtml || '<p><em>Tento dokument je prázdný.</em></p>';
-            
-            contentContainer.querySelectorAll('a').forEach(link => {
-                if (link.href && link.href.startsWith('http')) {
-                    link.setAttribute('target', '_blank');
-                    link.setAttribute('rel', 'noopener noreferrer');
-                }
-            });
-
-            contentContainer.querySelectorAll('img').forEach(img => {
-                img.addEventListener('click', () => openLightbox(img.src));
-            });
-
-            document.getElementById('loader').style.display = 'none';
-            document.getElementById('layoutContainer').style.display = 'grid';
-
-            generateTOC();
-
-            // SPUŠTĚNÍ ENTEPRISE FUNKCÍ PO VYRENDERU DOMu
-            if (window.calculateArticleTime) calculateArticleTime(contentContainer);
-            if (window.KB_VideoManager) KB_VideoManager.init();
-
-        } catch (e) { 
-            document.getElementById('loader').innerHTML = `<h2 style="color:var(--error)">Chyba</h2><p>${e.message}</p><br><a href="index.html" class="btn">Zpět</a>`; 
-        }
+        // B. Automatické zabalení tabulek proti přetékání a bílým místům
+        const tables = container.querySelectorAll('table');
+        tables.forEach(table => {
+            if (!table.parentElement.classList.contains('table-responsive-wrapper')) {
+                const wrapper = document.createElement('div');
+                wrapper.className = 'table-responsive-wrapper';
+                table.parentNode.insertBefore(wrapper, table);
+                wrapper.appendChild(table);
+            }
+        });
     }
 
     function populateControlPanel() {
         const container = document.getElementById('dynamicButtonsContainer');
+        if (!container) return;
         container.innerHTML = `
             <div style="display:flex; flex-direction:column; gap:4px; margin-bottom:10px; border-bottom:1px solid var(--border-subtle); padding-bottom:10px;">
                 <span style="font-size:0.75rem; color:var(--text-muted); font-weight:600; text-transform:uppercase;">Vzhled</span>
@@ -137,11 +109,10 @@
                 <button class="btn" onclick="setTheme('dark')" style="text-align:left;">🌙 Tmavý</button>
                 <button class="btn" onclick="setTheme('auto')" style="text-align:left;">🌓 Automatický</button>
             </div>
-            
             <div style="display:flex; flex-direction:column; gap:4px; margin-bottom:10px; border-bottom:1px solid var(--border-subtle); padding-bottom:10px;">
                 <span style="font-size:0.75rem; color:var(--text-muted); font-weight:600; text-transform:uppercase;">Písmo ke čtení</span>
                 <select id="fontSelect" class="sort-select" style="width:100%; padding:8px; font-size:0.9rem;" onchange="changeReaderFont(this.value)">
-                    <option value="system-ui, -apple-system, sans-serif">Výchozí Systémové Písmo</option>
+                    <option value="system-ui, -apple-system, sans-serif">Výchozí Systémové</option>
                     <option value="'Inter', sans-serif">Inter (Moderní)</option>
                     <option value="'Roboto', sans-serif">Roboto (Google)</option>
                     <option value="'Open Sans', sans-serif">Open Sans (Čisté)</option>
@@ -152,7 +123,6 @@
                     <option value="'Playfair Display', serif">Playfair (Elegantní)</option>
                 </select>
             </div>
-            
             <button class="btn" onclick="copyArticleLink()" style="text-align:left;">📋 Sdílet článek</button>
             <button class="btn" onclick="window.print()" style="text-align:left;">🖨️ Vytisknout článek</button>
         `;
@@ -164,55 +134,9 @@
         }
     }
 
-    window.changeReaderFont = function(fontFamily) {
-        document.getElementById('articleContent').style.fontFamily = fontFamily;
-        localStorage.setItem('jmhz_article_font', fontFamily);
-    };
-
-    window.copyArticleLink = function() {
-        navigator.clipboard.writeText(window.location.href).then(() => {
-            if(window.KB_Toaster) KB_Toaster.show('Zkopírováno', 'Odkaz na článek byl zkopírován do schránky.', 'success');
-            else alert('Zkopírováno: Odkaz na článek byl zkopírován do schránky.');
-        });
-    };
-
-    window.toggleFaq = function(element) { element.parentElement.classList.toggle('open'); };
-
-    window.openLightbox = function(src) {
-        document.getElementById('kbLightboxImg').src = src;
-        document.getElementById('kbLightbox').classList.add('active');
-    };
-    window.closeLightbox = function() {
-        document.getElementById('kbLightbox').classList.remove('active');
-        setTimeout(() => { document.getElementById('kbLightboxImg').src = ''; }, 300);
-    };
-
-    // OPERATIVNÍ REVIZE LOGIKY KVÍZŮ (BOD 2)
-    window.checkArticleQuiz = function(btn, isCorrect, quizId) {
-        const parent = btn.parentElement;
-        const feedback = document.getElementById(quizId + '_feedback');
-        
-        if (isCorrect) {
-            Array.from(parent.children).forEach(b => {
-                b.disabled = true; b.style.opacity = '0.5'; b.style.cursor = 'not-allowed';
-            });
-            btn.style.opacity = '1'; btn.style.color = '#fff';
-            btn.style.background = 'var(--success)'; btn.style.borderColor = 'var(--success)';
-            feedback.innerHTML = '✅ Správně!';
-            feedback.style.background = 'var(--success-bg)'; feedback.style.color = 'var(--success)';
-        } else {
-            btn.disabled = true; 
-            btn.style.opacity = '0.7'; 
-            btn.style.cursor = 'not-allowed';
-            btn.style.color = '#fff';
-            btn.style.background = 'var(--error)'; btn.style.borderColor = 'var(--error)';
-            feedback.innerHTML = '❌ Nesprávně. Zkuste kliknout na jinou možnost.';
-            feedback.style.background = 'var(--error-bg)'; feedback.style.color = 'var(--error)';
-        }
-        feedback.style.display = 'block';
-    };
-
-    // SYNCHRONIZACE SHORTCODŮ S CENTRALIZOVANÝM KB-VIDEO.JS
+    // ==========================================
+    // 3. PARSOVÁNÍ OBSAHU A SHORTCODŮ
+    // ==========================================
     function replaceMediaTags(html) {
         let parsed = html;
         
@@ -226,7 +150,7 @@
             let baseSrc = fullSrc.replace(/\.mp4$/i, '');
             return `
             <div class="media-wrapper kb-video-container" data-base-src="${baseSrc}" data-original-src="${fullSrc}">
-                <video controls preload="metadata" style="width:100%; border-radius:8px; box-shadow: 0 4px 10px rgba(0,0,0,0.1); background:#000;">
+                <video controls preload="metadata" playsinline style="width:100%; border-radius:8px; box-shadow: 0 4px 10px rgba(0,0,0,0.1); background:#000;">
                     <source src="${fullSrc}" type="video/mp4">
                     Váš prohlížeč nepodporuje přehrávání videa.
                 </video>
@@ -284,67 +208,9 @@
         return parsed;
     }
 
-    // DYNAMICKÁ ANALÝZA A VÝPOČET ČASU ČTENÍ ČLÁNKU (BOD 3)
-    window.calculateArticleTime = function(container) {
-        const indicator = document.getElementById('articleTimeIndicator');
-        if (!indicator) return;
-
-        const text = container.textContent || "";
-        const words = text.trim().split(/\s+/).length;
-        let totalSeconds = Math.ceil(words / 200) * 60; 
-
-        const mediaElements = container.querySelectorAll('video, audio');
-        let loadedCount = 0;
-
-        const updateUI = () => {
-            const mins = Math.ceil(totalSeconds / 60);
-            let minText = 'minut';
-            if (mins === 1) minText = 'minuta';
-            else if (mins >= 2 && mins <= 4) minText = 'minuty';
-            
-            // 1. Aktualizace hlavního indikátoru pod nadpisem
-            indicator.innerHTML = `⏱️ Odhadovaný čas na přečtení článku: <span style="color:var(--accent); font-weight:700;">${mins} ${minText}</span>`;
-
-            // 2. Přepis údaje v pravém panelu (Štítky a Info)
-            const metaBox = document.getElementById('articleMeta');
-            if (metaBox) {
-                // Skript vezme stávající obsah, odsekne ho u značky <br> (čímž zachráníme datum) 
-                // a připojí k němu nový, dynamicky spočítaný čas.
-                const datePart = metaBox.innerHTML.split('<br>')[0];
-                metaBox.innerHTML = `${datePart}<br>Vypočtený odhad: <strong>${mins} min</strong>`;
-            }
-        };
-
-        if (mediaElements.length === 0) {
-            updateUI();
-            return;
-        }
-
-        indicator.innerHTML = `⏱️ Vyhodnocuji délku přiložených médií...`;
-
-        mediaElements.forEach(media => {
-            if (media.readyState >= 1) { 
-                totalSeconds += media.duration;
-                loadedCount++;
-                if (loadedCount === mediaElements.length) updateUI();
-            } else {
-                media.addEventListener('loadedmetadata', () => {
-                    totalSeconds += media.duration;
-                    loadedCount++;
-                    if (loadedCount === mediaElements.length) updateUI();
-                });
-                
-                setTimeout(() => {
-                    if (loadedCount < mediaElements.length) {
-                        loadedCount++;
-                        if (media.readyState === 0) totalSeconds += 180; 
-                        if (loadedCount === mediaElements.length) updateUI();
-                    }
-                }, 1500);
-            }
-        });
-    };
-
+    // ==========================================
+    // 4. GENERACE OBSAHU A SCROLLSPY
+    // ==========================================
     function generateTOC() {
         const headings = document.getElementById('articleContent').querySelectorAll('h1, h2');
         let tocHtml = '';
@@ -380,14 +246,201 @@
         headings.forEach(h => observer.observe(h));
     }
 
-    window.addEventListener('scroll', () => {
-        const winScroll = document.body.scrollTop || document.documentElement.scrollTop;
-        const height = document.documentElement.scrollHeight - document.documentElement.clientHeight;
-        const scrolled = height > 0 ? (winScroll / height) * 100 : 0;
-        document.getElementById('progressBar').style.width = scrolled + "%";
-    }, { passive: true });
+    window.calculateArticleTime = function(container) {
+        const indicator = document.getElementById('articleTimeIndicator');
+        if (!indicator) return;
 
+        const text = container.textContent || "";
+        const words = text.trim().split(/\s+/).length;
+        let totalSeconds = Math.ceil(words / 200) * 60; 
+
+        const mediaElements = container.querySelectorAll('video, audio');
+        let loadedCount = 0;
+
+        const updateUI = () => {
+            const mins = Math.ceil(totalSeconds / 60);
+            let minText = 'minut';
+            if (mins === 1) minText = 'minuta';
+            else if (mins >= 2 && mins <= 4) minText = 'minuty';
+            
+            indicator.innerHTML = `⏱️ Odhadovaný čas na přečtení článku: <span style="color:var(--accent); font-weight:700;">${mins} ${minText}</span>`;
+            const metaBox = document.getElementById('articleMeta');
+            if (metaBox) {
+                const datePart = metaBox.innerHTML.split('<br>')[0];
+                metaBox.innerHTML = `${datePart}<br>Vypočtený odhad: <strong>${mins} min</strong>`;
+            }
+        };
+
+        if (mediaElements.length === 0) {
+            updateUI();
+            return;
+        }
+
+        indicator.innerHTML = `⏱️ Vyhodnocuji délku přiložených médií...`;
+        mediaElements.forEach(media => {
+            if (media.readyState >= 1) { 
+                totalSeconds += media.duration;
+                loadedCount++;
+                if (loadedCount === mediaElements.length) updateUI();
+            } else {
+                media.addEventListener('loadedmetadata', () => {
+                    totalSeconds += media.duration;
+                    loadedCount++;
+                    if (loadedCount === mediaElements.length) updateUI();
+                });
+                setTimeout(() => {
+                    if (loadedCount < mediaElements.length) {
+                        loadedCount++;
+                        if (media.readyState === 0) totalSeconds += 180; 
+                        if (loadedCount === mediaElements.length) updateUI();
+                    }
+                }, 1500);
+            }
+        });
+    };
+
+    // ==========================================
+    // 5. INTERAKTIVNÍ PRVKY
+    // ==========================================
+    window.changeReaderFont = function(fontFamily) {
+        document.getElementById('articleContent').style.fontFamily = fontFamily;
+        localStorage.setItem('jmhz_article_font', fontFamily);
+    };
+
+    window.copyArticleLink = function() {
+        navigator.clipboard.writeText(window.location.href).then(() => {
+            if(window.KB_Toaster) KB_Toaster.show('Zkopírováno', 'Odkaz na článek byl zkopírován do schránky.', 'success');
+            else alert('Zkopírováno: Odkaz na článek byl zkopírován do schránky.');
+        });
+    };
+
+    window.toggleFaq = function(element) { element.parentElement.classList.toggle('open'); };
+
+    window.openLightbox = function(src) {
+        document.getElementById('kbLightboxImg').src = src;
+        document.getElementById('kbLightbox').classList.add('active');
+    };
+    
+    window.closeLightbox = function() {
+        document.getElementById('kbLightbox').classList.remove('active');
+        setTimeout(() => { document.getElementById('kbLightboxImg').src = ''; }, 300);
+    };
+
+    window.checkArticleQuiz = function(btn, isCorrect, quizId) {
+        const parent = btn.parentElement;
+        const feedback = document.getElementById(quizId + '_feedback');
+        
+        if (isCorrect) {
+            Array.from(parent.children).forEach(b => {
+                b.disabled = true; b.style.opacity = '0.5'; b.style.cursor = 'not-allowed';
+            });
+            btn.style.opacity = '1'; btn.style.color = '#fff';
+            btn.style.background = 'var(--success)'; btn.style.borderColor = 'var(--success)';
+            feedback.innerHTML = '✅ Správně!';
+            feedback.style.background = 'var(--success-bg)'; feedback.style.color = 'var(--success)';
+        } else {
+            btn.disabled = true; 
+            btn.style.opacity = '0.7'; 
+            btn.style.cursor = 'not-allowed';
+            btn.style.color = '#fff';
+            btn.style.background = 'var(--error)'; btn.style.borderColor = 'var(--error)';
+            feedback.innerHTML = '❌ Nesprávně. Zkuste kliknout na jinou možnost.';
+            feedback.style.background = 'var(--error-bg)'; feedback.style.color = 'var(--error)';
+        }
+        feedback.style.display = 'block';
+    };
+
+    // ==========================================
+    // 6. HLAVNÍ FUNKCE (NAČTENÍ ČLÁNKU)
+    // ==========================================
+    async function loadArticle() {
+        if (!articleId) return location.href = 'index.html';
+        try {
+            const res = await fetch(DB_URL + "?t=" + Date.now());
+            if (!res.ok) throw new Error("Nelze načíst databázi aplikace JMHZ KNIHOVNA");
+            const db = await res.json();
+            
+            const allItems = [...(db.articles || []), ...(db.lms || [])];
+            const article = allItems.find(a => a.id === articleId);
+            
+            if (!article || !article.docxFile) throw new Error("Článek nenalezen.");
+
+            document.title = `${article.title} - SALARY Knihovna Znalostí`;
+            document.getElementById('articleTitle').textContent = article.title;
+            
+            const dateObj = new Date(article.lastUpdated);
+            document.getElementById('articleMeta').innerHTML = `Aktualizace: <strong>${dateObj.toLocaleDateString('cs-CZ')}</strong><br>Původní odhad: <strong>${article.readingTimeMin || 1} min</strong>`;
+            document.getElementById('articleTags').innerHTML = (article.tags || []).map(t => `<span class="tag-pill">${t}</span>`).join('');
+
+            populateControlPanel();
+
+            const docxUrl = DOCX_BASE_URL + encodeURIComponent(article.docxFile);
+            const docRes = await fetch(docxUrl);
+            if (!docRes.ok) throw new Error(`Dokument "${article.docxFile}" nenalezen.`);
+            
+            const arrayBuffer = await docRes.arrayBuffer();
+            const mammothOptions = { 
+                ignoreEmptyParagraphs: false,
+                styleMap: [
+                    "p[alignment='center'] => p.align-center",
+                    "p[alignment='justify'] => p.align-justify",
+                    "p[alignment='both'] => p.align-justify",
+                    "p[alignment='right'] => p.align-right",
+                    "h1[alignment='center'] => h1.align-center",
+                    "h2[alignment='center'] => h2.align-center",
+                    "h3[alignment='center'] => h3.align-center",
+                    "u => u",
+                    "strike => s"
+                ]
+            };
+            
+            const result = await mammoth.convertToHtml({ arrayBuffer: arrayBuffer }, mammothOptions);
+            let rawHtml = replaceMediaTags(result.value);
+
+            const contentContainer = document.getElementById('articleContent');
+            contentContainer.innerHTML = rawHtml;
+            
+            // Obalení tabulek a zarovnání
+            fixDocumentFormatting(contentContainer);
+
+            // Zprovoznění Lightboxu pro obrázky a otevírání odkazů na nové kartě
+            contentContainer.querySelectorAll('a').forEach(link => {
+                if (link.href && link.href.startsWith('http')) {
+                    link.setAttribute('target', '_blank');
+                    link.setAttribute('rel', 'noopener noreferrer');
+                }
+            });
+            contentContainer.querySelectorAll('img').forEach(img => {
+                img.addEventListener('click', () => openLightbox(img.src));
+            });
+
+            document.getElementById('loader').style.display = 'none';
+            document.getElementById('layoutContainer').style.display = 'grid';
+
+            generateTOC();
+            if (window.calculateArticleTime) calculateArticleTime(contentContainer);
+            if (window.KB_VideoManager) KB_VideoManager.init();
+
+        } catch (e) { 
+            document.getElementById('loader').innerHTML = `<h2 style="color:var(--error)">Chyba</h2><p>${e.message}</p><br><a href="index.html" class="btn">Zpět</a>`; 
+        }
+    }
+
+    // ==========================================
+    // 7. EVENT LISTENERY (Spuštění)
+    // ==========================================
     document.addEventListener('DOMContentLoaded', loadArticle);
+    
+    // OPRAVENÝ SENZOR PROGRESS BARU
+    window.addEventListener('scroll', () => {
+        const winScroll = window.scrollY || document.documentElement.scrollTop;
+        const height = document.documentElement.scrollHeight - document.documentElement.clientHeight;
+        
+        const scrolled = height > 0 ? (winScroll / height) * 100 : 0;
+        
+        const pb = document.getElementById('progressBar');
+        if (pb) pb.style.width = scrolled + "%";
+    }, { passive: true });
 </script>
 </body>
 </html>

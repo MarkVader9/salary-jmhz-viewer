@@ -75,7 +75,42 @@ const MOCK_NOTIFICATIONS = [
         title: "Byl Přidán Nový JMHZ Číselník",
         content: "Nově byl do knihovny přidán nový JMHZ Číselník Okresů. <br><br>Je možné si jej přečíst na tomto odkaze <a href=\"https://www.salary.cz/jmhz2026/knihovna-jmhz/clanek.html?id=jmhz_ciselnik_okresu\">Přejít na Nový Číselník</a>",
         tags: ["JMHZ","Číselníky", "Nové"]
-    }
+    },
+	    {
+        id: "notif_005",
+        date: "2026-05-23T14:54:00Z",
+        title: "Aktualizace Číselníků Legislativy JMHZ",
+        content: "V následujícíh dnech zde do SALARY KNIHOVNA JMHZ stále přibývají jednotlivé číselníky poslední květnové aktualizace Legislativy JMHZ.",
+        tags: ["Číselníky JMHZ", "Důležité"]
+    },	    
+	{
+    id: "notif_006",
+    date: "2026-05-26T06:59:36Z",
+    title: "Nový dokument v JMHZ KNIHOVNA: Předregistrace Zaměstnance (PREZEC)",
+    content: `Vážené mzdové účetní,<br><br> do knihovny byl přidán článek k procesu PREZEC. Od 1. 7. 2026 nám nová legislativa nařizuje přihlásit zaměstnance do evidence ČSSZ nejpozději před okamžikem jeho nástupu do práce.<br><br>Článek detailně popisuje tzv. částečné přihlášení (PREZEC), při kterém hlásíme pouze 8 základních údajů. Berte prosím na vědomí, že tento postup je záložní variantou pro případy, kdy před nástupem občana ČR nestihnete shromáždit všechny potřebné podklady.<br><br> Naším cílem zůstává obdržet 100 % dat včas a podat rovnou plnou registraci (REGZEC – akce 1). Tím se administrativně náročnějšímu procesu PREZEC vyhnete. (Pro cizince je navíc PREZEC zákonem zakázán).<br><br> Když ale podklady chybí, manuál vás provede, jak podat PREZEC akci P1 (Předpokládaný Nástup), PREZEC akci P2 (Oznámení o Nenastoupení), a také jak správně pohlídat lhůty.<br><br>Prosím, prostudujte si celý dokument <a href="https://www.salary.cz/jmhz2026/knihovna-jmhz/clanek.html?id=DIR-HR-IT-PREZEC-2026-(R1.1)"> v naší knihovně na tomto odkaze zde.</a><br><br>`,
+    tags: ["JMHZ Legislativa", "Důležité", "PREZEC"]
+    },
+	{
+    id: "notif_009",
+    date: "2026-05-27T22:02:19Z",
+    title: "Proběhla Aktualizace dnes 27. KVĚTNA 2026 v Novém dokumentu v JMHZ KNIHOVNA: Předregistrace Zaměstnance (PREZEC) (Revize-002)",
+    content: `AKTUALIZACE INFORMACÍ: Zásadní procesní úprava: Definování jak zákonný rámec JMHZ chápe u REGZEC a PREZEC procesů obsah 100% set (sady) dat od nově nastupujícího zaměstnance v procesech REGZEC a nově v zástupných procesech PREZEC.<br><br>Celý tento nově aktualizovaný článek naleznete <a href="https://www.salary.cz/jmhz2026/knihovna-jmhz/clanek.html?id=DIR-HR-IT-PREZEC-2026-(R1.1)"> v naší knihovně na tomto odkaze zde.</a><br><br>`,
+    tags: ["JMHZ Legislativa", "Důležité", "PREZEC"]
+	},
+    {
+    id: "notif_010",
+    date: "2026-06-01T22:25:45Z",
+    title: "Vydání Nového dokumentu: Nová Legislativa Pojišťovny PPPZ(PPZ) a HOZ 2026 (Revize-001)",
+    content: `AKTUALIZACE INFORMACÍ: Vydání nového komplexního analytického a implementačního manuálu (SOP-HR-IT-001) k přechodu na výhradně elektronické formáty zdravotních pojišťoven platné od 1. ledna 2026. Dokument detailně pokrývá všech 42 klíčových procesních a technologických otázek rozdělených pro role Mzdové účetní a IT Developera, včetně nové logiky kódů státních pojištěnců, mzdových limitů a striktních validačních XSD pravidel pro HOZ a PPPZ.<br><br>Celý tento nově vydaný článek a manuál naleznete <a href="https://www.salary.cz/jmhz2026/knihovna-jmhz/clanek.html?id=Nov%C3%A1_Legislativa_Poji%C5%A1%C5%A5ovny_PPPZ(PPZ)_a_HOZ_2026"> v naší knihovně na tomto odkaze zde.</a><br><br>`,
+    tags: ["Zdravotní Pojišťovny Legislativa", "Důležité", "HOZ a PPPZ"]
+	},
+	{
+    id: "notif_011",
+    date: "2026-06-02T06:36:36Z",
+    title: "Vydání Revize 002 Nového dokumentu: Nová Legislativa Pojišťovny PPPZ(PPZ) a HOZ 2026 (Revize-002)",
+    content: `AKTUALIZACE INFORMACÍ: Vydání nového komplexního analytického a implementačního manuálu (SOP-HR-IT-002) k přechodu na výhradně elektronické formáty zdravotních pojišťoven platné od 1. ledna 2026. Dokument detailně pokrývá všech 42 klíčových procesních a technologických otázek rozdělených pro role Mzdové účetní a Vývojovou Divizi SALARY s.r.o., včetně nové logiky kódů státních pojištěnců, mzdových limitů a striktních validačních XSD Schematických pravidel pro HOZ a PPPZ.<br><br>Celý tento nově vydaný článek a manuál naleznete <a href="https://www.salary.cz/jmhz2026/knihovna-jmhz/clanek.html?id=Nov%C3%A1_Legislativa_Poji%C5%A1%C5%A5ovny_PPPZ(PPZ)_a_HOZ_2026"> v naší knihovně na tomto odkaze zde.</a><br><br>`,
+    tags: ["Zdravotní Pojišťovny Legislativa", "Důležité", "HOZ a PPPZ"]
+	},
 ];
 
 const KB_Notifications = {

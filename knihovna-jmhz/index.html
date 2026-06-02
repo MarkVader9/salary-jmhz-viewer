@@ -9,6 +9,7 @@
     <script src="library-menu.js"></script>
     <script src="library-ui.js"></script>
     <link rel="stylesheet" href="library-style.css">
+    <link rel="stylesheet" href="core-responsive.css">
 </head>
 <body>
 
@@ -56,21 +57,14 @@
 
 async function init() {
         try {
-            let rawDb = null;
-            const cachedDb = sessionStorage.getItem('jmhz_db_cache_v1');
-            
-            // Zkusíme načíst z rychlé paměti prohlížeče (pokud už tam uživatel v této relaci byl)
-            if (cachedDb) {
-                rawDb = JSON.parse(cachedDb);
-            } else {
-                // Pokud tam není, stáhneme ji a uložíme pro příště
-                const res = await fetch("databaze-knihovny.json?t=" + Date.now());
-                if (!res.ok) throw new Error(`Nelze načíst databázi JSON (HTTP chyba: ${res.status})`);
-                rawDb = await res.json();
-                sessionStorage.setItem('jmhz_db_cache_v1', JSON.stringify(rawDb));
-            }
+            // Vždy stáhneme čerstvou databázi ze serveru (zabráníme neviditelným aktualizacím)
+            const res = await fetch("databaze-knihovny.json?t=" + Date.now());
+            if (!res.ok) throw new Error(`Nelze načíst databázi JSON (HTTP chyba: ${res.status})`);
+            const rawDb = await res.json();
             
             dbData.categories = rawDb.categories || [];
+			
+			
             
             // Sloučení "articles" a "lms" do jednoho pole pro jednotné vyhledávání
             const articles = rawDb.articles || [];
@@ -119,7 +113,8 @@ function renderGrid(articles) {
             const fUrl = window.location.origin + window.location.pathname.replace('index.html', '') + url;
             
             const date = new Date(item.lastUpdated).toLocaleDateString('cs-CZ');
-            const tags = (item.tags || []).slice(0, 3).map(t => `<span class="tag-pill">${t}</span>`).join('');
+           // Opraveno: Zobrazí všechny štítky, které u článku v JSONu máte
+const tags = (item.tags || []).map(t => `<span class="tag-pill">${t}</span>`).join('');
             
             const typeBadge = item.isLms 
                 ? `<span style="color:var(--accent); font-weight:800; font-size:0.8rem;">🎓 INTERAKTIVNÍ KURZ</span>` 
