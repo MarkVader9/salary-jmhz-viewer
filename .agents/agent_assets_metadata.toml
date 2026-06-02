@@ -1,0 +1,8 @@
+uploads = []
+generated = []
+
+[[outputs]]
+id = "djgVRkfTEa_uBfizp-NKE"
+uri = "file://predavaci-dokument-jmhz.docx"
+type = "word_document"
+title = "Předávací dokument — SALARY JMHZ Ecosystem"
