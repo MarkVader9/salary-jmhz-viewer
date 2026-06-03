@@ -1109,6 +1109,16 @@ body {
 .drawer-body .btn-jmhz-knihovna { background: #0057ca !important; color: #fff !important; border-color: #dcedff !important; }
 .drawer-body .btn-jmhz-knihovna:hover { background: #0d136a !important; color: #fff !important; border-color: #0d136a !important; }
 
+/* NOVÉ: Tlačítko "Oživit Prohlížeč" (hard refresh, zachovává localStorage) */
+.drawer-body .btn-ozivit-prohlizec {
+  display: flex; align-items: center; gap: var(--sp-2);
+  font-weight: 600 !important;
+}
+.drawer-body .btn-ozivit-prohlizec:hover { background: var(--bg-hover) !important; color: var(--text-primary) !important; }
+.drawer-body .btn-ozivit-prohlizec:disabled { opacity: 0.6; cursor: default; }
+.btn-ozivit-prohlizec .ozivit-spinner { display: inline-block; animation: ozivit-spin 0.7s linear infinite; }
+@keyframes ozivit-spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
+
 .drawer-body .btn-csv-meta {
   display: flex; align-items: center; gap: var(--sp-1);
   font-size: 0.8rem; color: var(--text-secondary);
@@ -2758,6 +2768,52 @@ body {
           }
         }
         const apply = () => document.querySelectorAll('.drop-zone').forEach(enhance);
+        new MutationObserver(apply).observe(document.body, { childList: true, subtree: true });
+        if (document.readyState !== 'loading') apply();
+        else document.addEventListener('DOMContentLoaded', apply);
+      })();
+
+      // Tvrdé pročištění mezipaměti (ekvivalent Ctrl+Shift+R, zachovává localStorage)
+      async function hardRefreshViewer() {
+        try {
+          if ('caches' in window) {
+            const keys = await caches.keys();
+            await Promise.all(keys.map(k => caches.delete(k)));
+          }
+          if ('serviceWorker' in navigator) {
+            const regs = await navigator.serviceWorker.getRegistrations();
+            await Promise.all(regs.map(r => r.update().catch(() => {})));
+          }
+        } catch (e) {}
+        // localStorage NENÍ dotčeno → uložená nastavení zůstávají
+        location.reload(true);
+      }
+
+      // Progresivní vložení tlačítka "Oživit Prohlížeč" do drawer menu (SolidJS jej vykresluje dynamicky)
+      (function injectOzivitButton() {
+        function inject(body) {
+          if (body.querySelector('.btn-ozivit-prohlizec')) return;
+          // Odstraň případný osiřelý oddělovač z předchozího částečného překreslení
+          body.querySelectorAll('hr[data-ozivit-divider]').forEach(el => el.remove());
+          const divider = document.createElement('hr');
+          divider.className = 'drawer-divider';
+          divider.dataset.ozivitDivider = '1';
+
+          const btn = document.createElement('button');
+          btn.type = 'button';
+          btn.className = 'btn-ozivit-prohlizec';
+          btn.title = 'Smaže mezipaměť a načte novou verzi Prohlížeče — uložená nastavení zůstanou zachována (ekvivalent Ctrl+Shift+R)';
+          btn.innerHTML = '<span aria-hidden="true">🔄</span> Oživit Prohlížeč';
+          btn.addEventListener('click', () => {
+            btn.disabled = true;
+            btn.innerHTML = '<span class="ozivit-spinner" aria-hidden="true">⟳</span> Oživuji…';
+            hardRefreshViewer();
+          });
+
+          body.appendChild(divider);
+          body.appendChild(btn);
+        }
+        const apply = () => document.querySelectorAll('.drawer-body').forEach(inject);
         new MutationObserver(apply).observe(document.body, { childList: true, subtree: true });
         if (document.readyState !== 'loading') apply();
         else document.addEventListener('DOMContentLoaded', apply);
