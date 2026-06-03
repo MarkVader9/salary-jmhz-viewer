@@ -8,30 +8,20 @@
     if (document.getElementById(STYLE_ID)) return;
     var css = "" +
       "#" + PANEL_ID + "{position:fixed;left:0;right:0;bottom:0;z-index:900;background:var(--bg,#f1f5f9);display:flex;flex-direction:column;overflow:hidden;}" +
-      ".zpv-topbar{display:flex;align-items:center;gap:12px;padding:12px 20px;background:var(--bg-elevated,#fff);border-bottom:1px solid var(--border,#e2e2e2);flex:0 0 auto;}" +
+      ".zpv-topbar{display:flex;align-items:center;gap:12px;padding:10px 20px;background:var(--bg-elevated,#fff);border-bottom:1px solid var(--border,#e2e2e2);flex:0 0 auto;}" +
       ".zpv-topbar .zpv-tag{display:inline-flex;align-items:center;gap:8px;font-weight:700;font-size:.95rem;color:var(--text-primary,#111);flex:1;min-width:0;}" +
       ".zpv-topbar .zpv-tag small{font-weight:500;color:var(--text-faint,#888);}" +
-      ".zpv-tbtn{border:1px solid var(--border,#d8d8d8);background:transparent;color:var(--text-secondary,#444);border-radius:8px;padding:8px 14px;font-size:.82rem;font-weight:600;cursor:pointer;white-space:nowrap;}" +
+      ".zpv-tbtn{border:1px solid var(--border,#d8d8d8);background:transparent;color:var(--text-secondary,#444);border-radius:8px;padding:7px 14px;font-size:.82rem;font-weight:600;cursor:pointer;white-space:nowrap;}" +
       ".zpv-tbtn:hover{background:var(--bg-hover,#f0f0f0);color:var(--text-primary,#000);}" +
-      ".zpv-tbtn.zpv-primary{background:#0e7490;border-color:#0e7490;color:#fff;}" +
-      ".zpv-tbtn.zpv-primary:hover{background:#155e75;border-color:#155e75;}" +
+      ".zpv-tbtn.zpv-primary{background:var(--accent-bg,#0e7490);border-color:var(--accent-bg,#0e7490);color:var(--on-accent-bg,#fff);}" +
       ".zpv-scroll{flex:1 1 auto;overflow-y:auto;}" +
-      ".zpv-content{max-width:980px;width:100%;margin:0 auto;padding:20px;display:flex;flex-direction:column;gap:16px;}" +
-      ".zpv-card{border:1px solid var(--border,#e2e2e2);border-radius:10px;overflow:hidden;background:var(--bg-elevated,#fff);}" +
-      ".zpv-card-h{padding:12px 16px;font-weight:700;font-size:.9rem;display:flex;align-items:center;gap:10px;background:var(--bg-hover,#f7f8fa);border-bottom:1px solid var(--border,#e2e2e2);color:var(--text-primary,#111);}" +
-      ".zpv-card-b{padding:14px 16px;font-size:.85rem;line-height:1.5;color:var(--text-primary,#1a1a1a);}" +
-      ".zpv-badge{font-size:.72rem;font-weight:700;padding:2px 9px;border-radius:20px;white-space:nowrap;}" +
-      ".zpv-ok{background:#dcfce7;color:#15803d;}" +
-      ".zpv-err{background:#fee2e2;color:#b91c1c;}" +
-      ".zpv-warn{background:#fef3c7;color:#92400e;}" +
-      ".zpv-info{background:#dbeafe;color:#1e40af;}" +
-      ".zpv-issue{padding:10px 12px;border-radius:8px;margin-bottom:8px;border-left:4px solid;}" +
-      ".zpv-issue:last-child{margin-bottom:0;}" +
-      ".zpv-issue.lvl-error{background:#fef2f2;border-color:#b91c1c;color:#7f1d1d;}" +
-      ".zpv-issue.lvl-warning{background:#fffbeb;border-color:#d97706;color:#78350f;}" +
-      ".zpv-issue.lvl-info{background:#eff6ff;border-color:#2563eb;color:#1e3a8a;}" +
-      ".zpv-issue .zpv-loc{display:block;font-size:.72rem;opacity:.75;margin-top:4px;}" +
-      ".zpv-issue .zpv-code{font-family:ui-monospace,monospace;font-size:.7rem;opacity:.7;}" +
+      ".zpv-content{max-width:1100px;width:100%;margin:0 auto;padding:16px 20px;}" +
+      "#" + PANEL_ID + " .validation-list{max-height:none;border:1px solid var(--border,#e2e2e2);border-radius:10px;overflow:hidden;background:var(--bg-elevated,#fff);}" +
+      "#" + PANEL_ID + " .validation-item{align-items:flex-start;}" +
+      "#" + PANEL_ID + " .validation-item .severity{margin-top:6px;}" +
+      "#" + PANEL_ID + " .validation-item .message{white-space:normal;flex:1;}" +
+      "#" + PANEL_ID + " .validation-item .path{white-space:nowrap;}" +
+      ".zpv-body{padding:12px 16px;font-size:.85rem;line-height:1.5;color:var(--text-primary,#1a1a1a);}" +
       ".zpv-kv{display:grid;grid-template-columns:auto 1fr;gap:6px 16px;margin:0;}" +
       ".zpv-kv dt{color:var(--text-faint,#888);}" +
       ".zpv-kv dd{margin:0;font-weight:600;}" +
@@ -135,34 +125,51 @@
     return out;
   }
 
-  function renderIssues(title, issues) {
-    if (!issues.length) return "";
-    var rows = issues.map(function (i) {
-      return '<div class="zpv-issue lvl-' + i.level + '">' +
-        esc(i.message) +
-        (i.location ? '<span class="zpv-loc">' + esc(i.location) + ' · <span class="zpv-code">' + esc(i.code) + "</span></span>" : ' <span class="zpv-code">' + esc(i.code) + "</span>") +
-        "</div>";
-    }).join("");
-    return "<div style='margin-bottom:6px;font-weight:700'>" + esc(title) + " (" + issues.length + ")</div>" + rows;
+  function plural(n, one, few, many) {
+    n = Math.abs(n);
+    if (n === 1) return one;
+    if (n >= 2 && n <= 4) return few;
+    return many;
   }
 
-  function renderEmployer(doc) {
+  // Build a single finding row using the app's shared validation elements
+  // (.validation-item / .severity / .path / .message) — the exact markup the
+  // compiled runtime renders for JMHZ and REGZEC findings.
+  function vItem(level, message, path) {
+    var cls = level === "error" ? "severity error" : level === "warning" ? "severity warning" : "severity";
+    var style = level === "info" ? ' style="background:var(--accent,#2563eb)"'
+      : level === "ok" ? ' style="background:#16a34a"' : "";
+    return '<div class="validation-item">' +
+      '<span class="' + cls + '"' + style + "></span>" +
+      (path ? '<span class="path">' + esc(path) + "</span>" : "") +
+      '<span class="message">' + esc(message) + "</span>" +
+      "</div>";
+  }
+
+  function vGroup(headerHtml, innerHtml) {
+    return '<div class="validation-group"><div class="validation-group-header">' + headerHtml + "</div>" + innerHtml + "</div>";
+  }
+
+  function vBody(innerHtml) {
+    return '<div class="zpv-body">' + innerHtml + "</div>";
+  }
+
+  function employerBody(doc) {
     var h = window.ZPKontroly.helpers;
     var root = doc.documentElement;
     var idZam = h.childByName(root, "identifikaceZamestnavatele");
-    if (!idZam) return "";
+    if (!idZam) return '<span class="zpv-muted">Identifikace zaměstnavatele nebyla nalezena.</span>';
     function t(n) { return esc(h.childText(idZam, n) || "—"); }
     var zp = esc(h.childText(root, "kodZdravotniPojistovny") || "—");
-    return '<div class="zpv-card"><div class="zpv-card-h">🏢 Zaměstnavatel</div><div class="zpv-card-b">' +
-      '<dl class="zpv-kv">' +
+    return '<dl class="zpv-kv">' +
       "<dt>Kód ZP</dt><dd>" + zp + "</dd>" +
       "<dt>Číslo plátce</dt><dd>" + t("identifikacniCisloPlatce") + "</dd>" +
       "<dt>Název plátce</dt><dd>" + t("nazevPlatce") + "</dd>" +
       "<dt>Adresa</dt><dd>" + t("adresaPlatceUlice") + " " + t("adresaPlatceCisloPopisneOrientacni") + ", " + t("adresaPlatcePsc") + " " + t("adresaPlatceObec") + "</dd>" +
-      "</dl></div></div>";
+      "</dl>";
   }
 
-  function renderHOZSummary(doc) {
+  function hozTableBody(doc) {
     var h = window.ZPKontroly.helpers;
     var root = doc.documentElement;
     var seznam = h.childByName(root, "seznamZmenZamestnancu");
@@ -172,12 +179,11 @@
         esc(h.childText(z, "datumZmeny") || "") + "</td><td>" + esc(h.childText(z, "cisloPojistence") || "") + "</td><td>" +
         esc((h.childText(z, "prijmeni") || "") + " " + (h.childText(z, "jmeno") || "")) + "</td></tr>";
     }).join("");
-    return '<div class="zpv-card"><div class="zpv-card-h">📋 Změny zaměstnanců <span class="zpv-muted">(' + zmeny.length + ")</span></div><div class='zpv-card-b' style='overflow-x:auto'>" +
-      '<table class="zpv-table"><thead><tr><th>#</th><th>Kód</th><th>Datum změny</th><th>Číslo pojištěnce</th><th>Jméno</th></tr></thead><tbody>' +
-      rows + "</tbody></table></div></div>";
+    return '<div style="overflow-x:auto"><table class="zpv-table"><thead><tr><th>#</th><th>Kód</th><th>Datum změny</th><th>Číslo pojištěnce</th><th>Jméno</th></tr></thead><tbody>' +
+      rows + "</tbody></table></div>";
   }
 
-  function renderPPPZSummary(doc, meta) {
+  function pppzBody(doc, meta) {
     var h = window.ZPKontroly.helpers;
     var root = doc.documentElement;
     var udaje = h.childByName(root, "udajePlatby");
@@ -185,7 +191,7 @@
     var typ = esc(h.childText(root, "typPrehledu") || "—");
     var theoretical = meta && typeof meta.theoretical === "number" ? meta.theoretical.toLocaleString("cs-CZ") + " Kč" : "—";
     var avg = meta && typeof meta.avgBase === "number" ? meta.avgBase.toLocaleString("cs-CZ", { maximumFractionDigits: 2 }) + " Kč" : "—";
-    return '<div class="zpv-card"><div class="zpv-card-h">💰 Údaje platby</div><div class="zpv-card-b"><dl class="zpv-kv">' +
+    return '<dl class="zpv-kv">' +
       "<dt>Typ přehledu</dt><dd>" + typ + "</dd>" +
       "<dt>Období</dt><dd>" + t("mesicHlaseni") + " / " + t("rokHlaseni") + "</dd>" +
       "<dt>Počet zaměstnanců</dt><dd>" + t("pocetZamestnancu") + "</dd>" +
@@ -193,42 +199,38 @@
       "<dt>Součet pojistného</dt><dd>" + t("soucetPojistneho") + " Kč</dd>" +
       "<dt>Teoretické pojistné (13,5 %)</dt><dd>" + theoretical + "</dd>" +
       "<dt>Průměrný základ / zaměstnanec</dt><dd>" + avg + "</dd>" +
-      "</dl></div></div>";
+      "</dl>";
   }
 
   function renderResults(container, parsed, schemaErrors, kontroly) {
     var entry = parsed.entry;
     var doc = parsed.doc;
-    var html = "";
-
     var schemaOk = schemaErrors.length === 0;
-    html += '<div class="zpv-card"><div class="zpv-card-h">' +
-      "🧬 Validace XSD schématu " +
-      '<span class="zpv-badge ' + (schemaOk ? "zpv-ok" : "zpv-err") + '">' + (schemaOk ? "V pořádku" : (schemaErrors.length + " chyb")) + "</span>" +
-      '</div><div class="zpv-card-b">';
-    if (schemaOk) {
-      html += '<span class="zpv-muted">Soubor je v souladu s XSD schématem „' + esc(entry.label) + "“.</span>";
-    } else {
-      html += schemaErrors.map(function (e) { return '<div class="zpv-issue lvl-error">' + esc(e) + "</div>"; }).join("");
-    }
-    html += "</div></div>";
+
+    var xsdInner = schemaOk
+      ? vItem("ok", "Soubor odpovídá XSD schématu „" + entry.label + "“.", "")
+      : schemaErrors.map(function (e) { return vItem("error", e, ""); }).join("");
+    var xsdHeader = "XSD validace · " + (schemaOk ? "žádné chyby" : (schemaErrors.length + " " + plural(schemaErrors.length, "chyba", "chyby", "chyb")));
 
     var nErr = kontroly.errors.length, nWarn = kontroly.warnings.length, nInfo = kontroly.info.length;
-    var logicBadge = nErr ? '<span class="zpv-badge zpv-err">' + nErr + " chyb</span>" :
-      (nWarn ? '<span class="zpv-badge zpv-warn">' + nWarn + " upozornění</span>" : '<span class="zpv-badge zpv-ok">Bez připomínek</span>');
-    html += '<div class="zpv-card"><div class="zpv-card-h">⚖️ Legislativní kontroly ' + logicBadge + '</div><div class="zpv-card-b">';
-    if (!nErr && !nWarn && !nInfo) {
-      html += '<span class="zpv-muted">Nebyly nalezeny žádné logické připomínky.</span>';
-    } else {
-      html += renderIssues("Chyby", kontroly.errors);
-      html += renderIssues("Upozornění", kontroly.warnings);
-      html += renderIssues("Informace", kontroly.info);
-    }
-    html += "</div></div>";
+    var kInner = "";
+    kontroly.errors.forEach(function (i) { kInner += vItem("error", i.message, i.location); });
+    kontroly.warnings.forEach(function (i) { kInner += vItem("warning", i.message, i.location); });
+    kontroly.info.forEach(function (i) { kInner += vItem("info", i.message, i.location); });
+    if (!kInner) kInner = vItem("ok", "Bez připomínek.", "");
+    var kCount = nErr ? (nErr + " " + plural(nErr, "chyba", "chyby", "chyb"))
+      : nWarn ? (nWarn + " upozornění")
+      : nInfo ? (nInfo + " " + plural(nInfo, "informace", "informace", "informací"))
+      : "žádné";
+    var kHeader = "Kontroly · " + kCount;
 
-    html += renderEmployer(doc);
-    if (parsed.key === "hoz") html += renderHOZSummary(doc);
-    else html += renderPPPZSummary(doc, kontroly.meta);
+    var html = '<div class="validation-list">';
+    html += vGroup(esc(xsdHeader), xsdInner);
+    html += vGroup(esc(kHeader), kInner);
+    html += vGroup("Zaměstnavatel", vBody(employerBody(doc)));
+    if (parsed.key === "hoz") html += vGroup("Změny zaměstnanců", vBody(hozTableBody(doc)));
+    else html += vGroup("Údaje platby", vBody(pppzBody(doc, kontroly.meta)));
+    html += "</div>";
 
     container.innerHTML = html;
   }

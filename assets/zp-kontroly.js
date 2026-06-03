@@ -1,11 +1,17 @@
 (function () {
   "use strict";
 
+  // Reuse the app's shared validation infrastructure (the same window.KontrolyUtils
+  // module used by JMHZ / REGZEC) so ZP checks run on identical primitives.
+  function KU() { return (typeof window !== "undefined" && window.KontrolyUtils) || null; }
+
   function directChildren(parent) {
     if (!parent) return [];
     return Array.prototype.filter.call(parent.childNodes, function (n) { return n.nodeType === 1; });
   }
   function childByName(parent, name) {
+    var ku = KU();
+    if (ku && ku.findChildEl) return ku.findChildEl(parent, name);
     return directChildren(parent).find(function (e) { return e.localName === name; }) || null;
   }
   function childrenByName(parent, name) {
@@ -26,6 +32,14 @@
   }
 
   function rcDivisibleBy11(rc) {
+    var ku = KU();
+    if (ku && ku.validateRCModulo11) {
+      // KontrolyUtils contract: only error === "modulo" means a 10-digit RC
+      // failed the divisibility check. "format"/"empty" must NOT be treated as
+      // a modulo failure here (callers already gate on /^\d{10}$/).
+      var r = ku.validateRCModulo11(rc);
+      return !(r && r.error === "modulo");
+    }
     if (!/^\d{10}$/.test(rc)) return true;
     var rem = 0;
     for (var i = 0; i < rc.length; i++) rem = (rem * 10 + parseInt(rc[i], 10)) % 11;
@@ -54,6 +68,20 @@
     return dt;
   }
 
+  function isFutureDate(s) {
+    var ku = KU();
+    if (ku && ku.parseDate && ku.compareDates && ku.todayDate) {
+      var d = ku.parseDate(s);
+      if (!d) return false;
+      return ku.compareDates(d, ku.todayDate()) > 0;
+    }
+    var dt = parseIsoDate(s);
+    if (!dt) return false;
+    var t = new Date();
+    t.setHours(23, 59, 59, 999);
+    return dt > t;
+  }
+
   function pushIssue(arr, level, code, message, location) {
     arr.push({ level: level, code: code, message: message, location: location || "" });
   }
@@ -80,8 +108,6 @@
 
     var seznam = childByName(root, "seznamZmenZamestnancu");
     var zmeny = seznam ? childrenByName(seznam, "zmenaZamestance") : [];
-    var today = new Date();
-    today.setHours(23, 59, 59, 999);
 
     var byPerson = {};
     zmeny.forEach(function (z, idx) {
@@ -116,8 +142,7 @@
         }
       }
 
-      var dt = parseIsoDate(datum);
-      if (dt && dt > today) {
+      if (isFutureDate(datum)) {
         pushIssue(issues, "warning", "HOZ-DATUM-BUDOUCNOST",
           "Datum změny „" + datum + "“ je v budoucnosti.",
           loc);
