@@ -2677,6 +2677,7 @@ body {
                     return Promise.all([
                         loadScript(r('data/xsd-data.js')),
                         loadScript(r('data/jmhz-xsd-data.js')),
+                        loadScript(r('data/zp-xsd-data.js')), // VZP schémata (HOZ + PPPZ)
                         loadScript('data/infohlasky.js?v=' + Date.now()) // Vynucené stažení bez mezipaměti!
                     ]);
                 })
@@ -2684,9 +2685,11 @@ body {
                     log('Načítání kontrolních mechanismů...');
                     return Promise.all([
                         loadScript(r('assets/formats.js')),
+                        loadScript(r('assets/zp-formats.js')), // VZP konfigurace formátů (HOZ + PPPZ)
                         loadScript(r('assets/kontroly-utils.js')),
                         loadScript(r('assets/mh-kontroly.js')),
-                        loadScript(r('assets/regzec-kontroly.js'))
+                        loadScript(r('assets/regzec-kontroly.js')),
+                        loadScript(r('assets/zp-kontroly.js')) // VZP kontroly (HOZ + PPPZ)
                     ]);
                 })
                 .then(() => {
@@ -2867,8 +2870,5 @@ body {
         });
       }
 </script>
-<script src="data/zp-xsd-data.js"></script>
-<script src="assets/zp-kontroly.js"></script>
-<script src="assets/zp-validator.js"></script>
 </body>
 </html>

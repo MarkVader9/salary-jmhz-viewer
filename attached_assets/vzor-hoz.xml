@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<hromadneOznameniZamestnavatele xmlns="http://xmlns.vzp.cz/hromadneOznameniZamestnavatele/v1">
+	<identifikacePredmetuPodaniText>Hromadné oznámení zaměstnavatele 2026+</identifikacePredmetuPodaniText>
+	<identifikacePredmetuPodaniKod>882b97d9-3a41-4552-887b-3942ae92c3ea</identifikacePredmetuPodaniKod>
+	<interniIdentifikacePodaniPodavatele>VZOR-HOZ-2026-01</interniIdentifikacePodaniPodavatele>
+	<kodZdravotniPojistovny>111</kodZdravotniPojistovny>
+	<identifikaceZamestnavatele>
+		<identifikacniCisloPlatce>2707435800</identifikacniCisloPlatce>
+		<nazevPlatce>Ukázková firma s.r.o.</nazevPlatce>
+		<adresaPlatceUlice>Pod Vinicí</adresaPlatceUlice>
+		<adresaPlatceCisloPopisneOrientacni>123/4</adresaPlatceCisloPopisneOrientacni>
+		<adresaPlatcePsc>11000</adresaPlatcePsc>
+		<adresaPlatceObec>Praha 1</adresaPlatceObec>
+		<adresaPlatceTelefon>222333444</adresaPlatceTelefon>
+	</identifikaceZamestnavatele>
+	<seznamZmenZamestnancu>
+		<zmenaZamestance>
+			<kodzmeny>P</kodzmeny>
+			<datumZmeny>2026-01-15</datumZmeny>
+			<cisloPojistence>480123123</cisloPojistence>
+			<jmeno>Jan</jmeno>
+			<prijmeni>Novák</prijmeni>
+			<adresa>
+				<ulice>Krátká 5</ulice>
+				<obec>Praha 4</obec>
+				<psc>14000</psc>
+			</adresa>
+		</zmenaZamestance>
+		<zmenaZamestance>
+			<kodzmeny>C</kodzmeny>
+			<datumZmeny>2026-02-01</datumZmeny>
+			<cisloPojistence>M05071980</cisloPojistence>
+			<jmeno>Adam</jmeno>
+			<prijmeni>Kovač</prijmeni>
+		</zmenaZamestance>
+	</seznamZmenZamestnancu>
+</hromadneOznameniZamestnavatele>

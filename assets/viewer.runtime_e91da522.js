@@ -70,6 +70,10 @@ function detectFormat(xmlDoc) {
         return REGZEC_CONFIG;
     if (root.localName === 'jmhz')
         return JMHZ_CONFIG;
+    if (root.localName === 'hromadneOznameniZamestnavatele')
+        return HOZ_CONFIG;
+    if (root.localName === 'prehledPlatbyZamestnavatele')
+        return PPPZ_CONFIG;
     alert('Neznámý formát XML');
     return null;
 }
@@ -4477,7 +4481,7 @@ html[dir=rtl],
                                                 c,
                                                 l,
                                                 u;
-                                                a ||= [`,`, `	`, `|`, `;`, s.RECORD_SEP, s.UNIT_SEP];
+                                                a ||= [`,`, `\t`, `|`, `;`, s.RECORD_SEP, s.UNIT_SEP];
                                                 for (var d = 0; d < a.length; d++) {
                                                     for (var f, p = a[d], m = 0, g = 0, _ = 0, v = (l = void 0, new h({
                                                                 comments: i,
@@ -5565,8 +5569,16 @@ Oddělte čárkou pro více filtrů">?</span></div><input placeholder="Hledat v 
             let e = p();
             return e && e.rootElement === `REGZEC`
         }),
-        Jn = I(() => Kn() || qn()),
-        Yn = I(() => qn() ? `REGZEC` : `MH`),
+        Jn = I(() => {
+            let e = p();
+            return !!(e && (e.rootElement === `jmhz` || e.rootElement === `REGZEC` || e.rootElement === `hromadneOznameniZamestnavatele` || e.rootElement === `prehledPlatbyZamestnavatele`))
+        }),
+        Yn = I(() => {
+            let e = p();
+            if (e && e.rootElement === `hromadneOznameniZamestnavatele`) return `HOZ`;
+            if (e && e.rootElement === `prehledPlatbyZamestnavatele`) return `PPPZ`;
+            return qn() ? `REGZEC` : `MH`
+        }),
         Z = I(() => {
             let e = p();
             return e && e.sections.some(e => e._custom === `attachments`)
@@ -5726,6 +5738,8 @@ Oddělte čárkou pro více filtrů">?</span></div><input placeholder="Hledat v 
                 ut(``),
                 window.MHKontroly && window.MHKontroly.resetKontrolyIndex(),
                 window.REGZECKontroly && window.REGZECKontroly.resetKontrolyIndex(),
+                window.HOZKontroly && window.HOZKontroly.resetKontrolyIndex(),
+                window.PPPZKontroly && window.PPPZKontroly.resetKontrolyIndex(),
                 gn.clear(),
                 hn(Y({})),
                 sn(Y({})),
@@ -7704,7 +7718,9 @@ Aktuální: ` + Ys(a) + `, nové soubory: ` + Ys(o) + `.`);
             }
             let f = {
                 DEFAULT_SCHEMAS,
-                JMHZ_SCHEMAS
+                JMHZ_SCHEMAS,
+                HOZ_SCHEMAS,
+                PPPZ_SCHEMAS
             }
             [activeFormat.schemasKey] || DEFAULT_SCHEMAS,
             p = activeFormat.mainSchema || null,
@@ -7891,7 +7907,7 @@ Aktuální: ` + Ys(a) + `, nové soubory: ` + Ys(o) + `.`);
                         _hasKontrolyWarning: !1
                     })));
             try {
-                let e = qn() ? window.REGZECKontroly : window.MHKontroly;
+                let e = activeFormat && activeFormat.kontrolyGlobal ? window[activeFormat.kontrolyGlobal] : (qn() ? window.REGZECKontroly : window.MHKontroly);
                 if (e === void 0)
                     return t || $(`Kontroly nejsou k dispozici`, {
                         type: `warning`,
