@@ -816,6 +816,13 @@ body {
 .btn-jmhz-knihovna { background: #0057ca !important; color: #fff !important; border-color: #dcedff !important; }
 .btn-jmhz-knihovna:hover { background: #0d136a !important; color: #fff !important; border-color: #0d136a !important; }
 
+/* NOVÉ: Tlačítko "Zavřít" v toolbaru (tvrdé pročištění + návrat na domovskou stránku) */
+.toolbar .btn-zavrit { background: #FF2800 !important; color: #fff !important; border-color: #FF2800 !important; font-weight: 600 !important; display: inline-flex; align-items: center; gap: var(--sp-1); }
+.toolbar .btn-zavrit:hover { background: #d62200 !important; border-color: #d62200 !important; color: #fff !important; }
+.toolbar .btn-zavrit:active { background: #b81d00 !important; border-color: #b81d00 !important; }
+.toolbar .btn-zavrit:disabled { opacity: 0.7; cursor: default; }
+.btn-zavrit .zavrit-spinner { display: inline-block; animation: ozivit-spin 0.7s linear infinite; }
+
 .btn-report:hover { transform: none !important; }
 .toolbar-left, .toolbar-center, .toolbar-right { min-width: 0; }
 
@@ -2814,6 +2821,38 @@ body {
           body.appendChild(btn);
         }
         const apply = () => document.querySelectorAll('.drawer-body').forEach(inject);
+        new MutationObserver(apply).observe(document.body, { childList: true, subtree: true });
+        if (document.readyState !== 'loading') apply();
+        else document.addEventListener('DOMContentLoaded', apply);
+      })();
+
+      // Progresivní vložení tlačítka "Zavřít" do toolbaru (jen při načteném XML souboru)
+      (function injectZavritButton() {
+        function buildButton() {
+          const btn = document.createElement('button');
+          btn.type = 'button';
+          btn.className = 'btn-zavrit';
+          btn.title = 'Zavře načtený soubor a vrátí vás na úvodní stránku pro načtení nového souboru (smaže mezipaměť, uložená nastavení zůstanou zachována)';
+          btn.innerHTML = '<span aria-hidden="true">✕</span> Zavřít';
+          btn.addEventListener('click', () => {
+            btn.disabled = true;
+            btn.innerHTML = '<span class="zavrit-spinner" aria-hidden="true">⟳</span> Zavírám…';
+            hardRefreshViewer();
+          });
+          return btn;
+        }
+        function apply() {
+          // Úvodní/prázdný stav má drop-zónu → žádný soubor není načten
+          const fileLoaded = !document.querySelector('.drop-zone');
+          document.querySelectorAll('.toolbar .toolbar-right').forEach(tr => {
+            const existing = tr.querySelector('.btn-zavrit');
+            if (fileLoaded) {
+              if (!existing) tr.appendChild(buildButton());
+            } else if (existing) {
+              existing.remove();
+            }
+          });
+        }
         new MutationObserver(apply).observe(document.body, { childList: true, subtree: true });
         if (document.readyState !== 'loading') apply();
         else document.addEventListener('DOMContentLoaded', apply);
