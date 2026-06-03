@@ -58,6 +58,14 @@
     fieldRules: {},
     sanitizerMeta: null,
 
+    stats: {
+      employer: null,
+      date: null,
+      citizenship: null,
+      action: null,
+      partialAccept: false
+    },
+
     getRowInfo: [],
 
     parseDocumentHeader: function (doc) {

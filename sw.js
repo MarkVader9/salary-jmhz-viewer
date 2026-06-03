@@ -1,5 +1,5 @@
 /* Service Worker – JMHZ Viewer (offline-first, statický provoz z FTP) */
-const CACHE = 'jmhz-viewer-v3';
+const CACHE = 'jmhz-viewer-v4';
 const CORE = [
   './',
   './index.html',

@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="utf-8"?>
+<prehledPlatbyZamestnavatele xmlns="http://xmlns.vzp.cz/PrehledPlatbyZamestnavatele/v1">
+  <identifikacePredmetuPodaniText>Pøehled platby zamìstnavatele pro ZP 2026+</identifikacePredmetuPodaniText>
+  <identifikacePredmetuPodaniKod>777FF26C-3609-4646-9072-80C9681D8D9F</identifikacePredmetuPodaniKod>
+  <interniIdentifikacePodaniPodavatele>4202603062026135651</interniIdentifikacePodaniPodavatele>
+  <kodZdravotniPojistovny>205</kodZdravotniPojistovny>
+  <typPrehledu>opravny</typPrehledu>
+  <identifikaceZamestnavatele>
+    <identifikacniCisloPlatce>75150131</identifikacniCisloPlatce>
+    <adresaPlatcePsc>40001</adresaPlatcePsc>
+    <adresaPlatceObec>Ústí nad Labem</adresaPlatceObec>
+  </identifikaceZamestnavatele>
+  <udajePlatby>
+    <mesicHlaseni>4</mesicHlaseni>
+    <rokHlaseni>2026</rokHlaseni>
+    <pocetZamestnancu>3</pocetZamestnancu>
+    <soucetZakladuPojistneho>93420</soucetZakladuPojistneho>
+    <soucetPojistneho>12613</soucetPojistneho>
+  </udajePlatby>
+</prehledPlatbyZamestnavatele>

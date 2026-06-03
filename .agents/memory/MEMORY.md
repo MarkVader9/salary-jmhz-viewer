@@ -1,1 +1,2 @@
 - [JMHZ Viewer is a compiled SolidJS bundle](jmhz-viewer-compiled.md) — root viewer source NOT in repo; DOM runtime-rendered (enhance via MutationObserver); NEW XML formats added natively via config+kontroly classic scripts + ~5 surgical runtime edits (NOT overlays); beware literal-tab bytes in the minified file.
+- [ZP format config contract](zp-format-config-contract.md) — every format config needs a `stats` object {employer,date,citizenship,action,partialAccept} or runtime crashes on load with "reading 'employer'"; Node repros won't catch it.
