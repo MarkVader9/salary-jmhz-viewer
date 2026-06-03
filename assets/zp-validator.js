@@ -14,6 +14,11 @@
       ".zpv-tbtn{border:1px solid var(--border,#d8d8d8);background:transparent;color:var(--text-secondary,#444);border-radius:8px;padding:7px 14px;font-size:.82rem;font-weight:600;cursor:pointer;white-space:nowrap;}" +
       ".zpv-tbtn:hover{background:var(--bg-hover,#f0f0f0);color:var(--text-primary,#000);}" +
       ".zpv-tbtn.zpv-primary{background:var(--accent-bg,#0e7490);border-color:var(--accent-bg,#0e7490);color:var(--on-accent-bg,#fff);}" +
+      ".zpv-seg{display:inline-flex;border:1px solid var(--border,#d8d8d8);border-radius:8px;overflow:hidden;}" +
+      ".zpv-segbtn{border:0;background:transparent;color:var(--text-secondary,#555);padding:7px 14px;font-size:.82rem;font-weight:600;cursor:pointer;border-right:1px solid var(--border,#e2e2e2);white-space:nowrap;}" +
+      ".zpv-segbtn:last-child{border-right:0;}" +
+      ".zpv-segbtn:hover{background:var(--bg-hover,#f0f0f0);color:var(--text-primary,#000);}" +
+      ".zpv-segbtn.active{background:var(--accent-bg,#0e7490);color:var(--on-accent-bg,#fff);}" +
       ".zpv-scroll{flex:1 1 auto;overflow-y:auto;}" +
       ".zpv-content{max-width:1100px;width:100%;margin:0 auto;padding:16px 20px;}" +
       "#" + PANEL_ID + " .validation-list{max-height:none;border:1px solid var(--border,#e2e2e2);border-radius:10px;overflow:hidden;background:var(--bg-elevated,#fff);}" +
@@ -21,13 +26,18 @@
       "#" + PANEL_ID + " .validation-item .severity{margin-top:6px;}" +
       "#" + PANEL_ID + " .validation-item .message{white-space:normal;flex:1;}" +
       "#" + PANEL_ID + " .validation-item .path{white-space:nowrap;}" +
-      ".zpv-body{padding:12px 16px;font-size:.85rem;line-height:1.5;color:var(--text-primary,#1a1a1a);}" +
-      ".zpv-kv{display:grid;grid-template-columns:auto 1fr;gap:6px 16px;margin:0;}" +
-      ".zpv-kv dt{color:var(--text-faint,#888);}" +
-      ".zpv-kv dd{margin:0;font-weight:600;}" +
-      ".zpv-table{width:100%;border-collapse:collapse;font-size:.8rem;}" +
-      ".zpv-table th,.zpv-table td{text-align:left;padding:6px 10px;border-bottom:1px solid var(--border,#eee);}" +
-      ".zpv-table th{color:var(--text-faint,#888);font-weight:600;}" +
+      ".zpv-pad{padding:14px 0;}" +
+      "#" + PANEL_ID + " .zpv-section{border:1px solid var(--border,#e2e2e2);border-radius:10px;overflow:hidden;background:var(--bg-elevated,#fff);margin-bottom:12px;}" +
+      "#" + PANEL_ID + " .zpv-section .zpv-section{margin:10px 10px 0;}" +
+      "#" + PANEL_ID + " .zpv-section .section-header{display:flex;align-items:center;gap:8px;padding:9px 14px;background:var(--bg-hover,#f7f8fa);border-bottom:1px solid var(--border,#e2e2e2);}" +
+      "#" + PANEL_ID + " .zpv-section .section-body{padding:0;max-height:none;}" +
+      "#" + PANEL_ID + " .zpv-section .field-table{margin:0;}" +
+      "#" + PANEL_ID + " .field-value{padding:5px var(--sp-3,12px);}" +
+      "#" + PANEL_ID + " .field-value .empty{color:var(--text-faint,#888);font-style:italic;}" +
+      "#" + PANEL_ID + " .table-content{max-height:none;}" +
+      "#" + PANEL_ID + " .table-view td{cursor:default;}" +
+      "#" + PANEL_ID + " .table-view td.name-cell{white-space:nowrap;}" +
+      "#" + PANEL_ID + " .table-view .col-id{font-family:ui-monospace,monospace;font-size:.62rem;opacity:.6;display:block;font-weight:400;}" +
       ".zpv-spin{display:inline-block;animation:zpv-spin .7s linear infinite;}" +
       "@keyframes zpv-spin{to{transform:rotate(360deg);}}" +
       ".zpv-muted{color:var(--text-faint,#888);}" +
@@ -150,61 +160,145 @@
     return '<div class="validation-group"><div class="validation-group-header">' + headerHtml + "</div>" + innerHtml + "</div>";
   }
 
-  function vBody(innerHtml) {
-    return '<div class="zpv-body">' + innerHtml + "</div>";
-  }
+  // Friendly Czech labels for known ZP element tags; unknown tags fall back to
+  // their raw localName so the views stay generic for any ZP document shape.
+  var LABELS = {
+    identifikaceZamestnavatele: "Identifikace zaměstnavatele",
+    identifikacniCisloPlatce: "Identifikační číslo plátce",
+    nazevPlatce: "Název plátce",
+    adresaPlatceUlice: "Ulice",
+    adresaPlatceCisloPopisneOrientacni: "Č. popisné / orientační",
+    adresaPlatcePsc: "PSČ",
+    adresaPlatceObec: "Obec",
+    kodZdravotniPojistovny: "Kód zdravotní pojišťovny",
+    seznamZmenZamestnancu: "Seznam změn zaměstnanců",
+    zmenaZamestance: "Změna zaměstnance",
+    kodzmeny: "Kód změny",
+    datumZmeny: "Datum změny",
+    cisloPojistence: "Číslo pojištěnce",
+    prijmeni: "Příjmení",
+    jmeno: "Jméno",
+    udajePlatby: "Údaje platby",
+    mesicHlaseni: "Měsíc hlášení",
+    rokHlaseni: "Rok hlášení",
+    pocetZamestnancu: "Počet zaměstnanců",
+    soucetZakladuPojistneho: "Součet vyměřovacích základů",
+    soucetPojistneho: "Součet pojistného",
+    typPrehledu: "Typ přehledu"
+  };
+  function label(name) { return LABELS[name] || name; }
 
-  function employerBody(doc) {
+  function elemChildren(el) { return window.ZPKontroly.helpers.directChildren(el); }
+  function isLeaf(el) { return elemChildren(el).length === 0; }
+  function personName(el) {
     var h = window.ZPKontroly.helpers;
-    var root = doc.documentElement;
-    var idZam = h.childByName(root, "identifikaceZamestnavatele");
-    if (!idZam) return '<span class="zpv-muted">Identifikace zaměstnavatele nebyla nalezena.</span>';
-    function t(n) { return esc(h.childText(idZam, n) || "—"); }
-    var zp = esc(h.childText(root, "kodZdravotniPojistovny") || "—");
-    return '<dl class="zpv-kv">' +
-      "<dt>Kód ZP</dt><dd>" + zp + "</dd>" +
-      "<dt>Číslo plátce</dt><dd>" + t("identifikacniCisloPlatce") + "</dd>" +
-      "<dt>Název plátce</dt><dd>" + t("nazevPlatce") + "</dd>" +
-      "<dt>Adresa</dt><dd>" + t("adresaPlatceUlice") + " " + t("adresaPlatceCisloPopisneOrientacni") + ", " + t("adresaPlatcePsc") + " " + t("adresaPlatceObec") + "</dd>" +
-      "</dl>";
+    var n = ((h.childText(el, "prijmeni") || "") + " " + (h.childText(el, "jmeno") || "")).trim();
+    return n || null;
   }
 
-  function hozTableBody(doc) {
+  // === KARTY (Formulářové zobrazení) — same .section/.field-table markup the
+  //     compiled runtime uses for JMHZ/REGZEC card view. ===
+  function fieldRow(el) {
+    var name = el.localName;
+    var val = (el.textContent || "").trim();
+    var valHtml = val ? esc(val) : '<span class="empty">— prázdné —</span>';
+    return '<tr class="field-row">' +
+      '<td class="field-id">' + esc(name) + "</td>" +
+      '<td class="field-label">' + esc(label(name)) + "</td>" +
+      '<td class="field-value">' + valHtml + "</td>" +
+      "</tr>";
+  }
+
+  function renderCardSection(title, el) {
+    var children = elemChildren(el);
+    var leaves = [], containers = [];
+    children.forEach(function (c) { (isLeaf(c) ? leaves : containers).push(c); });
+    var html = '<div class="zpv-section"><div class="section-header"><span class="section-title">' + esc(title) + "</span></div>" +
+      '<div class="section-body">';
+    if (leaves.length) html += '<table class="field-table">' + leaves.map(fieldRow).join("") + "</table>";
+    var totals = {}, counts = {};
+    containers.forEach(function (c) { totals[c.localName] = (totals[c.localName] || 0) + 1; });
+    containers.forEach(function (c) {
+      var ln = c.localName;
+      counts[ln] = (counts[ln] || 0) + 1;
+      var t = label(ln);
+      if (totals[ln] > 1) t += " #" + counts[ln];
+      var pn = personName(c);
+      if (pn) t += " — " + pn;
+      html += renderCardSection(t, c);
+    });
+    html += "</div></div>";
+    return html;
+  }
+
+  function renderCard(container, doc) {
+    var root = doc.documentElement;
+    var children = elemChildren(root);
+    var rootLeaves = [], rootContainers = [];
+    children.forEach(function (c) { (isLeaf(c) ? rootLeaves : rootContainers).push(c); });
+    var html = '<div class="zpv-pad">';
+    if (rootLeaves.length) {
+      html += '<div class="zpv-section"><div class="section-header"><span class="section-title">' + esc(label(root.localName)) + "</span></div>" +
+        '<div class="section-body"><table class="field-table">' + rootLeaves.map(fieldRow).join("") + "</table></div></div>";
+    }
+    rootContainers.forEach(function (c) { html += renderCardSection(label(c.localName), c); });
+    if (!rootLeaves.length && !rootContainers.length) html += '<div class="zpv-muted">Dokument neobsahuje žádné údaje.</div>';
+    html += "</div>";
+    container.innerHTML = html;
+  }
+
+  // === TABULKA — same .table-view/.table-content markup as JMHZ/REGZEC table
+  //     view. HOZ has repeating records → matrix (rows = changes); PPPZ is a
+  //     single record → key/value listing of all leaf values. ===
+  function tableCell(val) {
+    return "<td>" + (val ? '<span class="cell-value">' + esc(val) + "</span>" : '<span class="cell-empty">—</span>') + "</td>";
+  }
+
+  function renderTableHOZ(container, doc) {
     var h = window.ZPKontroly.helpers;
     var root = doc.documentElement;
     var seznam = h.childByName(root, "seznamZmenZamestnancu");
     var zmeny = seznam ? h.childrenByName(seznam, "zmenaZamestance") : [];
-    var rows = zmeny.map(function (z, idx) {
-      return "<tr><td>" + (idx + 1) + "</td><td><strong>" + esc(h.childText(z, "kodzmeny") || "") + "</strong></td><td>" +
-        esc(h.childText(z, "datumZmeny") || "") + "</td><td>" + esc(h.childText(z, "cisloPojistence") || "") + "</td><td>" +
-        esc((h.childText(z, "prijmeni") || "") + " " + (h.childText(z, "jmeno") || "")) + "</td></tr>";
+    if (!zmeny.length) { container.innerHTML = '<div class="zpv-pad zpv-muted">Soubor neobsahuje žádné změny zaměstnanců.</div>'; return; }
+    var cols = [], seen = {};
+    zmeny.forEach(function (z) {
+      elemChildren(z).filter(isLeaf).forEach(function (f) {
+        if (!seen[f.localName]) { seen[f.localName] = true; cols.push(f.localName); }
+      });
+    });
+    var thead = '<tr><th class="name-col name-cell">Změna</th>' +
+      cols.map(function (c) { return "<th>" + esc(label(c)) + '<span class="col-id">' + esc(c) + "</span></th>"; }).join("") + "</tr>";
+    var tbody = zmeny.map(function (z, idx) {
+      var nm = personName(z) || ("Změna #" + (idx + 1));
+      var cells = cols.map(function (c) { return tableCell(h.childText(z, c)); }).join("");
+      return '<tr><td class="name-cell">' + esc((idx + 1) + ". " + nm) + "</td>" + cells + "</tr>";
     }).join("");
-    return '<div style="overflow-x:auto"><table class="zpv-table"><thead><tr><th>#</th><th>Kód</th><th>Datum změny</th><th>Číslo pojištěnce</th><th>Jméno</th></tr></thead><tbody>' +
-      rows + "</tbody></table></div>";
+    container.innerHTML = '<div class="zpv-pad"><div class="table-content"><div class="table-view"><table><thead>' +
+      thead + "</thead><tbody>" + tbody + "</tbody></table></div></div></div>";
   }
 
-  function pppzBody(doc, meta) {
-    var h = window.ZPKontroly.helpers;
-    var root = doc.documentElement;
-    var udaje = h.childByName(root, "udajePlatby");
-    function t(n) { return udaje ? esc(h.childText(udaje, n) || "—") : "—"; }
-    var typ = esc(h.childText(root, "typPrehledu") || "—");
-    var theoretical = meta && typeof meta.theoretical === "number" ? meta.theoretical.toLocaleString("cs-CZ") + " Kč" : "—";
-    var avg = meta && typeof meta.avgBase === "number" ? meta.avgBase.toLocaleString("cs-CZ", { maximumFractionDigits: 2 }) + " Kč" : "—";
-    return '<dl class="zpv-kv">' +
-      "<dt>Typ přehledu</dt><dd>" + typ + "</dd>" +
-      "<dt>Období</dt><dd>" + t("mesicHlaseni") + " / " + t("rokHlaseni") + "</dd>" +
-      "<dt>Počet zaměstnanců</dt><dd>" + t("pocetZamestnancu") + "</dd>" +
-      "<dt>Součet vyměř. základů</dt><dd>" + t("soucetZakladuPojistneho") + " Kč</dd>" +
-      "<dt>Součet pojistného</dt><dd>" + t("soucetPojistneho") + " Kč</dd>" +
-      "<dt>Teoretické pojistné (13,5 %)</dt><dd>" + theoretical + "</dd>" +
-      "<dt>Průměrný základ / zaměstnanec</dt><dd>" + avg + "</dd>" +
-      "</dl>";
+  function renderTablePPPZ(container, doc) {
+    var rows = [];
+    (function walk(el, sec) {
+      elemChildren(el).forEach(function (c) {
+        if (isLeaf(c)) rows.push({ sec: sec, name: c.localName, val: (c.textContent || "").trim() });
+        else walk(c, label(c.localName));
+      });
+    })(doc.documentElement, label(doc.documentElement.localName));
+    if (!rows.length) { container.innerHTML = '<div class="zpv-pad zpv-muted">Dokument neobsahuje žádné údaje.</div>'; return; }
+    var thead = '<tr><th class="name-col name-cell">Sekce</th><th>Pole</th><th>Hodnota</th></tr>';
+    var tbody = rows.map(function (r) {
+      return '<tr><td class="name-cell">' + esc(r.sec) + "</td>" +
+        "<td>" + esc(label(r.name)) + '<span class="col-id">' + esc(r.name) + "</span></td>" +
+        tableCell(r.val) + "</tr>";
+    }).join("");
+    container.innerHTML = '<div class="zpv-pad"><div class="table-content"><div class="table-view"><table><thead>' +
+      thead + "</thead><tbody>" + tbody + "</tbody></table></div></div></div>";
   }
 
-  function renderResults(container, parsed, schemaErrors, kontroly) {
+  // === KONTROLY — findings only, in the shared .validation-list markup. ===
+  function renderKontroly(container, parsed, schemaErrors, kontroly) {
     var entry = parsed.entry;
-    var doc = parsed.doc;
     var schemaOk = schemaErrors.length === 0;
 
     var xsdInner = schemaOk
@@ -224,15 +318,36 @@
       : "žádné";
     var kHeader = "Kontroly · " + kCount;
 
-    var html = '<div class="validation-list">';
-    html += vGroup(esc(xsdHeader), xsdInner);
-    html += vGroup(esc(kHeader), kInner);
-    html += vGroup("Zaměstnavatel", vBody(employerBody(doc)));
-    if (parsed.key === "hoz") html += vGroup("Změny zaměstnanců", vBody(hozTableBody(doc)));
-    else html += vGroup("Údaje platby", vBody(pppzBody(doc, kontroly.meta)));
-    html += "</div>";
+    container.innerHTML = '<div class="validation-list">' +
+      vGroup(esc(xsdHeader), xsdInner) +
+      vGroup(esc(kHeader), kInner) +
+      "</div>";
+  }
 
-    container.innerHTML = html;
+  // Active view state for the open panel: {parsed, kontroly, schemaErrors, mode}.
+  // schemaErrors === null means XSD validation is still running.
+  var ST = null;
+
+  function renderMode(content) {
+    if (!ST || !content) return;
+    if (ST.mode === "cards") { renderCard(content, ST.parsed.doc); return; }
+    if (ST.mode === "table") { (ST.parsed.key === "hoz" ? renderTableHOZ : renderTablePPPZ)(content, ST.parsed.doc); return; }
+    if (ST.schemaErrors === null) {
+      content.innerHTML = '<div class="zpv-pad zpv-muted"><span class="zpv-spin">⟳</span> Ověřuji proti XSD schématu (' + esc(ST.parsed.entry.label) + ")…</div>";
+      return;
+    }
+    renderKontroly(content, ST.parsed, ST.schemaErrors, ST.kontroly);
+  }
+
+  function setMode(mode) {
+    if (!ST) return;
+    ST.mode = mode;
+    var panel = document.getElementById(PANEL_ID);
+    if (!panel) return;
+    panel.querySelectorAll(".zpv-segbtn").forEach(function (b) {
+      b.classList.toggle("active", b.getAttribute("data-mode") === mode);
+    });
+    renderMode(panel.querySelector(".zpv-content"));
   }
 
   function headerOffset() {
@@ -256,6 +371,11 @@
       panel.innerHTML = '' +
         '<div class="zpv-topbar">' +
         '<span class="zpv-tag">🏥 <span>ZP Validátor</span> <small class="zpv-tag-sub"></small></span>' +
+        '<div class="zpv-seg" role="tablist">' +
+        '<button type="button" class="zpv-segbtn" data-mode="kontroly">Kontroly</button>' +
+        '<button type="button" class="zpv-segbtn" data-mode="cards">Karty</button>' +
+        '<button type="button" class="zpv-segbtn" data-mode="table">Tabulka</button>' +
+        '</div>' +
         '<button type="button" class="zpv-tbtn zpv-primary zpv-reload">Nahrát jiný soubor</button>' +
         '<button type="button" class="zpv-tbtn zpv-close">Zavřít</button>' +
         '<input type="file" accept=".xml,text/xml,application/xml" style="display:none">' +
@@ -263,6 +383,10 @@
         '<div class="zpv-scroll"><div class="zpv-content"></div></div>';
       document.body.appendChild(panel);
       panel.querySelector(".zpv-close").addEventListener("click", closePanel);
+      panel.querySelector(".zpv-seg").addEventListener("click", function (e) {
+        var b = e.target.closest && e.target.closest(".zpv-segbtn");
+        if (b) setMode(b.getAttribute("data-mode"));
+      });
       var fi = panel.querySelector('input[type=file]');
       panel.querySelector(".zpv-reload").addEventListener("click", function () { fi.value = ""; fi.click(); });
     }
@@ -274,17 +398,22 @@
   function closePanel() {
     var el = document.getElementById(PANEL_ID);
     if (el) el.remove();
+    ST = null;
   }
 
   function processZP(parsed, xmlString) {
-    var content = ensurePanel(parsed.entry);
+    ensurePanel(parsed.entry);
     var kontroly = parsed.key === "hoz" ? window.ZPKontroly.runHOZ(parsed.doc) : window.ZPKontroly.runPPPZ(parsed.doc);
-    content.innerHTML = '<div class="zpv-muted"><span class="zpv-spin">⟳</span> Ověřuji proti XSD schématu (' + esc(parsed.entry.label) + ")…</div>";
+    ST = { parsed: parsed, kontroly: kontroly, schemaErrors: null, mode: "kontroly" };
+    setMode("kontroly");
     runSchemaValidation(xmlString, parsed.entry).then(function (res) {
-      var schemaErrors = (res && res.valid) ? [] : normalizeSchemaErrors(res);
-      renderResults(content, parsed, schemaErrors, kontroly);
+      if (!ST || ST.parsed !== parsed) return;
+      ST.schemaErrors = (res && res.valid) ? [] : normalizeSchemaErrors(res);
+      if (ST.mode === "kontroly") renderMode(document.querySelector("#" + PANEL_ID + " .zpv-content"));
     }).catch(function (err) {
-      renderResults(content, parsed, ["Validaci proti XSD se nepodařilo provést: " + (err && err.message ? err.message : err)], kontroly);
+      if (!ST || ST.parsed !== parsed) return;
+      ST.schemaErrors = ["Validaci proti XSD se nepodařilo provést: " + (err && err.message ? err.message : err)];
+      if (ST.mode === "kontroly") renderMode(document.querySelector("#" + PANEL_ID + " .zpv-content"));
     });
   }
 
@@ -356,7 +485,9 @@
     var p = document.getElementById(PANEL_ID);
     if (!p) return;
     var c = p.querySelector(".zpv-content");
-    if (c) c.innerHTML = '<div class="zpv-issue lvl-warning">Tento soubor není HOZ ani PPPZ. Zavřete prosím toto okno a načtěte soubor přímo přes hlavní plochu prohlížeče.</div>';
+    if (c) c.innerHTML = '<div class="validation-list"><div class="validation-group"><div class="validation-group-header">Neznámý formát</div>' +
+      vItem("warning", "Tento soubor není HOZ ani PPPZ. Zavřete prosím toto okno a načtěte soubor přímo přes hlavní plochu prohlížeče.", "") +
+      "</div></div>";
   }
 
   function attachListeners() {
