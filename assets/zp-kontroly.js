@@ -1,8 +1,13 @@
+// === Nativni kontroly pro VZP formaty HOZ + PPPZ ===
+// Stejny kontrakt jako window.MHKontroly / window.REGZECKontroly:
+//   runKontroly(xmlDoc, employees, header, FIELDS, FIELDS_BY_SECTION, fieldRules)
+//     -> pole { severity, controlId, empIndex, employeeName, sectionLabel,
+//               fieldLabel, fieldKey, headerKey, canNavigate, message }
+//   resetKontrolyIndex()
+// Vystupy se renderuji v nativnim panelu Kontroly (Karty/Tabulka) JMHZ VIEWER.
 (function () {
   "use strict";
 
-  // Reuse the app's shared validation infrastructure (the same window.KontrolyUtils
-  // module used by JMHZ / REGZEC) so ZP checks run on identical primitives.
   function KU() { return (typeof window !== "undefined" && window.KontrolyUtils) || null; }
 
   function directChildren(parent) {
@@ -13,9 +18,6 @@
     var ku = KU();
     if (ku && ku.findChildEl) return ku.findChildEl(parent, name);
     return directChildren(parent).find(function (e) { return e.localName === name; }) || null;
-  }
-  function childrenByName(parent, name) {
-    return directChildren(parent).filter(function (e) { return e.localName === name; });
   }
   function childText(parent, name) {
     var e = childByName(parent, name);
@@ -34,9 +36,6 @@
   function rcDivisibleBy11(rc) {
     var ku = KU();
     if (ku && ku.validateRCModulo11) {
-      // KontrolyUtils contract: only error === "modulo" means a 10-digit RC
-      // failed the divisibility check. "format"/"empty" must NOT be treated as
-      // a modulo failure here (callers already gate on /^\d{10}$/).
       var r = ku.validateRCModulo11(rc);
       return !(r && r.error === "modulo");
     }
@@ -82,204 +81,215 @@
     return dt > t;
   }
 
-  function pushIssue(arr, level, code, message, location) {
-    arr.push({ level: level, code: code, message: message, location: location || "" });
+  // --- sekvencni controlId (resetuje se pri nacteni noveho souboru) ---
+  var _idCounter = 0;
+  function resetKontrolyIndex() { _idCounter = 0; }
+  function nextId(prefix) { return prefix + "-" + (++_idCounter); }
+
+  function val(emp, key) {
+    var f = emp && emp.fields && emp.fields[key];
+    return f ? (f.value || "").trim() : "";
+  }
+  function empName(emp, idx) {
+    if (emp && emp.surname) return (emp.surname + " " + (emp.firstName || "")).trim();
+    return "Řádek " + (idx + 1);
+  }
+  function push(out, o) {
+    o.controlId = nextId(o._p || "ZP");
+    delete o._p;
+    out.push(o);
   }
 
   var STATE_PAIR_CODES = { D: "důchodce", I: "uchazeč o zaměstnání", G: "nezaopatřené dítě / student" };
+  var EMPLOYER_HEADER_KEY = "identifikaceZamestnavatele/identifikacniCisloPlatce";
 
-  function runHOZ(doc) {
-    var issues = [];
-    var root = doc.documentElement;
-
+  function checkEmployerIco(doc, out, prefix) {
+    var root = doc && doc.documentElement;
+    if (!root) return;
     var idZam = childByName(root, "identifikaceZamestnavatele");
-    if (idZam) {
-      var icp = childText(idZam, "identifikacniCisloPlatce");
-      if (icp && /^\d{10}$/.test(icp)) {
-        var ico = icp.substr(0, 8);
-        var orgUnit = icp.substr(8, 2);
-        if (orgUnit !== "99" && !validIco(ico)) {
-          pushIssue(issues, "warning", "HOZ-ICO",
-            "IČ plátce „" + ico + "“ nemá platný kontrolní součet (modulo 11). Ověřte číslo plátce pojistného.",
-            "identifikaceZamestnavatele / identifikacniCisloPlatce");
-        }
+    if (!idZam) return;
+    var icp = childText(idZam, "identifikacniCisloPlatce");
+    if (icp && /^\d{10}$/.test(icp)) {
+      var ico = icp.substr(0, 8);
+      var orgUnit = icp.substr(8, 2);
+      if (orgUnit !== "99" && !validIco(ico)) {
+        push(out, {
+          _p: prefix, severity: "warning",
+          empIndex: -1, employeeName: "",
+          sectionLabel: "Identifikace zaměstnavatele", fieldLabel: "IČ plátce",
+          fieldKey: "", headerKey: EMPLOYER_HEADER_KEY, canNavigate: true,
+          message: "IČ plátce „" + ico + "“ nemá platný kontrolní součet (modulo 11). Ověřte číslo plátce pojistného."
+        });
       }
     }
+  }
 
-    var seznam = childByName(root, "seznamZmenZamestnancu");
-    var zmeny = seznam ? childrenByName(seznam, "zmenaZamestance") : [];
+  // =========================================================================
+  // HOZ — Hromadné oznámení zaměstnavatele
+  // =========================================================================
+  function runHOZ(doc, employees) {
+    var out = [];
+    var emps = employees || [];
+
+    checkEmployerIco(doc, out, "HOZ");
 
     var byPerson = {};
-    zmeny.forEach(function (z, idx) {
-      var kod = childText(z, "kodzmeny");
-      var cislo = childText(z, "cisloPojistence");
-      var datum = childText(z, "datumZmeny");
-      var prijmeni = childText(z, "prijmeni") || "";
-      var jmeno = childText(z, "jmeno") || "";
-      var loc = "Řádek " + (idx + 1) + " (" + prijmeni + " " + jmeno + ")";
+    emps.forEach(function (emp, idx) {
+      var kod = val(emp, "zaznam/kodzmeny");
+      var cislo = val(emp, "zaznam/cisloPojistence");
+      var datum = val(emp, "zaznam/datumZmeny");
+      var name = empName(emp, idx);
+      var base = { empIndex: idx, employeeName: name, sectionLabel: "Změna zaměstnance" };
 
       if (cislo) {
         if (kod === "E" || kod === "C") {
           if (!/^[MZ]\d{8}$/.test(cislo)) {
-            pushIssue(issues, "warning", "HOZ-CIZ-FORMAT",
-              "U kódu „" + kod + "“ (první přihlášení cizince/občana EU bez trvalého pobytu) se očekává identifikátor ve tvaru pohlaví + datum narození (např. M05071980), nikoli rodné číslo.",
-              loc);
+            push(out, Object.assign({}, base, {
+              _p: "HOZ", severity: "warning", fieldLabel: "Číslo pojištěnce",
+              fieldKey: "zaznam/cisloPojistence", headerKey: "", canNavigate: !!(emp.fields && emp.fields["zaznam/cisloPojistence"]),
+              message: "U kódu „" + kod + "“ (první přihlášení cizince/občana EU bez trvalého pobytu) se očekává identifikátor ve tvaru pohlaví + datum narození (např. M05071980), nikoli rodné číslo."
+            }));
           } else if (!plausibleForeignerId(cislo)) {
-            pushIssue(issues, "warning", "HOZ-CIZ-DATUM",
-              "Identifikátor cizince „" + cislo + "“ obsahuje nesmyslné datum narození.",
-              loc);
+            push(out, Object.assign({}, base, {
+              _p: "HOZ", severity: "warning", fieldLabel: "Číslo pojištěnce",
+              fieldKey: "zaznam/cisloPojistence", headerKey: "", canNavigate: !!(emp.fields && emp.fields["zaznam/cisloPojistence"]),
+              message: "Identifikátor cizince „" + cislo + "“ obsahuje nesmyslné datum narození."
+            }));
           }
         } else {
           if (/^[MZ]\d{8}$/.test(cislo)) {
-            pushIssue(issues, "warning", "HOZ-CIZ-JINY-KOD",
-              "Identifikátor ve tvaru pohlaví + datum narození („" + cislo + "“) je určen jen pro první přihlášení cizince (kódy E/C). U kódu „" + kod + "“ se očekává přidělené číslo pojištěnce.",
-              loc);
+            push(out, Object.assign({}, base, {
+              _p: "HOZ", severity: "warning", fieldLabel: "Číslo pojištěnce",
+              fieldKey: "zaznam/cisloPojistence", headerKey: "", canNavigate: !!(emp.fields && emp.fields["zaznam/cisloPojistence"]),
+              message: "Identifikátor ve tvaru pohlaví + datum narození („" + cislo + "“) je určen jen pro první přihlášení cizince (kódy E/C). U kódu „" + kod + "“ se očekává přidělené číslo pojištěnce."
+            }));
           } else if (/^\d{10}$/.test(cislo) && !rcDivisibleBy11(cislo)) {
-            pushIssue(issues, "warning", "HOZ-RC-MOD11",
-              "Číslo pojištěnce „" + cislo + "“ (10 číslic) není dělitelné 11 — pravděpodobně nejde o platné rodné číslo. Pokud jde o číslo přidělené pojišťovnou, upozornění ignorujte.",
-              loc);
+            push(out, Object.assign({}, base, {
+              _p: "HOZ", severity: "warning", fieldLabel: "Číslo pojištěnce",
+              fieldKey: "zaznam/cisloPojistence", headerKey: "", canNavigate: !!(emp.fields && emp.fields["zaznam/cisloPojistence"]),
+              message: "Číslo pojištěnce „" + cislo + "“ (10 číslic) není dělitelné 11 — pravděpodobně nejde o platné rodné číslo. Pokud jde o číslo přidělené pojišťovnou, upozornění ignorujte."
+            }));
           }
         }
       }
 
       if (isFutureDate(datum)) {
-        pushIssue(issues, "warning", "HOZ-DATUM-BUDOUCNOST",
-          "Datum změny „" + datum + "“ je v budoucnosti.",
-          loc);
+        push(out, Object.assign({}, base, {
+          _p: "HOZ", severity: "warning", fieldLabel: "Datum změny",
+          fieldKey: "zaznam/datumZmeny", headerKey: "", canNavigate: !!(emp.fields && emp.fields["zaznam/datumZmeny"]),
+          message: "Datum změny „" + datum + "“ je v budoucnosti."
+        }));
       }
 
-      if (kod === "X") {
-        pushIssue(issues, "info", "HOZ-OPRAVA-X",
-          "Kód „X“ (oprava čísla pojištěnce) — na dalším řádku musí být uveden kód „P“ se správným číslem pojištěnce.",
-          loc);
-      }
-      if (kod === "Y") {
-        pushIssue(issues, "info", "HOZ-OPRAVA-Y",
-          "Kód „Y“ opravuje datum přihlášení — ověřte správnost data změny.",
-          loc);
-      }
-      if (kod === "Z") {
-        pushIssue(issues, "info", "HOZ-OPRAVA-Z",
-          "Kód „Z“ opravuje datum odhlášení — ověřte správnost data změny.",
-          loc);
+      var opravaMsg = null;
+      if (kod === "X") opravaMsg = "Kód „X“ (oprava čísla pojištěnce) — na dalším řádku musí být uveden kód „P“ se správným číslem pojištěnce.";
+      else if (kod === "Y") opravaMsg = "Kód „Y“ opravuje datum přihlášení — ověřte správnost data změny.";
+      else if (kod === "Z") opravaMsg = "Kód „Z“ opravuje datum odhlášení — ověřte správnost data změny.";
+      if (opravaMsg) {
+        push(out, Object.assign({}, base, {
+          _p: "HOZ", severity: "warning", fieldLabel: "Kód změny",
+          fieldKey: "zaznam/kodzmeny", headerKey: "", canNavigate: !!(emp.fields && emp.fields["zaznam/kodzmeny"]),
+          message: opravaMsg
+        }));
       }
 
       if (cislo) {
         if (!byPerson[cislo]) byPerson[cislo] = [];
-        byPerson[cislo].push({ kod: kod, datum: datum, loc: loc, idx: idx });
+        byPerson[cislo].push({ kod: kod, datum: datum, idx: idx });
       }
     });
 
-    zmeny.forEach(function (z, idx) {
-      var kod = childText(z, "kodzmeny");
-      var cislo = childText(z, "cisloPojistence");
-      var prijmeni = childText(z, "prijmeni") || "";
-      var jmeno = childText(z, "jmeno") || "";
-      var loc = "Řádek " + (idx + 1) + " (" + prijmeni + " " + jmeno + ")";
+    // párový kód P (D/I/G se obvykle oznamují spolu s nástupem P)
+    emps.forEach(function (emp, idx) {
+      var kod = val(emp, "zaznam/kodzmeny");
+      var cislo = val(emp, "zaznam/cisloPojistence");
       if (STATE_PAIR_CODES[kod] && cislo) {
         var hasP = (byPerson[cislo] || []).some(function (r) { return r.kod === "P"; });
         if (!hasP) {
-          pushIssue(issues, "warning", "HOZ-PAR-P",
-            "Kód „" + kod + "“ (" + STATE_PAIR_CODES[kod] + ") se obvykle oznamuje na dvou řádcích spolu s kódem „P“ (nástup) pro stejnou osobu — kód „P“ pro toto číslo pojištěnce ve formuláři chybí. Pokud již byl nástup oznámen dříve, upozornění ignorujte.",
-            loc);
+          push(out, {
+            _p: "HOZ", severity: "warning", empIndex: idx, employeeName: empName(emp, idx),
+            sectionLabel: "Změna zaměstnance", fieldLabel: "Kód změny",
+            fieldKey: "zaznam/kodzmeny", headerKey: "", canNavigate: !!(emp.fields && emp.fields["zaznam/kodzmeny"]),
+            message: "Kód „" + kod + "“ (" + STATE_PAIR_CODES[kod] + ") se obvykle oznamuje na dvou řádcích spolu s kódem „P“ (nástup) pro stejnou osobu — kód „P“ pro toto číslo pojištěnce ve formuláři chybí. Pokud již byl nástup oznámen dříve, upozornění ignorujte."
+          });
         }
       }
     });
 
-    Object.keys(byPerson).forEach(function (cislo) {
-      var seen = {};
-      byPerson[cislo].forEach(function (r) {
-        var key = r.kod + "|" + r.datum;
-        if (seen[key]) {
-          pushIssue(issues, "warning", "HOZ-DUPLICITA",
-            "Stejné číslo pojištěnce má opakovaně kód „" + r.kod + "“ se stejným datem (" + (r.datum || "?") + ") — možná duplicita.",
-            r.loc);
-        }
-        seen[key] = true;
-      });
+    // duplicity (stejné číslo + kód + datum)
+    emps.forEach(function (emp, idx) {
+      var kod = val(emp, "zaznam/kodzmeny");
+      var cislo = val(emp, "zaznam/cisloPojistence");
+      var datum = val(emp, "zaznam/datumZmeny");
+      if (!cislo) return;
+      var arr = byPerson[cislo] || [];
+      var dup = arr.some(function (r) { return r.idx < idx && r.kod === kod && r.datum === datum; });
+      if (dup) {
+        push(out, {
+          _p: "HOZ", severity: "warning", empIndex: idx, employeeName: empName(emp, idx),
+          sectionLabel: "Změna zaměstnance", fieldLabel: "Číslo pojištěnce",
+          fieldKey: "zaznam/cisloPojistence", headerKey: "", canNavigate: !!(emp.fields && emp.fields["zaznam/cisloPojistence"]),
+          message: "Stejné číslo pojištěnce má opakovaně kód „" + kod + "“ se stejným datem (" + (datum || "?") + ") — možná duplicita."
+        });
+      }
     });
 
-    return finalize(issues, { pocetZmen: zmeny.length });
+    return out;
   }
 
-  function runPPPZ(doc) {
-    var issues = [];
-    var root = doc.documentElement;
+  // =========================================================================
+  // PPPZ — Přehled platby zaměstnavatele
+  // =========================================================================
+  function runPPPZ(doc, employees) {
+    var out = [];
+    var emps = employees || [];
 
-    var idZam = childByName(root, "identifikaceZamestnavatele");
-    if (idZam) {
-      var icp = childText(idZam, "identifikacniCisloPlatce");
-      if (icp && /^\d{10}$/.test(icp)) {
-        var ico = icp.substr(0, 8);
-        var orgUnit = icp.substr(8, 2);
-        if (orgUnit !== "99" && !validIco(ico)) {
-          pushIssue(issues, "warning", "PPPZ-ICO",
-            "IČ plátce „" + ico + "“ nemá platný kontrolní součet (modulo 11). Ověřte číslo plátce pojistného.",
-            "identifikaceZamestnavatele / identifikacniCisloPlatce");
-        }
+    checkEmployerIco(doc, out, "PPPZ");
+
+    var emp = emps[0];
+    if (!emp) return out;
+
+    var mesic = parseInt(val(emp, "udajePlatby/mesicHlaseni"), 10);
+    var rok = parseInt(val(emp, "udajePlatby/rokHlaseni"), 10);
+    var pocet = parseInt(val(emp, "udajePlatby/pocetZamestnancu"), 10);
+    var zaklad = parseFloat((val(emp, "udajePlatby/soucetZakladuPojistneho") || "").replace(",", "."));
+    var pojistne = parseInt(val(emp, "udajePlatby/soucetPojistneho"), 10);
+    var base = { empIndex: 0, employeeName: empName(emp, 0), sectionLabel: "Údaje platby" };
+
+    if (!isNaN(rok) && !isNaN(mesic)) {
+      var now = new Date();
+      var periodEnd = new Date(rok, mesic, 0);
+      if (periodEnd > now) {
+        push(out, Object.assign({}, base, {
+          _p: "PPPZ", severity: "warning", fieldLabel: "Měsíc hlášení",
+          fieldKey: "udajePlatby/mesicHlaseni", headerKey: "", canNavigate: !!(emp.fields && emp.fields["udajePlatby/mesicHlaseni"]),
+          message: "Vykazované období " + mesic + "/" + rok + " je v budoucnosti."
+        }));
       }
     }
 
-    var udaje = childByName(root, "udajePlatby");
-    var meta = {};
-    if (udaje) {
-      var mesic = parseInt(childText(udaje, "mesicHlaseni"), 10);
-      var rok = parseInt(childText(udaje, "rokHlaseni"), 10);
-      var pocet = parseInt(childText(udaje, "pocetZamestnancu"), 10);
-      var zaklad = parseFloat(childText(udaje, "soucetZakladuPojistneho"));
-      var pojistne = parseInt(childText(udaje, "soucetPojistneho"), 10);
-
-      meta.mesic = mesic; meta.rok = rok; meta.pocet = pocet;
-      meta.zaklad = zaklad; meta.pojistne = pojistne;
-
-      if (!isNaN(rok) && !isNaN(mesic)) {
-        var now = new Date();
-        var periodEnd = new Date(rok, mesic, 0);
-        if (periodEnd > now) {
-          pushIssue(issues, "warning", "PPPZ-OBDOBI-BUDOUCNOST",
-            "Vykazované období " + mesic + "/" + rok + " je v budoucnosti.",
-            "udajePlatby");
-        }
-      }
-
-      if (!isNaN(zaklad) && !isNaN(pojistne)) {
-        var theoretical = Math.round(zaklad * 0.135);
-        meta.theoretical = theoretical;
-        var minBound = Math.floor(zaklad * 0.135);
-        var maxBound = Math.ceil(zaklad * 0.135) + Math.max(1, isNaN(pocet) ? 1 : pocet);
-        if (pojistne < minBound || pojistne > maxBound) {
-          pushIssue(issues, "warning", "PPPZ-SOUCET",
-            "Součet pojistného (" + pojistne + " Kč) neodpovídá 13,5 % ze součtu vyměřovacích základů. Teoreticky očekáváno přibližně " + theoretical + " Kč (z " + (isNaN(zaklad) ? "?" : zaklad.toFixed(2)) + " Kč). Rozdíl může vzniknout zaokrouhlováním po jednotlivých zaměstnancích — ověřte výpočet.",
-            "udajePlatby / soucetPojistneho");
-        }
-      }
-
-      if (!isNaN(pocet) && pocet > 0 && !isNaN(zaklad)) {
-        meta.avgBase = zaklad / pocet;
+    if (!isNaN(zaklad) && !isNaN(pojistne)) {
+      var theoretical = Math.round(zaklad * 0.135);
+      var minBound = Math.floor(zaklad * 0.135);
+      var maxBound = Math.ceil(zaklad * 0.135) + Math.max(1, isNaN(pocet) ? 1 : pocet);
+      if (pojistne < minBound || pojistne > maxBound) {
+        push(out, Object.assign({}, base, {
+          _p: "PPPZ", severity: "warning", fieldLabel: "Součet pojistného",
+          fieldKey: "udajePlatby/soucetPojistneho", headerKey: "", canNavigate: !!(emp.fields && emp.fields["udajePlatby/soucetPojistneho"]),
+          message: "Součet pojistného (" + pojistne + " Kč) neodpovídá 13,5 % ze součtu vyměřovacích základů. Teoreticky očekáváno přibližně " + theoretical + " Kč (z " + (isNaN(zaklad) ? "?" : zaklad.toFixed(2)) + " Kč). Rozdíl může vzniknout zaokrouhlováním po jednotlivých zaměstnancích — ověřte výpočet."
+        }));
       }
     }
 
-    var typPrehledu = childText(root, "typPrehledu");
-    meta.typPrehledu = typPrehledu;
-
-    return finalize(issues, meta);
+    return out;
   }
 
-  function finalize(issues, meta) {
-    var errors = issues.filter(function (i) { return i.level === "error"; });
-    var warnings = issues.filter(function (i) { return i.level === "warning"; });
-    var info = issues.filter(function (i) { return i.level === "info"; });
-    return { errors: errors, warnings: warnings, info: info, meta: meta || {} };
-  }
-
-  window.ZPKontroly = {
-    runHOZ: runHOZ,
-    runPPPZ: runPPPZ,
-    helpers: {
-      childByName: childByName,
-      childrenByName: childrenByName,
-      childText: childText,
-      directChildren: directChildren
-    }
+  window.HOZKontroly = {
+    runKontroly: function (xmlDoc, employees) { return runHOZ(xmlDoc, employees); },
+    resetKontrolyIndex: resetKontrolyIndex
+  };
+  window.PPPZKontroly = {
+    runKontroly: function (xmlDoc, employees) { return runPPPZ(xmlDoc, employees); },
+    resetKontrolyIndex: resetKontrolyIndex
   };
 })();
