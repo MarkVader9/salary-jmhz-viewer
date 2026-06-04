@@ -119,7 +119,21 @@
             if (!docRes.ok) throw new Error(`Zdrojový soubor kurzu chybí na serveru.`);
             
             const arrayBuffer = await docRes.arrayBuffer();
-            const mammothOptions = { ignoreEmptyParagraphs: false };
+            const mammothOptions = {
+                ignoreEmptyParagraphs: false,
+                styleMap: [
+                    "u => u",
+                    "strike => s"
+                ],
+                transformDocument: (function() {
+                    var _n = 0;
+                    return mammoth.transforms.paragraph(function(p) {
+                        if (!p.alignment || p.alignment === 'left') return p;
+                        var name = 'wdalign-' + p.alignment + '-' + (_n++);
+                        return Object.assign({}, p, { children: [{ type: 'bookmarkStart', name: name, id: name }].concat(p.children) });
+                    });
+                }())
+            };
             const result = await mammoth.convertToHtml({ arrayBuffer: arrayBuffer }, mammothOptions);
             
             parseHtmlToLessons(result.value);
@@ -543,6 +557,19 @@
     // LOGIKA PRO DYNAMICKÉ ZÁLOŽKY (TABS) Z MS WORDU
     // =========================================================
     
+    function applyWordAlignment(container) {
+        container.querySelectorAll('a[id^="wdalign-"]').forEach(function(anchor) {
+            var m = anchor.id.match(/^wdalign-(center|both|right)-/);
+            if (!m) return;
+            var parent = anchor.parentElement;
+            if (!parent) { anchor.remove(); return; }
+            if (m[1] === 'center') parent.classList.add('align-center');
+            else if (m[1] === 'both')   parent.classList.add('align-justify');
+            else if (m[1] === 'right')  parent.classList.add('align-right');
+            anchor.remove();
+        });
+    }
+
     function processLessonContent(html, container, courseId, lessonIndex) {
         let tabsData = [];
 
@@ -584,6 +611,7 @@
 
         // 4. Vložení vyčištěného obsahu do lekce
         container.innerHTML = cleanHtml;
+        applyWordAlignment(container);
 
         // 5. Pokud byly nalezeny nějaké záložky, vykreslíme komponentu záložek
         if (tabsData.length > 0) {

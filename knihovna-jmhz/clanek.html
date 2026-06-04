@@ -85,20 +85,7 @@
     // 2. FUNKCE PRO VZHLED A UI
     // ==========================================
     function fixDocumentFormatting(container) {
-        // A. Oprava zarovnání odstavců z MS Word
-        const paragraphs = container.querySelectorAll('p');
-        paragraphs.forEach(p => {
-            const style = p.getAttribute('style') || '';
-            if (style.includes('text-align: justify') || style.includes('text-align:both')) {
-                p.classList.add('align-justify');
-            } else if (style.includes('text-align: center')) {
-                p.classList.add('align-center');
-            } else if (style.includes('text-align: right')) {
-                p.classList.add('align-right');
-            }
-        });
-
-        // B. Automatické zabalení tabulek proti přetékání a bílým místům
+        // Automatické zabalení tabulek proti přetékání a bílým místům
         const tables = container.querySelectorAll('table');
         tables.forEach(table => {
             if (!table.parentElement.classList.contains('table-responsive-wrapper')) {
@@ -107,6 +94,19 @@
                 table.parentNode.insertBefore(wrapper, table);
                 wrapper.appendChild(table);
             }
+        });
+    }
+
+    function applyWordAlignment(container) {
+        container.querySelectorAll('a[id^="wdalign-"]').forEach(function(anchor) {
+            var m = anchor.id.match(/^wdalign-(center|both|right)-/);
+            if (!m) return;
+            var parent = anchor.parentElement;
+            if (!parent) { anchor.remove(); return; }
+            if (m[1] === 'center') parent.classList.add('align-center');
+            else if (m[1] === 'both')   parent.classList.add('align-justify');
+            else if (m[1] === 'right')  parent.classList.add('align-right');
+            anchor.remove();
         });
     }
 
@@ -391,19 +391,20 @@
             if (!docRes.ok) throw new Error(`Dokument "${article.docxFile}" nenalezen.`);
             
             const arrayBuffer = await docRes.arrayBuffer();
-            const mammothOptions = { 
+            const mammothOptions = {
                 ignoreEmptyParagraphs: false,
                 styleMap: [
-                    "p[alignment='center'] => p.align-center",
-                    "p[alignment='justify'] => p.align-justify",
-                    "p[alignment='both'] => p.align-justify",
-                    "p[alignment='right'] => p.align-right",
-                    "h1[alignment='center'] => h1.align-center",
-                    "h2[alignment='center'] => h2.align-center",
-                    "h3[alignment='center'] => h3.align-center",
                     "u => u",
                     "strike => s"
-                ]
+                ],
+                transformDocument: (function() {
+                    var _n = 0;
+                    return mammoth.transforms.paragraph(function(p) {
+                        if (!p.alignment || p.alignment === 'left') return p;
+                        var name = 'wdalign-' + p.alignment + '-' + (_n++);
+                        return Object.assign({}, p, { children: [{ type: 'bookmarkStart', name: name, id: name }].concat(p.children) });
+                    });
+                }())
             };
             
             const result = await mammoth.convertToHtml({ arrayBuffer: arrayBuffer }, mammothOptions);
@@ -412,8 +413,10 @@
             const contentContainer = document.getElementById('articleContent');
             contentContainer.innerHTML = rawHtml;
             
-            // Obalení tabulek a zarovnání
+            // Obalení tabulek
             fixDocumentFormatting(contentContainer);
+            // Zarovnání odstavců z MS Word (center / justify / right)
+            applyWordAlignment(contentContainer);
 
             // Zprovoznění Lightboxu pro obrázky a otevírání odkazů na nové kartě
             contentContainer.querySelectorAll('a').forEach(link => {

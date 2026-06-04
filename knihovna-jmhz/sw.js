@@ -1,5 +1,5 @@
 /* Service Worker – JMHZ Knihovna (offline-first, statický provoz z FTP) */
-const CACHE = 'jmhz-knihovna-v2';
+const CACHE = 'jmhz-knihovna-v3';
 const CORE = [
   './',
   './index.html',
