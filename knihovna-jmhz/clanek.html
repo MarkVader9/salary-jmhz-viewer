@@ -69,9 +69,23 @@
             </div>
         </aside>
     </div>
+<button id="mobileTocBtn" class="mobile-toc-btn" aria-label="Obsah článku" title="Obsah článku">
+        <span class="toc-icon">☰</span> <span class="toc-label">Obsah</span>
+    </button>
 
-<script>
-    // ==========================================
+    <div id="mobileTocModal" class="mobile-toc-modal">
+        <div class="mobile-toc-header">
+            <h2>Obsah článku</h2>
+            <button id="mobileTocClose" class="mobile-toc-close" aria-label="Zavřít">&times;</button>
+        </div>
+        <div class="mobile-toc-search">
+            <input type="text" id="mobileTocSearchInput" placeholder="🔍 Hledat v obsahu (např. DNP)...">
+        </div>
+        <div class="mobile-toc-body" id="mobileTocList">
+            </div>
+    </div>
+	<script>
+// ==========================================
     // 1. KONFIGURACE A KONSTANTY
     // ==========================================
     const DB_URL = "databaze-knihovny.json"; 
@@ -116,13 +130,13 @@
         container.innerHTML = `
             <div style="display:flex; flex-direction:column; gap:4px; margin-bottom:10px; border-bottom:1px solid var(--border-subtle); padding-bottom:10px;">
                 <span style="font-size:0.75rem; color:var(--text-muted); font-weight:600; text-transform:uppercase;">Vzhled</span>
-                <button class="btn" onclick="setTheme('light')" style="text-align:left;">☀️ Světlý</button>
-                <button class="btn" onclick="setTheme('dark')" style="text-align:left;">🌙 Tmavý</button>
-                <button class="btn" onclick="setTheme('auto')" style="text-align:left;">🌓 Automatický</button>
+                <button class="btn" onclick="window.setTheme('light')" style="text-align:left;">☀️ Světlý</button>
+                <button class="btn" onclick="window.setTheme('dark')" style="text-align:left;">🌙 Tmavý</button>
+                <button class="btn" onclick="window.setTheme('auto')" style="text-align:left;">🌓 Automatický</button>
             </div>
             <div style="display:flex; flex-direction:column; gap:4px; margin-bottom:10px; border-bottom:1px solid var(--border-subtle); padding-bottom:10px;">
                 <span style="font-size:0.75rem; color:var(--text-muted); font-weight:600; text-transform:uppercase;">Písmo ke čtení</span>
-                <select id="fontSelect" class="sort-select" style="width:100%; padding:8px; font-size:0.9rem;" onchange="changeReaderFont(this.value)">
+                <select id="fontSelect" class="sort-select" style="width:100%; padding:8px; font-size:0.9rem;" onchange="window.changeReaderFont(this.value)">
                     <option value="system-ui, -apple-system, sans-serif">Výchozí Systémové</option>
                     <option value="'Inter', sans-serif">Inter (Moderní)</option>
                     <option value="'Roboto', sans-serif">Roboto (Google)</option>
@@ -134,14 +148,14 @@
                     <option value="'Playfair Display', serif">Playfair (Elegantní)</option>
                 </select>
             </div>
-            <button class="btn" onclick="copyArticleLink()" style="text-align:left;">📋 Sdílet článek</button>
+            <button class="btn" onclick="window.copyArticleLink()" style="text-align:left;">📋 Sdílet článek</button>
             <button class="btn" onclick="window.print()" style="text-align:left;">🖨️ Vytisknout článek</button>
         `;
 
         const savedFont = localStorage.getItem('jmhz_article_font');
         if (savedFont) {
             document.getElementById('fontSelect').value = savedFont;
-            changeReaderFont(savedFont);
+            window.changeReaderFont(savedFont);
         }
     }
 
@@ -199,7 +213,7 @@
         parsed = parsed.replace(/(?:<a[^>]*>)?\[FAQ:\s*([^|\]]+)\|([^\]]+)\](?:<\/a>)?/gi, (match, question, answer) => {
             let q = question.replace(/<[^>]+>/g, '').trim();
             let a = answer.replace(/<[^>]+>/g, '').trim();
-            return `<div class="faq-box"><div class="faq-question" onclick="toggleFaq(this)"><span>${q}</span><span class="faq-icon">▼</span></div><div class="faq-answer">${a}</div></div>`;
+            return `<div class="faq-box"><div class="faq-question" onclick="window.toggleFaq(this)"><span>${q}</span><span class="faq-icon">▼</span></div><div class="faq-answer">${a}</div></div>`;
         });
 
         parsed = parsed.replace(/(?:<a[^>]*>)?\[KVIZ:\s*(.+?)\](?:<\/a>)?/gi, (match, content) => {
@@ -210,7 +224,7 @@
             parts.forEach((ans) => {
                 let isCorrect = ans.endsWith('*');
                 let cleanAns = isCorrect ? ans.slice(0, -1).trim() : ans;
-                htmlOut += `<button class="btn" onclick="checkArticleQuiz(this, ${isCorrect}, '${quizId}')" style="text-align:left; justify-content:flex-start; font-size:1rem; padding:12px; border:1px solid var(--border); background:var(--bg-elevated); transition:0.2s;">${cleanAns}</button>`;
+                htmlOut += `<button class="btn" onclick="window.checkArticleQuiz(this, ${isCorrect}, '${quizId}')" style="text-align:left; justify-content:flex-start; font-size:1rem; padding:12px; border:1px solid var(--border); background:var(--bg-elevated); transition:0.2s;">${cleanAns}</button>`;
             });
             htmlOut += `</div><div id="${quizId}_feedback" style="margin-top:15px; font-weight:600; font-size:0.95rem; display:none; padding:10px; border-radius:6px;"></div></div>`;
             return htmlOut;
@@ -220,7 +234,7 @@
     }
 
     // ==========================================
-    // 4. GENERACE OBSAHU A SCROLLSPY
+    // 4. GENERACE OBSAHU A SCROLLSPY (Včetně Mobilního TOC)
     // ==========================================
     function generateTOC() {
         const headings = document.getElementById('articleContent').querySelectorAll('h1, h2');
@@ -233,11 +247,67 @@
             tocHtml += `<a href="#${id}" class="toc-link${extraClass}" data-target="${id}">${h.textContent}</a>`;
         });
 
+        const mobileBtn = document.getElementById('mobileTocBtn');
+        const mobileList = document.getElementById('mobileTocList');
+
         if (headings.length > 0) {
             document.getElementById('tocList').innerHTML = tocHtml;
+            if (mobileList) mobileList.innerHTML = tocHtml; 
             initEnterpriseScrollSpy(headings);
+            
+            // ---> TOTO ZDE CHYBĚLO <--- Zprovoznění mobilního menu!
+            initMobileTOC(); 
+            
         } else {
             document.querySelector('.toc-aside').style.display = 'none';
+            if (mobileBtn) mobileBtn.style.display = 'none';
+        }
+    }
+
+    // ---> TOTO ZDE CHYBĚLO <--- Vlastní funkce oživující vyhledávání a skrytí panelu
+    function initMobileTOC() {
+        const btn = document.getElementById('mobileTocBtn');
+        const modal = document.getElementById('mobileTocModal');
+        const closeBtn = document.getElementById('mobileTocClose');
+        const searchInput = document.getElementById('mobileTocSearchInput');
+        const listContainer = document.getElementById('mobileTocList');
+
+        // Otevření
+        if (btn) btn.addEventListener('click', () => {
+            modal.classList.add('open');
+            document.body.style.overflow = 'hidden'; // Zamezí scrollování stránky pod oknem
+            if(searchInput) { searchInput.value = ''; searchInput.dispatchEvent(new Event('input')); }
+        });
+
+        // Zavření křížkem
+        const closeModal = () => {
+            modal.classList.remove('open');
+            document.body.style.overflow = '';
+        };
+        if (closeBtn) closeBtn.addEventListener('click', closeModal);
+
+        // Zavření po kliknutí na konkrétní odkaz v seznamu
+        if (listContainer) listContainer.addEventListener('click', (e) => {
+            if (e.target.classList.contains('toc-link')) {
+                closeModal();
+            }
+        });
+
+        // Inteligentní vyhledávání / filtrace v obsahu
+        if (searchInput && listContainer) {
+            searchInput.addEventListener('input', (e) => {
+                const term = e.target.value.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, ""); 
+                const links = listContainer.querySelectorAll('.toc-link');
+                
+                links.forEach(link => {
+                    const text = link.textContent.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+                    if (text.includes(term)) {
+                        link.style.display = 'block';
+                    } else {
+                        link.style.display = 'none';
+                    }
+                });
+            });
         }
     }
 
@@ -391,6 +461,7 @@
             if (!docRes.ok) throw new Error(`Dokument "${article.docxFile}" nenalezen.`);
             
             const arrayBuffer = await docRes.arrayBuffer();
+
             const mammothOptions = {
                 ignoreEmptyParagraphs: false,
                 styleMap: [
@@ -426,24 +497,24 @@
                 }
             });
             contentContainer.querySelectorAll('img').forEach(img => {
-                img.addEventListener('click', () => openLightbox(img.src));
+                img.addEventListener('click', () => window.openLightbox(img.src));
             });
 
             document.getElementById('loader').style.display = 'none';
             document.getElementById('layoutContainer').style.display = 'grid';
 
             generateTOC();
-            if (window.calculateArticleTime) calculateArticleTime(contentContainer);
-            if (window.KB_VideoManager) KB_VideoManager.init();
+            if (window.calculateArticleTime) window.calculateArticleTime(contentContainer);
+            if (window.KB_VideoManager) window.KB_VideoManager.init();
 
         } catch (e) { 
             document.getElementById('loader').innerHTML = `<h2 style="color:var(--error)">Chyba</h2><p>${e.message}</p><br><a href="index.html" class="btn">Zpět</a>`; 
         }
     }
 
-    // ==========================================
-    // 7. EVENT LISTENERY (Spuštění)
-    // ==========================================
+    // ==================================================================
+    // 7. EVENT LISTENERY (Spuštění, Progress Bar a Back to Top)
+    // ==============================================================
     document.addEventListener('DOMContentLoaded', loadArticle);
 
     // Registrace Service Workeru (offline režim / PWA)
@@ -455,16 +526,22 @@
         });
     }
 
-    // OPRAVENÝ SENZOR PROGRESS BARU
+    // SLOUČENÝ SENZOR: PROGRESS BAR + TLAČÍTKO ZPĚT NAHORU
     window.addEventListener('scroll', () => {
+        // Kalkulace pro Progress Bar
         const winScroll = window.scrollY || document.documentElement.scrollTop;
         const height = document.documentElement.scrollHeight - document.documentElement.clientHeight;
-        
         const scrolled = height > 0 ? (winScroll / height) * 100 : 0;
         
         const pb = document.getElementById('progressBar');
         if (pb) pb.style.width = scrolled + "%";
+
+        // Logika pro zobrazení/skrytí tlačítka "Zpět nahoru" (zobrazí se po 400px)
+        const btnTop = document.getElementById('backToTop');
+        if (btnTop) btnTop.classList.toggle('visible', window.scrollY > 400);
     }, { passive: true });
 </script>
+<button id="backToTop" class="back-to-top" aria-label="Zpět nahoru" title="Zpět na začátek stránky" onclick="window.scrollTo({top:0,behavior:'smooth'})">↑</button>
+
 </body>
 </html>

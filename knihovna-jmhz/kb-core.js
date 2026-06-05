@@ -111,6 +111,13 @@ const MOCK_NOTIFICATIONS = [
     content: `AKTUALIZACE INFORMACÍ: Vydání nového komplexního analytického a implementačního manuálu (SOP-HR-IT-002) k přechodu na výhradně elektronické formáty zdravotních pojišťoven platné od 1. ledna 2026. Dokument detailně pokrývá všech 42 klíčových procesních a technologických otázek rozdělených pro role Mzdové účetní a Vývojovou Divizi SALARY s.r.o., včetně nové logiky kódů státních pojištěnců, mzdových limitů a striktních validačních XSD Schematických pravidel pro HOZ a PPPZ.<br><br>Celý tento nově vydaný článek a manuál naleznete <a href="https://www.salary.cz/jmhz2026/knihovna-jmhz/clanek.html?id=Nov%C3%A1_Legislativa_Poji%C5%A1%C5%A5ovny_PPPZ(PPZ)_a_HOZ_2026"> v naší knihovně na tomto odkaze zde.</a><br><br>`,
     tags: ["Zdravotní Pojišťovny Legislativa", "Důležité", "HOZ a PPPZ"]
 	},
+{
+        id: "notif_014",
+        date: "2026-06-04T18:08:00Z",
+        title: "Aktualizace SALARY Znalostní Knihovny a Nový Obsah",
+        content: "Vážení kolegové, zdravím vás všechny opět z Londýna. Nasadili jsme aktualizaci SALARY Znalostní Knihovny, která přináší plynulejší zalamování textů a nové tlačítko pro rychlý návrat na začátek stránky v pravém spodním rohu (PC/tablet/mobil). <br><br>Pro uživatele na tabletech a smartphonech jsme navíc v levém spodním rohu přidali praktické tlačítko 'Obsah', které rozbalí celoobrazovkové menu s možností chytrého vyhledávání v kapitolách článku, který si v danou chvíli pročítáte. <br><br>Především jsme ale masivně rozšířili obsah: Přibyly nové otázky a odpovědi k legislativě pojišťoven (HOZ a PPPZ 2026) a k metodikám ČSSZ a MPSV. <br><br>Dostupná je nyní rozsáhlá sada JMHZ číselníků, zahrnující například klasifikace CZ-ISCO a ČSÚ, kódy bank, obcí, okresů, poboček ÚP, druhy důchodů či typy zdravotních omezení. Dále jsme doplnili materiály k předregistraci zaměstnanců (PREZEC) a spustili interaktivní kurz pro efektivní ovládání SALARY Prohlížeče JMHZ Formulářů, který zakrátko budeme aktualizovat a expandovat o další vhledy a zkušenosti z praxe.<br><br>",
+        tags: ["Aktualizace Znalostní Knihovny", "Nový obsah", "Důležité"]
+    }
 ];
 
 const KB_Notifications = {
