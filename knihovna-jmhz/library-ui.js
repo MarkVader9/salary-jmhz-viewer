@@ -275,7 +275,7 @@ document.addEventListener("DOMContentLoaded", () => {
                         </label>
                     </div>
                     <div style="display:flex;align-items:center;gap:var(--sp-3,12px);justify-content:flex-end;flex-wrap:wrap">
-                        <span style="font-size:0.6875rem;color:var(--text-muted,#888);margin-right:auto">Otevře se e-mailový klient s předvyplněnou zprávou na slsavek@salary.cz</span>
+                        <span style="font-size:0.6875rem;color:var(--text-muted,#888);margin-right:auto">Otevře se e-mailový klient s předvyplněnou zprávou na slavek@salary.cz</span>
                         <button id="jmhz-report-send" style="padding:8px 18px;background:var(--accent,#1e5fa3);color:#fff;border:none;border-radius:var(--radius-md,6px);font-size:0.875rem;font-weight:600;cursor:pointer">Odeslat</button>
                     </div>
                 </div>
@@ -309,7 +309,7 @@ document.addEventListener("DOMContentLoaded", () => {
                     (cust ? 'Zákaznické číslo: ' + cust + '\n\n' : '') +
                     '--- Diagnostické informace ---\n' + diag
                 );
-                window.location.href = 'mailto:slsavek@salary.cz?subject=' + subject + '&body=' + body;
+                window.location.href = 'mailto:slavek@salary.cz?subject=' + subject + '&body=' + body;
             });
         }
 

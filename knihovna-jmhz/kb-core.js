@@ -111,13 +111,20 @@ const MOCK_NOTIFICATIONS = [
     content: `AKTUALIZACE INFORMACÍ: Vydání nového komplexního analytického a implementačního manuálu (SOP-HR-IT-002) k přechodu na výhradně elektronické formáty zdravotních pojišťoven platné od 1. ledna 2026. Dokument detailně pokrývá všech 42 klíčových procesních a technologických otázek rozdělených pro role Mzdové účetní a Vývojovou Divizi SALARY s.r.o., včetně nové logiky kódů státních pojištěnců, mzdových limitů a striktních validačních XSD Schematických pravidel pro HOZ a PPPZ.<br><br>Celý tento nově vydaný článek a manuál naleznete <a href="https://www.salary.cz/jmhz2026/knihovna-jmhz/clanek.html?id=Nov%C3%A1_Legislativa_Poji%C5%A1%C5%A5ovny_PPPZ(PPZ)_a_HOZ_2026"> v naší knihovně na tomto odkaze zde.</a><br><br>`,
     tags: ["Zdravotní Pojišťovny Legislativa", "Důležité", "HOZ a PPPZ"]
 	},
-{
-        id: "notif_014",
-        date: "2026-06-04T18:08:00Z",
-        title: "Aktualizace SALARY Znalostní Knihovny a Nový Obsah",
-        content: "Vážení kolegové, zdravím vás všechny opět z Londýna. Nasadili jsme aktualizaci SALARY Znalostní Knihovny, která přináší plynulejší zalamování textů a nové tlačítko pro rychlý návrat na začátek stránky v pravém spodním rohu (PC/tablet/mobil). <br><br>Pro uživatele na tabletech a smartphonech jsme navíc v levém spodním rohu přidali praktické tlačítko 'Obsah', které rozbalí celoobrazovkové menu s možností chytrého vyhledávání v kapitolách článku, který si v danou chvíli pročítáte. <br><br>Především jsme ale masivně rozšířili obsah: Přibyly nové otázky a odpovědi k legislativě pojišťoven (HOZ a PPPZ 2026) a k metodikám ČSSZ a MPSV. <br><br>Dostupná je nyní rozsáhlá sada JMHZ číselníků, zahrnující například klasifikace CZ-ISCO a ČSÚ, kódy bank, obcí, okresů, poboček ÚP, druhy důchodů či typy zdravotních omezení. Dále jsme doplnili materiály k předregistraci zaměstnanců (PREZEC) a spustili interaktivní kurz pro efektivní ovládání SALARY Prohlížeče JMHZ Formulářů, který zakrátko budeme aktualizovat a expandovat o další vhledy a zkušenosti z praxe.<br><br>",
-        tags: ["Aktualizace Znalostní Knihovny", "Nový obsah", "Důležité"]
-    }
+	{
+	id: "notif_015",
+	date: "2026-06-05T14:41:00Z",
+	title: "Rozšíření Otázek a Odpovědí K SALARY: Extrémní scénáře JMHZ a IT validace",
+	content: `Vážení kolegové, v návaznosti na včerejší aktualizaci jsme do SALARY Znalostní Knihovny přidali další expertní obsah. <br><br>Článek 'Otázky a Odpovědi K SALARY' byl právě rozšířen o ucelenou sadu 10 nových detailně zpracovaných dotazů z praxe, které se zaměřují na úskalí Jednotného měsíčního hlášení (JMHZ). <br><br>Tento nový blok jsme koncipovali pro dvě úrovně uživatelů: Pokrýváme běžnou mzdovou praxi (vykazování odměn studentů na praxi, rozlišení fondů pracovní doby u DPP či technické závislosti u uplatňování slev na děti), ale zároveň jdeme do hloubky pro seniorní účetní. Extrémně podrobně se věnujeme střetu účetní metodiky s tvrdými XML validacemi – například jak vyřešit paradox záporného čistého příjmu a smrtící chybu ePortálu 20267 u naturálního benefitu 1 % za auto při nulové peněžní mzdě. <br><br>Pro vaši snadnou a bleskovou orientaci jsme všechny nově přidané dotazy opatřili intuitivními tematickými nadpisy, abyste na první pohled poznali, zda daný scénář řeší legislativu pro Úřad práce, nebo čistě strukturu datové věty. To vše <a href="https://www.salary.cz/jmhz2026/knihovna-jmhz/clanek.html?id=dotazy_smerem_k_salary"> v naší knihovně na tomto odkaze zde.</a><br><br>`,
+	tags: ["Aktualizace Znalostní Knihovny", "Nový Obsah", "JMHZ", "Otázky a Odpovědi K SALARY", "Důležité"]
+	},
+	{
+	id: "notif_016",
+	date: "2026-06-07T10:27:00Z",
+	title: "Přidání Nového Číselníku JMHZ - Druh Činnosti ID 10239",
+	content: `Zdravím vás všechny opět z Londýna, Vydali jsme nový praktický článek zaměřený na číselník JMHZ „Druh činnosti“ (ID 10239). Dozvíte se v něm, jak tento přemosťovací údaj správně využívat pro zaměstnance bez ustavených identifikátorů a vyhnout se chybám při XML validaci. Upozorňujeme na hlavní účetní pasti, jako je striktní požadavek na vykazování nulové pracovní doby u kódů činnosti K–S. Zkušení účetní ocení návod na řešení tzv. „mrtvých duší“ – znovuregistraci bývalých zaměstnanců při vyplácení odložených příjmů pod kódem 9. Detailně rozebíráme i specifika vykazování náhrad, plnění důchodcům po více než roce od konce zaměstnání a záludnosti při zúčtování svědečného v režimu zaměstnání malého rozsahu.<br><br>Tento nový číselník JMHZ naleznete <a href="https://www.salary.cz/jmhz2026/knihovna-jmhz/clanek.html?id=jmhz_ciselnik_druh_cinnosti_id_10239"> v naší knihovně na tomto odkaze zde.</a><br><br><br><br>`,
+    tags: ["Číselníky JMHZ", "Důležité"]
+	}
 ];
 
 const KB_Notifications = {

@@ -179,9 +179,9 @@
       "title": "Dotazy Směrem K Salary  •  Vaše Dotazy K Legislativě JMHZ",
       "tags": ["Pro Mzdové Účetní", "JMHZ", "Otázky a Odpovědi Salary"],
       "categoryId": "cat_8",
-      "readingTimeMin": 5,
-      "lastUpdated": "2026-05-29T16:18:36Z",
-      "docxFile": "dotazy_smerem_k_salary.docx"
+      "readingTimeMin": 13,
+      "lastUpdated": "2026-06-06T00:53:00Z",
+      "docxFile": "dotazy_smerem_k_salary_rev_006.docx"
     },
 	{
       "id": "dotazy_smerem_k_cssz_a_mpsv",
@@ -209,6 +209,24 @@
       "readingTimeMin": 21,
       "lastUpdated": "2026-06-02T06:36:36Z",
       "docxFile": "Nová__Legislativa_Pojišťovny_PPPZ_(PPZ)_a_HOZ_2026__(Revize-002---02_ČERVNA-2026).docx"
+    },
+	{
+      "id": "jmhz_ciselnik_nkpz",
+      "title": "JMHZ ČÍSELNÍKY  •  Národní Klasifikace Postavení v Zaměstnání (NKPZ)",
+      "tags": ["Pro Mzdové Účetní", "JMHZ", "Číselníky"],
+      "categoryId": "cat_6",
+      "readingTimeMin": 2,
+      "lastUpdated": "2026-06-06T00:42:00Z",
+      "docxFile": "jmhz_ciselnik_nkpz_rev_006.docx"
+    },	
+	{
+      "id": "jmhz_ciselnik_druh_cinnosti_id_10239",
+      "title": "JMHZ ČÍSELNÍKY  •  Kódy Druhu Činnosti (ID 10239)",
+      "tags": ["Pro Mzdové Účetní", "JMHZ", "Číselníky"],
+      "categoryId": "cat_6",
+      "readingTimeMin": 6,
+      "lastUpdated": "2026-06-07T10:19:00Z",
+      "docxFile": "jmhz_ciselnik_druh_cinnosti_id_10239_.docx"
     }
   ],
   "lms": [
