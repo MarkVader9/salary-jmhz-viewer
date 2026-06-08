@@ -12,7 +12,6 @@ const KB_CONFIG = {
 
     // Daty řízená pravidla (Rule Engine)
     rules: [
-
         { id: 'R1', field: 'title', type: 'required', msg: 'Článek musí mít vyplněný nadpis.' },
         { id: 'R2', field: 'content', type: 'required', msg: 'Obsah článku nesmí být prázdný.' },
         { id: 'R3', field: 'categoryId', type: 'required', msg: 'Pro veřejné publikování musí být vybrána kategorie.', cond: (d) => d.status === 'public' }
@@ -23,14 +22,11 @@ const KB_CONFIG = {
 const KB_Toaster = {
     container: null,
     init() {
-        // CSS styly notifikací přesunuty do library-style.css
         this.container = document.createElement('div');
         this.container.className = 'kb-toaster';
         document.body.appendChild(this.container);
     },
     show(title, desc = '', type = 'info') {
-                
-                
         if (!this.container) this.init();
         const t = document.createElement('div');
         t.className = `kb-toast kb-toast-${type}`;
@@ -69,62 +65,63 @@ const MOCK_NOTIFICATIONS = [
         title: "Nový kurz pro Mzdové Účetní přidán do sekce Školení",
         content: "Přidali jsme nový interaktivní kurz zaměřený na Používání Webové Aplikace SALARY Prohlížeče JMHZ Formulářů. <br><br>Kurz si můžete spustit v hlavní nabídce knihovny, a nebo na tomto odkaze <a href=\"lms.html?course=kurz_jmhz_prohlizec\">Přejít na Kurz</a>",
         tags: ["Kurzy", "Nové"]
-    },{
+    },
+    {
         id: "notif_004",
         date: "2026-05-13T07:26:33Z",
         title: "Byl Přidán Nový JMHZ Číselník",
         content: "Nově byl do knihovny přidán nový JMHZ Číselník Okresů. <br><br>Je možné si jej přečíst na tomto odkaze <a href=\"clanek.html?id=jmhz_ciselnik_okresu\">Přejít na Nový Číselník</a>",
         tags: ["JMHZ","Číselníky", "Nové"]
     },
-	    {
+    {
         id: "notif_005",
         date: "2026-05-23T14:54:00Z",
         title: "Aktualizace Číselníků Legislativy JMHZ",
         content: "V následujícíh dnech zde do SALARY KNIHOVNA JMHZ stále přibývají jednotlivé číselníky poslední květnové aktualizace Legislativy JMHZ.",
         tags: ["Číselníky JMHZ", "Důležité"]
-    },	    
-	{
-    id: "notif_006",
-    date: "2026-05-26T06:59:36Z",
-    title: "Nový dokument v JMHZ KNIHOVNA: Předregistrace Zaměstnance (PREZEC)",
-    content: `Vážené mzdové účetní,<br><br> do knihovny byl přidán článek k procesu PREZEC. Od 1. 7. 2026 nám nová legislativa nařizuje přihlásit zaměstnance do evidence ČSSZ nejpozději před okamžikem jeho nástupu do práce.<br><br>Článek detailně popisuje tzv. částečné přihlášení (PREZEC), při kterém hlásíme pouze 8 základních údajů. Berte prosím na vědomí, že tento postup je záložní variantou pro případy, kdy před nástupem občana ČR nestihnete shromáždit všechny potřebné podklady.<br><br> Naším cílem zůstává obdržet 100 % dat včas a podat rovnou plnou registraci (REGZEC – akce 1). Tím se administrativně náročnějšímu procesu PREZEC vyhnete. (Pro cizince je navíc PREZEC zákonem zakázán).<br><br> Když ale podklady chybí, manuál vás provede, jak podat PREZEC akci P1 (Předpokládaný Nástup), PREZEC akci P2 (Oznámení o Nenastoupení), a také jak správně pohlídat lhůty.<br><br>Prosím, prostudujte si celý dokument <a href="https://www.salary.cz/jmhz2026/knihovna-jmhz/clanek.html?id=DIR-HR-IT-PREZEC-2026-(R1.1)"> v naší knihovně na tomto odkaze zde.</a><br><br>`,
-    tags: ["JMHZ Legislativa", "Důležité", "PREZEC"]
-    },
-	{
-    id: "notif_009",
-    date: "2026-05-27T22:02:19Z",
-    title: "Proběhla Aktualizace dnes 27. KVĚTNA 2026 v Novém dokumentu v JMHZ KNIHOVNA: Předregistrace Zaměstnance (PREZEC) (Revize-002)",
-    content: `AKTUALIZACE INFORMACÍ: Zásadní procesní úprava: Definování jak zákonný rámec JMHZ chápe u REGZEC a PREZEC procesů obsah 100% set (sady) dat od nově nastupujícího zaměstnance v procesech REGZEC a nově v zástupných procesech PREZEC.<br><br>Celý tento nově aktualizovaný článek naleznete <a href="https://www.salary.cz/jmhz2026/knihovna-jmhz/clanek.html?id=DIR-HR-IT-PREZEC-2026-(R1.1)"> v naší knihovně na tomto odkaze zde.</a><br><br>`,
-    tags: ["JMHZ Legislativa", "Důležité", "PREZEC"]
-	},
+    },        
     {
-    id: "notif_010",
-    date: "2026-06-01T22:25:45Z",
-    title: "Vydání Nového dokumentu: Nová Legislativa Pojišťovny PPPZ(PPZ) a HOZ 2026 (Revize-001)",
-    content: `AKTUALIZACE INFORMACÍ: Vydání nového komplexního analytického a implementačního manuálu (SOP-HR-IT-001) k přechodu na výhradně elektronické formáty zdravotních pojišťoven platné od 1. ledna 2026. Dokument detailně pokrývá všech 42 klíčových procesních a technologických otázek rozdělených pro role Mzdové účetní a IT Developera, včetně nové logiky kódů státních pojištěnců, mzdových limitů a striktních validačních XSD pravidel pro HOZ a PPPZ.<br><br>Celý tento nově vydaný článek a manuál naleznete <a href="https://www.salary.cz/jmhz2026/knihovna-jmhz/clanek.html?id=Nov%C3%A1_Legislativa_Poji%C5%A1%C5%A5ovny_PPPZ(PPZ)_a_HOZ_2026"> v naší knihovně na tomto odkaze zde.</a><br><br>`,
-    tags: ["Zdravotní Pojišťovny Legislativa", "Důležité", "HOZ a PPPZ"]
-	},
-	{
-    id: "notif_011",
-    date: "2026-06-02T06:36:36Z",
-    title: "Vydání Revize 002 Nového dokumentu: Nová Legislativa Pojišťovny PPPZ(PPZ) a HOZ 2026 (Revize-002)",
-    content: `AKTUALIZACE INFORMACÍ: Vydání nového komplexního analytického a implementačního manuálu (SOP-HR-IT-002) k přechodu na výhradně elektronické formáty zdravotních pojišťoven platné od 1. ledna 2026. Dokument detailně pokrývá všech 42 klíčových procesních a technologických otázek rozdělených pro role Mzdové účetní a Vývojovou Divizi SALARY s.r.o., včetně nové logiky kódů státních pojištěnců, mzdových limitů a striktních validačních XSD Schematických pravidel pro HOZ a PPPZ.<br><br>Celý tento nově vydaný článek a manuál naleznete <a href="https://www.salary.cz/jmhz2026/knihovna-jmhz/clanek.html?id=Nov%C3%A1_Legislativa_Poji%C5%A1%C5%A5ovny_PPPZ(PPZ)_a_HOZ_2026"> v naší knihovně na tomto odkaze zde.</a><br><br>`,
-    tags: ["Zdravotní Pojišťovny Legislativa", "Důležité", "HOZ a PPPZ"]
-	},
-	{
-	id: "notif_015",
-	date: "2026-06-05T14:41:00Z",
-	title: "Rozšíření Otázek a Odpovědí K SALARY: Extrémní scénáře JMHZ a IT validace",
-	content: `Vážení kolegové, v návaznosti na včerejší aktualizaci jsme do SALARY Znalostní Knihovny přidali další expertní obsah. <br><br>Článek 'Otázky a Odpovědi K SALARY' byl právě rozšířen o ucelenou sadu 10 nových detailně zpracovaných dotazů z praxe, které se zaměřují na úskalí Jednotného měsíčního hlášení (JMHZ). <br><br>Tento nový blok jsme koncipovali pro dvě úrovně uživatelů: Pokrýváme běžnou mzdovou praxi (vykazování odměn studentů na praxi, rozlišení fondů pracovní doby u DPP či technické závislosti u uplatňování slev na děti), ale zároveň jdeme do hloubky pro seniorní účetní. Extrémně podrobně se věnujeme střetu účetní metodiky s tvrdými XML validacemi – například jak vyřešit paradox záporného čistého příjmu a smrtící chybu ePortálu 20267 u naturálního benefitu 1 % za auto při nulové peněžní mzdě. <br><br>Pro vaši snadnou a bleskovou orientaci jsme všechny nově přidané dotazy opatřili intuitivními tematickými nadpisy, abyste na první pohled poznali, zda daný scénář řeší legislativu pro Úřad práce, nebo čistě strukturu datové věty. To vše <a href="https://www.salary.cz/jmhz2026/knihovna-jmhz/clanek.html?id=dotazy_smerem_k_salary"> v naší knihovně na tomto odkaze zde.</a><br><br>`,
-	tags: ["Aktualizace Znalostní Knihovny", "Nový Obsah", "JMHZ", "Otázky a Odpovědi K SALARY", "Důležité"]
-	},
-	{
-	id: "notif_016",
-	date: "2026-06-07T10:27:00Z",
-	title: "Přidání Nového Číselníku JMHZ - Druh Činnosti ID 10239",
-	content: `Zdravím vás všechny opět z Londýna, Vydali jsme nový praktický článek zaměřený na číselník JMHZ „Druh činnosti“ (ID 10239). Dozvíte se v něm, jak tento přemosťovací údaj správně využívat pro zaměstnance bez ustavených identifikátorů a vyhnout se chybám při XML validaci. Upozorňujeme na hlavní účetní pasti, jako je striktní požadavek na vykazování nulové pracovní doby u kódů činnosti K–S. Zkušení účetní ocení návod na řešení tzv. „mrtvých duší“ – znovuregistraci bývalých zaměstnanců při vyplácení odložených příjmů pod kódem 9. Detailně rozebíráme i specifika vykazování náhrad, plnění důchodcům po více než roce od konce zaměstnání a záludnosti při zúčtování svědečného v režimu zaměstnání malého rozsahu.<br><br>Tento nový číselník JMHZ naleznete <a href="https://www.salary.cz/jmhz2026/knihovna-jmhz/clanek.html?id=jmhz_ciselnik_druh_cinnosti_id_10239"> v naší knihovně na tomto odkaze zde.</a><br><br><br><br>`,
-    tags: ["Číselníky JMHZ", "Důležité"]
-	}
+        id: "notif_006",
+        date: "2026-05-26T06:59:36Z",
+        title: "Nový dokument v JMHZ KNIHOVNA: Předregistrace Zaměstnance (PREZEC)",
+        content: `Vážené mzdové účetní,<br><br> do knihovny byl přidán článek k procesu PREZEC. Od 1. 7. 2026 nám nová legislativa nařizuje přihlásit zaměstnance do evidence ČSSZ nejpozději před okamžikem jeho nástupu do práce.<br><br>Článek detailně popisuje tzv. částečné přihlášení (PREZEC), při kterém hlásíme pouze 8 základních údajů. Berte prosím na vědomí, že tento postup je záložní variantou pro případy, kdy před nástupem občana ČR nestihnete shromáždit všechny potřebné podklady.<br><br> Naším cílem zůstává obdržet 100 % dat včas a podat rovnou plnou registraci (REGZEC – akce 1). Tím se administrativně náročnějšímu procesu PREZEC vyhnete. (Pro cizince je navíc PREZEC zákonem zakázán).<br><br> Když ale podklady chybí, manuál vás provede, jak podat PREZEC akci P1 (Předpokládaný Nástup), PREZEC akci P2 (Oznámení o Nenastoupení), a také jak správně pohlídat lhůty.<br><br>Prosím, prostudujte si celý dokument <a href="https://www.salary.cz/jmhz2026/knihovna-jmhz/clanek.html?id=DIR-HR-IT-PREZEC-2026-(R1.1)"> v naší knihovně na tomto odkaze zde.</a><br><br>`,
+        tags: ["JMHZ Legislativa", "Důležité", "PREZEC"]
+    },
+    {
+        id: "notif_009",
+        date: "2026-05-27T22:02:19Z",
+        title: "Proběhla Aktualizace dnes 27. KVĚTNA 2026 v Novém dokumentu v JMHZ KNIHOVNA: Předregistrace Zaměstnance (PREZEC) (Revize-002)",
+        content: `AKTUALIZACE INFORMACÍ: Zásadní procesní úprava: Definování jak zákonný rámec JMHZ chápe u REGZEC a PREZEC procesů obsah 100% set (sady) dat od nově nastupujícího zaměstnance v procesech REGZEC a nově v zástupných procesech PREZEC.<br><br>Celý tento nově aktualizovaný článek naleznete <a href="https://www.salary.cz/jmhz2026/knihovna-jmhz/clanek.html?id=DIR-HR-IT-PREZEC-2026-(R1.1)"> v naší knihovně na tomto odkaze zde.</a><br><br>`,
+        tags: ["JMHZ Legislativa", "Důležité", "PREZEC"]
+    },
+    {
+        id: "notif_010",
+        date: "2026-06-01T22:25:45Z",
+        title: "Vydání Nového dokumentu: Nová Legislativa Pojišťovny PPPZ(PPZ) a HOZ 2026 (Revize-001)",
+        content: `AKTUALIZACE INFORMACÍ: Vydání nového komplexního analytického a implementačního manuálu (SOP-HR-IT-001) k přechodu na výhradně elektronické formáty zdravotních pojišťoven platné od 1. ledna 2026. Dokument detailně pokrývá všech 42 klíčových procesních a technologických otázek rozdělených pro role Mzdové účetní a IT Developera, včetně nové logiky kódů státních pojištěnců, mzdových limitů a striktních validačních XSD pravidel pro HOZ a PPPZ.<br><br>Celý tento nově vydaný článek a manuál naleznete <a href="https://www.salary.cz/jmhz2026/knihovna-jmhz/clanek.html?id=Nov%C3%A1_Legislativa_Poji%C5%A1%C5%A5ovny_PPPZ(PPZ)_a_HOZ_2026"> v naší knihovně na tomto odkaze zde.</a><br><br>`,
+        tags: ["Zdravotní Pojišťovny Legislativa", "Důležité", "HOZ a PPPZ"]
+    },
+    {
+        id: "notif_011",
+        date: "2026-06-02T06:36:36Z",
+        title: "Vydání Revize 002 Nového dokumentu: Nová Legislativa Pojišťovny PPPZ(PPZ) a HOZ 2026 (Revize-002)",
+        content: `AKTUALIZACE INFORMACÍ: Vydání nového komplexního analytického a implementačního manuálu (SOP-HR-IT-002) k přechodu na výhradně elektronické formáty zdravotních pojišťoven platné od 1. ledna 2026. Dokument detailně pokrývá všech 42 klíčových procesních a technologických otázek rozdělených pro role Mzdové účetní a Vývojovou Divizi SALARY s.r.o., včetně nové logiky kódů státních pojištěnců, mzdových limitů a striktních validačních XSD Schematických pravidel pro HOZ a PPPZ.<br><br>Celý tento nově vydaný článek a manuál naleznete <a href="https://www.salary.cz/jmhz2026/knihovna-jmhz/clanek.html?id=Nov%C3%A1_Legislativa_Poji%C5%A1%C5%A5ovny_PPPZ(PPZ)_a_HOZ_2026"> v naší knihovně na tomto odkaze zde.</a><br><br>`,
+        tags: ["Zdravotní Pojišťovny Legislativa", "Důležité", "HOZ a PPPZ"]
+    },
+    {
+        id: "notif_015",
+        date: "2026-06-05T14:41:00Z",
+        title: "Rozšíření Otázek a Odpovědí K SALARY: Extrémní scénáře JMHZ a IT validace",
+        content: `Vážení kolegové, v návaznosti na včerejší aktualizaci jsme do SALARY Znalostní Knihovny přidali další expertní obsah. <br><br>Článek 'Otázky a Odpovědi K SALARY' byl právě rozšířen o ucelenou sadu 10 nových detailně zpracovaných dotazů z praxe, které se zaměřují na úskalí Jednotného měsíčního hlášení (JMHZ). <br><br>Tento nový blok jsme koncipovali pro dvě úrovně uživatelů: Pokrýváme běžnou mzdovou praxi (vykazování odměn studentů na praxi, rozlišení fondů pracovní doby u DPP či technické závislosti u uplatňování slev na děti), ale zároveň jdeme do hloubky pro seniorní účetní. Extrémně podrobně se věnujeme střetu účetní metodiky s tvrdými XML validacemi – například jak vyřešit paradox záporného čistého příjmu a smrtící chybu ePortálu 20267 u naturálního benefitu 1 % za auto při nulové peněžní mzdě. <br><br>Pro vaši snadnou a bleskovou orientaci jsme všechny nově přidané dotazy opatřili intuitivními tematickými nadpisy, abyste na první pohled poznali, zda daný scénář řeší legislativu pro Úřad práce, nebo čistě strukturu datové věty. To vše <a href="https://www.salary.cz/jmhz2026/knihovna-jmhz/clanek.html?id=dotazy_smerem_k_salary"> v naší knihovně na tomto odkaze zde.</a><br><br>`,
+        tags: ["Aktualizace Znalostní Knihovny", "Nový Obsah", "JMHZ", "Otázky a Odpovědi K SALARY", "Důležité"]
+    },
+    {
+        id: "notif_016",
+        date: "2026-06-07T10:27:00Z",
+        title: "Přidání Nového Číselníku JMHZ - Druh Činnosti ID 10239",
+        content: `Zdravím vás všechny opět z Londýna, Vydali jsme nový praktický článek zaměřený na číselník JMHZ „Druh činnosti“ (ID 10239). Dozvíte se v něm, jak tento přemosťovací údaj správně využívat pro zaměstnance bez ustavených identifikátorů a vyhnout se chybám při XML validaci. <br><br>Upozorňujeme na hlavní účetní pasti, jako je striktní požadavek na vykazování nulové pracovní doby u kódů činnosti K–S. Zkušení účetní ocení návod na řešení tzv. „mrtvých duší“ – znovuregistraci bývalých zaměstnanců při vyplácení odložených příjmů pod kódem 9. <br><br>Detailně rozebíráme i specifika vykazování náhrad, plnění důchodcům po více než roce od konce zaměstnání a záludnosti při zúčtování svědečného v režimu zaměstnání malého rozsahu.<br><br>Tento nový číselník JMHZ naleznete [PRILOHA: https://www.salary.cz/jmhz2026/knihovna-jmhz/clanek.html?id=jmhz_ciselnik_druh_cinnosti_id_10239 | v naší knihovně na tomto odkaze zde.]<br><br><br><br>`,
+        tags: ["Číselníky JMHZ", "Důležité"]
+    }
 ];
 
 const KB_Notifications = {
@@ -151,11 +148,9 @@ const KB_Notifications = {
     getArchive() { return this.data.filter(n => this.readIds.has(n.id)); },
 
     injectUI() {
-        // Hledáme POUZE pravou část horní lišty
         const targetContainer = document.querySelector('.toolbar-right');
         
         if (!targetContainer) {
-            // Jelikož lištu generuje library-ui.js dynamicky, počkáme, až se vytvoří
             setTimeout(() => this.injectUI(), 100);
             return;
         }
@@ -177,7 +172,6 @@ const KB_Notifications = {
             </div>
         `;
 
-        // Vložíme zvoneček PŘED tlačítko hamburger menu
         targetContainer.insertBefore(wrapper, targetContainer.firstChild);
 
         const modalContainer = document.createElement('div');
@@ -189,6 +183,10 @@ const KB_Notifications = {
                         <button class="notif-modal-close" id="kbNotifDetailClose">&times;</button>
                     </div>
                     <div class="notif-modal-body notif-reader" id="kbNotifDetailBody"></div>
+                    <div class="notif-modal-footer">
+                         <button class="btn primary" id="kbBtnDetailAllNew">Zobrazit Nepřečtená Oznámení</button>
+                         <button class="btn" id="kbBtnDetailArchive">Přejít Do Archivu Oznámení</button>
+                    </div>
                 </div>
             </div>
 
@@ -228,12 +226,10 @@ const KB_Notifications = {
         document.getElementById('kbBtnArchive').addEventListener('click', () => this.openListModal('archive'));
 
         document.getElementById('kbNotifDetailClose').addEventListener('click', () => {
-            document.getElementById('kbNotifDetailModal').classList.remove('show');
-            this.updateBadge();
+            this.closeModals();
         });
         document.getElementById('kbNotifListClose').addEventListener('click', () => {
-            document.getElementById('kbNotifListModal').classList.remove('show');
-            this.updateBadge();
+            this.closeModals();
         });
 
         document.getElementById('kbNotifSearch').addEventListener('input', (e) => {
@@ -245,9 +241,22 @@ const KB_Notifications = {
             this.openListModal(newMode);
         });
 
+        // Tlačítka v detailu notifikace
+        document.getElementById('kbBtnDetailAllNew').addEventListener('click', () => {
+            document.getElementById('kbNotifDetailModal').classList.remove('show');
+            this.openListModal('new');
+        });
+        document.getElementById('kbBtnDetailArchive').addEventListener('click', () => {
+             document.getElementById('kbNotifDetailModal').classList.remove('show');
+             this.openListModal('archive');
+        });
+
         this.updateBadge();
     },
 
+    // ----------------------------------------------------
+    // POMOCNÉ A RENDER FUNKCE (Které jste omylem smazal)
+    // ----------------------------------------------------
     updateBadge() {
         const unreadCount = this.getUnread().length;
         const badge = document.getElementById('kbNotifBadge');
@@ -280,7 +289,6 @@ const KB_Notifications = {
 
     parseContentHtml(text) {
         let html = text;
-        // Relativní cesty – funguje z FTP i z jakéhokoli jiného hostingu bez úprav.
         const mediaBase = "media/";
         const docxBase = "dokumenty/";
 
@@ -299,7 +307,6 @@ const KB_Notifications = {
         });
 
         html = html.replace(/<a href="([^"]+)">/g, `<a href="$1" target="_blank" rel="noopener noreferrer">`);
-        
         return html;
     },
 
@@ -353,6 +360,13 @@ const KB_Notifications = {
         `).join('');
     },
 
+    closeModals() {
+        document.getElementById('kbNotifDetailModal').classList.remove('show');
+        document.getElementById('kbNotifListModal').classList.remove('show');
+        document.body.classList.remove('no-scroll'); 
+        this.updateBadge();
+    },
+
     openListModal(mode) {
         document.getElementById('kbNotifDropdown').classList.remove('show');
         this.dropdownOpen = false;
@@ -360,13 +374,14 @@ const KB_Notifications = {
         document.getElementById('kbNotifSearch').value = "";
         this.renderListBody(mode, "");
         document.getElementById('kbNotifListModal').classList.add('show');
+        
+        document.body.classList.add('no-scroll');
     },
 
     openDetail(id, fromList = false) {
         const notif = this.data.find(n => n.id === id);
         if (!notif) return;
 
-        // VŽDY zavřeme ostatní okna, bez ohledu na to, odkud jsme klikli
         document.getElementById('kbNotifDropdown').classList.remove('show');
         document.getElementById('kbNotifListModal').classList.remove('show');
         this.dropdownOpen = false;
@@ -389,8 +404,8 @@ const KB_Notifications = {
         `;
 
         document.getElementById('kbNotifDetailModal').classList.add('show');
+        document.body.classList.add('no-scroll');
         
-        // Zaktualizovat seznam na pozadí, abychom po zavření detailu měli správné počty / obsah
         if (fromList) {
             this.renderListBody(this.currentListMode, document.getElementById('kbNotifSearch').value);
         }
@@ -419,7 +434,7 @@ const KB_Validator = {
     }
 };
 
-// --- CENTRÁLNÍ DATOVÝ KLIENT (pouze čtení statického JSON z FTP) ---
+// --- CENTRÁLNÍ DATOVÝ KLIENT ---
 const KB_API = {
     async fetchDB() {
         const res = await fetch(KB_CONFIG.DB_URL);
