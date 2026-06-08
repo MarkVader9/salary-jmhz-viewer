@@ -2311,33 +2311,23 @@ body {
     background-color: var(--border-strong, #d1d5db);
 }
 /* Styly pro běžící text */
-      .marquee-container {
-        width: 100%;
-        overflow: hidden;
-        white-space: nowrap;
-        display: flex;
-        align-items: center;
-        height: 100%;
-      }
-        .marquee-content {
-        display: inline-block;
-        padding-left: 100%;
-        animation-name: marquee;
-        animation-timing-function: linear;
-        animation-iteration-count: infinite;
-        font-weight: 700;
-        color: #1976d2;
-        font-size: 0.95rem;
-      }
-      
-      .marquee-container:hover .marquee-content {
-        animation-play-state: paused !important;
-      }
-
-      @keyframes marquee {
-        0%   { transform: translateX(0); }
-        100% { transform: translateX(-100%); }
-      }
+      .marquee-container { overflow: hidden; white-space: nowrap; position: relative; width: 100%; border-bottom: 1px solid var(--border); background: var(--bg-surface); }
+    
+    /* OPRAVENÁ PLYNULOST (Hardwarová akcelerace přes GPU) */
+    .marquee-content { 
+        display: inline-block; padding: 9px 0; font-size: 0.95rem; font-weight: 700; color: var(--text-muted); 
+        animation: marquee linear infinite; 
+        will-change: transform; 
+        transform: translateZ(0); 
+        backface-visibility: hidden; 
+    }
+    
+    .marquee-content:hover { animation-play-state: paused !important; }
+    
+    @keyframes marquee { 
+        0% { transform: translate3d(0, 0, 0); } 
+        100% { transform: translate3d(-100%, 0, 0); } 
+    }
     </style>
 </head>
 <body>
@@ -2494,140 +2484,147 @@ body {
         }
     }
 
-    // --- 5. FUNKCE PRO SKRYTÍ PRÁZDNÝCH SLOUPCŮ ---
-    function startEmptyColumnsFilterInjector() {
-        let isEnabled = false;
-        let debounceTimer = null;
+// --- 5. FUNKCE PRO SKRYTÍ SLOUPCŮ (PRÁZDNÉ / VYPLNĚNÉ) ---
+function startEmptyColumnsFilterInjector() {
+    let hideEmptyEnabled = false;
+    let hideFilledEnabled = false;
+    let debounceTimer = null;
 
-        function evaluateEmptyColumns() {
-            if (!isEnabled) {
-                const styleEl = document.getElementById('hide-empty-cols-style');
-                if (styleEl) styleEl.innerHTML = '';
-                return;
-            }
-
-            const table = document.querySelector('.table-view table');
-            if (!table) return;
-
-            const thead = table.querySelector('thead tr');
-            const tbody = table.querySelector('tbody');
-            if (!thead || !tbody) return;
-
-            const ths = thead.querySelectorAll('th');
-            const rows = tbody.querySelectorAll('tr:not(.separator-row)'); 
-            
-            const emptyCols = [];
-
-            for (let colIdx = 1; colIdx <= ths.length; colIdx++) {
-                // Přeskočíme první fixní sloupec (zpravidla jméno/ID)
-                if (colIdx === 1) continue; 
-
-                let isEmpty = true;
-                for (let rowIdx = 0; rowIdx < rows.length; rowIdx++) {
-                    const cell = rows[rowIdx].querySelector(`td:nth-child(${colIdx})`);
-                    if (cell) {
-                        // Očištění o veškeré možné mezery, nezlomitelné mezery a kontrola
-                        // Viewer vykresluje prázdné buňky jako '—' (em dash)
-                        const text = cell.textContent.replace(/[\s\u00A0\u200B]+/g, '').trim();
-                        if (text !== '' && text !== '—') {
-                            isEmpty = false;
-                            break;
-                        }
-                    }
-                }
-
-                if (isEmpty) {
-                    emptyCols.push(colIdx);
-                }
-            }
-
-            let styleEl = document.getElementById('hide-empty-cols-style');
-            if (!styleEl) {
-                styleEl = document.createElement('style');
-                styleEl.id = 'hide-empty-cols-style';
-                document.head.appendChild(styleEl);
-            }
-            
-            if (emptyCols.length > 0) {
-                // Dynamicky vygenerujeme CSS pravidlo pro skrytí celého daného sloupce
-                const selectors = emptyCols.map(idx => 
-                    `.table-view table th:nth-child(${idx}), .table-view table td:nth-child(${idx}), .table-view table col:nth-child(${idx})`
-                ).join(', ');
-                styleEl.innerHTML = `${selectors} { display: none !important; }`;
-            } else {
-                styleEl.innerHTML = '';
-            }
+    function evaluateColumns() {
+        let styleEl = document.getElementById('hide-cols-style');
+        if (!styleEl) {
+            styleEl = document.createElement('style');
+            styleEl.id = 'hide-cols-style';
+            document.head.appendChild(styleEl);
         }
 
-        const observer = new MutationObserver(() => {
-            const pillsContainer = document.querySelector('.group-filter-pills');
-            const tableView = document.querySelector('.table-view');
+        if (!hideEmptyEnabled && !hideFilledEnabled) {
+            styleEl.innerHTML = '';
+            return;
+        }
 
-            // Vložení checkboxu do sekce "group-filter-pills", pokud je zrovna otevřená tabulka
-            if (pillsContainer && tableView && !document.getElementById('toggle-empty-cols-wrapper')) {
-                const wrapper = document.createElement('label');
-                wrapper.id = 'toggle-empty-cols-wrapper';
-                wrapper.style.cssText = 'font-size:0.75rem; font-weight:600; cursor:pointer; display:flex; align-items:center; gap:6px; margin-left:auto; background:var(--bg-elevated); padding:3px 10px; border-radius:20px; border:1px solid var(--border); color:var(--text-secondary); transition:all 0.2s;';
-                wrapper.innerHTML = `<input type="checkbox" id="toggle-empty-cols" style="margin:0; cursor:pointer;"> Vypnout prázdné sloupce`;
-                
-                // Hover efekt na wrapper label
-                wrapper.addEventListener('mouseenter', () => {
-                    if(!isEnabled) {
-                        wrapper.style.background = 'var(--bg-hover)';
-                        wrapper.style.color = 'var(--text-primary)';
-                    }
-                });
-                wrapper.addEventListener('mouseleave', () => {
-                    if(!isEnabled) {
-                        wrapper.style.background = 'var(--bg-elevated)';
-                        wrapper.style.color = 'var(--text-secondary)';
-                    }
-                });
+        const table = document.querySelector('.table-view table');
+        if (!table) return;
 
-                const checkbox = wrapper.querySelector('input');
-                checkbox.checked = isEnabled;
-                
-                // Obnova grafického stavu tlačítka (např. po přepnutí zpět z Karet na Tabulku)
-                if(isEnabled) {
-                    wrapper.style.background = 'var(--accent-subtle)';
-                    wrapper.style.color = 'var(--accent)';
-                    wrapper.style.borderColor = 'var(--accent)';
+        const thead = table.querySelector('thead tr');
+        const tbody = table.querySelector('tbody');
+        if (!thead || !tbody) return;
+
+        const ths = thead.querySelectorAll('th');
+        const rows = tbody.querySelectorAll('tr:not(.separator-row)');
+        let cssRules = '';
+
+        ths.forEach((th, index) => {
+            // Přeskakujeme první sloupec (obvykle Jméno / RC zaměstnance)
+            if (index === 0) return;
+
+            let isEmpty = true;
+            for (let row of rows) {
+                const cells = row.querySelectorAll('td');
+                if (cells[index]) {
+                    const text = cells[index].textContent.trim();
+                    if (text !== '—' && text !== '') {
+                        isEmpty = false;
+                        break;
+                    }
                 }
-
-                checkbox.addEventListener('change', (e) => {
-                    isEnabled = e.target.checked;
-                    if (isEnabled) {
-                        wrapper.style.background = 'var(--accent-subtle)';
-                        wrapper.style.color = 'var(--accent)';
-                        wrapper.style.borderColor = 'var(--accent)';
-                    } else {
-                        wrapper.style.background = 'var(--bg-elevated)';
-                        wrapper.style.color = 'var(--text-secondary)';
-                        wrapper.style.borderColor = 'var(--border)';
-                    }
-                    evaluateEmptyColumns();
-                });
-
-                pillsContainer.appendChild(wrapper);
             }
 
-            // Ošetření: Pokud se tabulka schová (přepnutí na Karty), vymažeme skrytí sloupců
-            if (!tableView && document.getElementById('hide-empty-cols-style')) {
-                document.getElementById('hide-empty-cols-style').innerHTML = '';
+            if (hideEmptyEnabled && isEmpty) {
+                cssRules += `.table-view th:nth-child(${index + 1}), .table-view td:nth-child(${index + 1}) { display: none !important; }\n`;
             }
-
-            // Pokud dojde ke změně v DOMu (scrollování, filtrování), přehodnotíme, které sloupce skrýt
-            if (isEnabled && tableView) {
-                clearTimeout(debounceTimer);
-                debounceTimer = setTimeout(evaluateEmptyColumns, 150);
+            if (hideFilledEnabled && !isEmpty) {
+                cssRules += `.table-view th:nth-child(${index + 1}), .table-view td:nth-child(${index + 1}) { display: none !important; }\n`;
             }
         });
 
-        const appContainer = document.getElementById('app');
-        if (appContainer) {
-            observer.observe(appContainer, { childList: true, subtree: true, characterData: true });
-        }
+        styleEl.innerHTML = cssRules;
     }
+
+    const observer = new MutationObserver(() => {
+        const tableView = document.querySelector('.table-view');
+        
+        // Hledáme správný kontejner, do kterého přidáme naše "Pills"
+        // Aplikace používá .group-filter-pills pro ostatní filtry (Vše, Změněno, S chybou...)
+        const pillsContainer = document.querySelector('.group-filter-pills');
+
+        if (tableView && pillsContainer) {
+            // Vložíme oddělovač, pokud tam ještě není
+            if (!document.getElementById('colsFilterSeparator')) {
+                const sep = document.createElement('div');
+                sep.id = 'colsFilterSeparator';
+                sep.style.width = '1px';
+                sep.style.height = '16px';
+                sep.style.background = 'var(--border)';
+                sep.style.margin = '0 6px';
+                pillsContainer.appendChild(sep);
+            }
+
+            // 1. TLAČÍTKO: Vypnout prázdné sloupce
+            if (!document.getElementById('emptyColsFilterPill')) {
+                const btnEmpty = document.createElement('button');
+                btnEmpty.className = 'group-pill';
+                btnEmpty.id = 'emptyColsFilterPill';
+                btnEmpty.innerHTML = `Vypnout prázdné sloupce`;
+                
+                if (hideEmptyEnabled) btnEmpty.classList.add('active');
+
+                btnEmpty.addEventListener('click', () => {
+                    hideEmptyEnabled = !hideEmptyEnabled;
+                    if (hideEmptyEnabled) {
+                        btnEmpty.classList.add('active');
+                        // Vypnutí druhého tlačítka
+                        hideFilledEnabled = false;
+                        const btnFilled = document.getElementById('filledColsFilterPill');
+                        if (btnFilled) btnFilled.classList.remove('active');
+                    } else {
+                        btnEmpty.classList.remove('active');
+                    }
+                    evaluateColumns();
+                });
+                pillsContainer.appendChild(btnEmpty);
+            }
+
+            // 2. TLAČÍTKO: Vypnout vyplněné sloupce
+            if (!document.getElementById('filledColsFilterPill')) {
+                const btnFilled = document.createElement('button');
+                btnFilled.className = 'group-pill';
+                btnFilled.id = 'filledColsFilterPill';
+                btnFilled.innerHTML = `Vypnout vyplněné sloupce`;
+                
+                if (hideFilledEnabled) btnFilled.classList.add('active');
+
+                btnFilled.addEventListener('click', () => {
+                    hideFilledEnabled = !hideFilledEnabled;
+                    if (hideFilledEnabled) {
+                        btnFilled.classList.add('active');
+                        // Vypnutí prvního tlačítka
+                        hideEmptyEnabled = false;
+                        const btnEmpty = document.getElementById('emptyColsFilterPill');
+                        if (btnEmpty) btnEmpty.classList.remove('active');
+                    } else {
+                        btnFilled.classList.remove('active');
+                    }
+                    evaluateColumns();
+                });
+                pillsContainer.appendChild(btnFilled);
+            }
+
+            clearTimeout(debounceTimer);
+            debounceTimer = setTimeout(evaluateColumns, 100);
+        }
+
+        // Ošetření: Pokud se tabulka schová, vymažeme skrytí sloupců
+        if (!tableView && document.getElementById('hide-cols-style')) {
+            document.getElementById('hide-cols-style').innerHTML = '';
+        }
+    });
+
+    const appContainer = document.getElementById('app');
+    if (appContainer) {
+        observer.observe(appContainer, { childList: true, subtree: true });
+    }
+}
 
     // --- 4. ZAVADĚČ APLIKACE A SPUŠTĚNÍ ---
     (function () {
