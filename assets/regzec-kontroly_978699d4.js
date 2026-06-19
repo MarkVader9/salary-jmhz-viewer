@@ -1673,8 +1673,9 @@
 
     // R172: earlyterm — mandatory when job ends before work permit; forbidden otherwise
     // PP for A1-OST/SPEC, A2-OST/SPEC, A4-OST/SPEC
+    // Applies only when work-permit data apply: citizenship ≠ CZ and free access ≠ ANO
     // A1/A4: filled(10224) && 10106∈{1,2,4} && 10224 < 10110
-    // A2: 10106∈{1,2,4} && 10224 < 10110
+    // A2 is skipped because work-permit fields used by this rule are forbidden there.
     // Z-side: merged from P/N/Z column control (originally R212)
     // CSV column 26 (Z): conditions not met → 10534 forbidden
     { id: 'R172', scope: 'emp', sev: 'error', type: 'custom',
@@ -1682,6 +1683,7 @@
       check: function(ctx) {
         var act = ctx.getVal('10008');
         if (act !== '1' && act !== '2' && act !== '4') return [];
+        if (act === '2') return [];
         var rt = getRowType(ctx.emp);
         if (rt !== 'OST' && rt !== 'SPEC') return [];
         // A1/A4: job.to must be filled for obligation to trigger
@@ -1689,6 +1691,14 @@
           // Z-side: 10224 not filled → 10534 forbidden
           if (ctx.isFilled('10534'))
             return [{ fieldCsszId: '10534', message: 'Důvod předčasného ukončení nesmí být vyplněn, pokud datum skončení zaměstnání není vyplněno.' }];
+          return [];
+        }
+        var citizenship = ctx.getVal('10067') || '';
+        var freeacc = ctx.getVal('10414') || '';
+        if (citizenship === 'CZ' || isTrueValue(freeacc)) {
+          // Z-side: work-permit data do not apply for CZ citizens or free access
+          if (ctx.isFilled('10534'))
+            return [{ fieldCsszId: '10534', message: 'Důvod předčasného ukončení nesmí být vyplněn pro občany ČR nebo zaměstnance s volným přístupem na trh práce.' }];
           return [];
         }
         var permType = ctx.getVal('10106') || '';
@@ -2111,12 +2121,7 @@
         if (!ctx.isFilled('10085')) return [];
         if (ctx.isFilled('10258')) return [];
         return [{ fieldCsszId: '10258', message: ctx.rule.msg }];
-      }},
-
-    // R73C: value enum on 10258 (práce probíhá převážně). REGZEC25 XSD allows 1-9
-    // (simpleNType); REG-ZEC pokyny enumerate 4 options (v prostorách / u zákazníka /
-    // v bydlišti / jinde) → allow 1-4.
-    mkInlineEnumRule('R73C', '10258', ['1','2','3','4'], 'Práce probíhá převážně')
+      }}
 
   ]; // end KONTROLY
 
@@ -2168,7 +2173,6 @@
   // R132 (10116 fact.reduc): reduced capacity — FIELD_REMOVED
 
   // ── R73 — implemented (no-op until field 10211 lands in REGZEC25 / formats.js) ──
-  // Value enum on 10258 implemented as R73C.
 
   // ═══════════════════════════════════════════════════════════════
   // P/N/Z COLUMN SKIPPED CONTROLS (columns 24-26 of CSV spec)

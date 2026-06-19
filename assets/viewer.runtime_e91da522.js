@@ -5217,7 +5217,7 @@ html[dir=rtl],
     Yi = K(`<div class=drawer-backdrop>`),
     Xi = K(`<span class=csv-meta-sources> (<!>)`),
     Zi = K(`<button class=btn-csv-meta>Metadata: <!> řádků<span class=csv-meta-clear> ✕`),
-    Qi = K(`<div class=drawer><div class=drawer-header><span style=font-weight:600;font-size:0.875rem>Možnosti</span><button class=drawer-close aria-label=Zavřít>✕</button></div><div class=drawer-body><button>Nahrát soubor</button><button>Uložit XML</button><button>Uložit ZIP</button><button class=btn-submit-cssz>Podat na ČSSZ</button><hr class=drawer-divider><button class=btn-jmhz-knihovna aria-label="Otevřít JMHZ Knihovnu" title="Otevřít JMHZ Knihovnu v nové záložce">📖 JMHZ Knihovna</button><button>Zobrazení: </button><button>Export do Excelu</button><button>Export do PDF</button><hr class=drawer-divider><button>Editor XML</button><button class=btn-report>Nahlásit problém</button><hr class=drawer-divider><button class=theme-toggle aria-label="Přepnout vzhled"> Vzhled`),
+    Qi = K(`<div class=drawer><div class=drawer-header><span style=font-weight:600;font-size:0.875rem>Možnosti</span><button class=drawer-close aria-label=Zavřít>✕</button></div><div class=drawer-body><button>Nahrát soubor</button><button>Uložit XML</button><button>Uložit ZIP</button><button class=btn-submit-cssz>Podat na ČSSZ</button><hr class=drawer-divider><button class=btn-jmhz-knihovna aria-label="Otevřít JMHZ Knihovnu" title="Otevřít JMHZ Knihovnu v nové záložce">📖 JMHZ Knihovna</button><button class=btn-workspace style="color:#0057ca; font-weight:600;">SALARY Workspace</button><hr class=drawer-divider><button>Zobrazení: </button><button>Export do Excelu</button><button>Export do PDF</button><hr class=drawer-divider><button>Editor XML</button><button class=btn-report>Nahlásit problém</button><hr class=drawer-divider><button class=theme-toggle aria-label="Přepnout vzhled"> Vzhled`),
     $i = K(`<div class=modal-backdrop><div class=modal-dialog><div style=font-weight:600;font-size:.9375rem>Uložit</div><p style=font-size:0.8125rem;color:var(--text-secondary);line-height:1.5>Jak chcete soubor uložit?</p><div style=display:flex;gap:var(--sp-2);justify-content:flex-end;margin-top:var(--sp-3)><button class=btn>Zrušit</button><button class=btn>Uložit aktuální XML</button><button class="btn primary">Uložit vše jako ZIP`),
     ea = K(`<div style=position:fixed;inset:0;z-index:100;display:flex;align-items:center;justify-content:center;background:rgba(0,0,0,.35)><div style="background:var(--bg-elevated);border:1px solid var(--border);border-radius:var(--radius-lg);padding:var(--sp-6);min-width:320px;display:flex;flex-direction:column;gap:var(--sp-4)"><div style=font-weight:600;font-size:.9375rem>Možnosti Exportu Do Excel</div><div style=font-size:0.8125rem;color:var(--text-muted);line-height:1.45>Vyberte, co se má doplnit do názvů sloupců v Excelu.<br>Hodnoty zaměstnanců se tím nemění, upraví se jen text v hlavičce exportu.</div><div style=display:flex;flex-direction:column;gap:var(--sp-2)><label style=display:flex;align-items:flex-start;gap:var(--sp-2);cursor:pointer><input type=checkbox style=margin-top:2px><span><strong>Název sloupce</strong><br><span style=font-size:0.8125rem;color:var(--text-muted)>Do hlavičky přidá běžný název pole, např. „Příjmení“.</span></span></label><label style=display:flex;align-items:flex-start;gap:var(--sp-2);cursor:pointer><input type=checkbox style=margin-top:2px><span><strong>ID pole</strong><br><span style=font-size:0.8125rem;color:var(--text-muted)>Do hlavičky přidá technické ID z formuláře, např. „10505“.</span></span></label><label style=display:flex;align-items:flex-start;gap:var(--sp-2);cursor:pointer><input type=checkbox style=margin-top:2px><span><strong>Kategorie</strong><br><span style=font-size:0.8125rem;color:var(--text-muted)>Do hlavičky přidá název sekce, ve které se pole nachází.</span></span></label></div><div style="border-top:1px solid var(--border);padding-top:var(--sp-3);display:flex;flex-direction:column;gap:var(--sp-2)"><label style=display:flex;align-items:flex-start;gap:var(--sp-2);cursor:pointer><input type=checkbox style=margin-top:2px><span><strong>Součtový Řádek</strong><br><span style=font-size:0.8125rem;color:var(--text-muted)>Na konec tabulky přidá řádek se součty číselných sloupců.</span></span></label></div><div style=display:flex;gap:var(--sp-2);justify-content:flex-end><button class=btn>Zrušit</button><button class="btn primary">Exportovat`),
     ta = K(`<div style=position:fixed;inset:0;z-index:100;display:flex;align-items:center;justify-content:center;background:rgba(0,0,0,.35)><div style="background:var(--bg-elevated);border:1px solid var(--border);border-radius:var(--radius-lg);padding:var(--sp-6);min-width:300px;display:flex;flex-direction:column;gap:var(--sp-4)"><div style=font-weight:600;font-size:.9375rem>Možnosti Exportu Do PDF</div><div style=display:flex;flex-direction:column;gap:var(--sp-2)><label style=display:flex;align-items:center;gap:var(--sp-2);cursor:pointer><input type=radio name=printMode value=all><span><strong>Kompletní Výpis</strong><br><span style=font-size:0.8125rem;color:var(--text-muted)>Všichni zaměstnanci, všechna vyplněná pole</span></span></label><label style=display:flex;align-items:center;gap:var(--sp-2);cursor:pointer><input type=radio name=printMode value=filtered><span><strong>Aktuální zobrazení</strong><br><span style=font-size:0.8125rem;color:var(--text-muted)></span></span></label></div><div style="border-top:1px solid var(--border-subtle);padding-top:var(--sp-2);margin-top:var(--sp-1);display:flex;flex-direction:column;gap:var(--sp-2)"><label style=display:flex;align-items:center;gap:var(--sp-2);cursor:pointer;font-size:0.8125rem><input type=checkbox>Zahrnout Souhrny (hlavičku) Dokumentu</label><label style=display:flex;align-items:center;gap:var(--sp-2);cursor:pointer;font-size:0.8125rem><input type=checkbox></label></div><div style=display:flex;gap:var(--sp-2);justify-content:flex-end><button class=btn>Zrušit</button><button class="btn primary">Exportovat`),
@@ -8461,7 +8461,7 @@ Aktuální: ` + Ys(a) + `, nové soubory: ` + Ys(o) + `.`);
                             var e = Yi();
                             return e.$$click = () => kr(!1),
                             e
-                        })(Oa()), (() => {
+                        })(), (() => {
             var e = Qi(),
                 t = e.firstChild,
                 n = t.firstChild.nextSibling,
@@ -8471,7 +8471,8 @@ Aktuální: ` + Ys(a) + `, nové soubory: ` + Ys(o) + `.`);
                 o = a.nextSibling,
                 s = o.nextSibling,
                 libBtn = s.nextSibling.nextSibling,
-                c = libBtn.nextSibling,
+                wsBtn = libBtn.nextSibling,          // <-- ZDE JSME DEFINOVALI TLAČÍTKO PRACOVNÍ PROSTOR
+                c = wsBtn.nextSibling.nextSibling,   // <-- PŘESKOČÍME NOVOU HR ČÁRU NA 'ZOBRAZENÍ'
                 l = c.nextSibling,
                 u = l.nextSibling,
                 d = u.nextSibling.nextSibling,
@@ -8487,6 +8488,10 @@ Aktuální: ` + Ys(a) + `, nové soubory: ` + Ys(o) + `.`);
             libBtn.$$click = () => {
                 kr(!1),
                 window.open('https://www.salary.cz/jmhz2026/knihovna-jmhz/index.html', '_blank')
+            },
+            wsBtn.$$click = () => {                  // <-- LOGIKA PRO PRACOVNÍ PROSTOR
+                kr(!1),
+                window.location.href='/salary-workspace/salary-workspace.html#'
             },
             a.$$click = () => {
                 kr(!1),
@@ -8518,9 +8523,9 @@ Aktuální: ` + Ys(a) + `, nové soubory: ` + Ys(o) + `.`);
                 kr(!1),
                 wc()
             },
-            f.$$click = () => {
+            f.$$click = () => {                      // <-- NAHLÁŠENÍ PROBLÉMU POMOCÍ SALARY FEEDBACK
                 kr(!1),
-                _i()
+                window.SalaryFeedback ? window.SalaryFeedback.open() : _i()
             },
             p.$$click = tn,
             J(p, (() => {

@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval' 'wasm-unsafe-eval' blob:; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob:; font-src 'self' data:; connect-src 'self' blob: data:; worker-src 'self' blob:; child-src 'self' blob:; object-src 'none'; base-uri 'self'; form-action 'self'">
+    <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval' 'wasm-unsafe-eval' blob:; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob:; font-src 'self' data:; connect-src 'self' blob: data: https://ipapi.co https://ipwho.is https://script.google.com https://script.googleusercontent.com; worker-src 'self' blob:; child-src 'self' blob:; object-src 'none'; base-uri 'self'; form-action 'self'">
     <title>Prohlížeč JMHZ</title>
     <meta name="description" content="Validace a vizualizace mzdových dat JMHZ a REGZEC přímo ve vašem prohlížeči. Žádná data nikdy neopouštějí vaše zařízení.">
     <meta name="theme-color" content="#0f172a">
@@ -2311,11 +2311,16 @@ body {
     background-color: var(--border-strong, #d1d5db);
 }
 /* Styly pro běžící text */
-      .marquee-container { overflow: hidden; white-space: nowrap; position: relative; width: 100%; border-bottom: 1px solid var(--border); background: var(--bg-surface); }
+    .marquee-container { overflow: hidden; white-space: nowrap; position: relative; width: 100%; border-bottom: 1px solid var(--border); background: var(--bg-surface); }
     
-    /* OPRAVENÁ PLYNULOST (Hardwarová akcelerace přes GPU) */
+    /* OPRAVENÁ PLYNULOST + SPRÁVNÝ NÁJEZD ZPRAVA */
     .marquee-content { 
-        display: inline-block; padding: 9px 0; font-size: 0.95rem; font-weight: 700; color: var(--text-muted); 
+        display: inline-block; 
+        /* KLÍČOVÁ ZMĚNA: 100% padding-left vytlačí text přesně za pravou hranu */
+        padding: 9px 0 9px 100%; 
+        font-size: 1.1rem; 
+        font-weight: 700; 
+        color: var(--text-muted); 
         animation: marquee linear infinite; 
         will-change: transform; 
         transform: translateZ(0); 
@@ -2328,6 +2333,34 @@ body {
         0% { transform: translate3d(0, 0, 0); } 
         100% { transform: translate3d(-100%, 0, 0); } 
     }
+	
+	
+	/* === UNIVERZÁLNÍ MINI SPINNER PRO TLAČÍTKA === */
+.btn-spinner {
+    display: inline-block;
+    width: 14px;
+    height: 14px;
+    border: 2px solid var(--border-strong, rgba(128, 128, 128, 0.3)); /* Fixní šedavá stopa */
+    border-top: 2px solid currentColor; /* Točící se hlava vždy převezme barvu textu tlačítka */
+    border-radius: 50%;
+    animation: spin 0.8s linear infinite;
+    vertical-align: middle;
+    margin-top: -2px; /* Optické vycentrování k textu */
+}
+
+/* Modifikátor pro tlačítka s barevným podkladem (např. červené Zavřít, modré Uložit) */
+.btn-zavrit .btn-spinner,
+.btn.primary .btn-spinner,
+.btn-submit-cssz .btn-spinner {
+    border-color: rgba(255, 255, 255, 0.3); /* U barevných tlačítek chceme stopu bílou a průhlednou */
+    border-top-color: #ffffff;
+}
+
+/* (Pokud náhodou v některé z menších aplikací chybí definice samotné animace spin, přidejte i toto:) */
+@keyframes spin { 
+    0% { transform: rotate(0deg); } 
+    100% { transform: rotate(360deg); } 
+}
     </style>
 </head>
 <body>
@@ -2813,7 +2846,7 @@ function startEmptyColumnsFilterInjector() {
           btn.innerHTML = '<span aria-hidden="true">🔄</span> Oživit Prohlížeč';
           btn.addEventListener('click', () => {
             btn.disabled = true;
-            btn.innerHTML = '<span class="ozivit-spinner" aria-hidden="true">⟳</span> Oživuji…';
+            btn.innerHTML = '<span class="btn-spinner" aria-hidden="true"></span> Oživuji…';
             hardRefreshViewer();
           });
 
@@ -2836,7 +2869,7 @@ function startEmptyColumnsFilterInjector() {
           btn.innerHTML = '<span aria-hidden="true">✕</span> Zavřít';
           btn.addEventListener('click', () => {
             btn.disabled = true;
-            btn.innerHTML = '<span class="zavrit-spinner" aria-hidden="true">⟳</span> Zavírám…';
+            btn.innerHTML = '<span class="btn-spinner" aria-hidden="true"></span> Zavírám…';
             hardRefreshViewer();
           });
           return btn;
@@ -2867,5 +2900,89 @@ function startEmptyColumnsFilterInjector() {
         });
       }
 </script>
+
+<script>
+      // ================================================================================================
+	  // SALARY Site Analytics Script (Obohacená včerejší verze)
+	  // ================================================================================================
+
+    async function sendAnonymousHit() {
+        // --- DOPLNĚNO: GENERACE A ULOŽENÍ UNIKÁTNÍHO ID NÁVŠTĚVNÍKA ---
+        function generateId() {
+            return Math.random().toString(36).substring(2) + Date.now().toString(36);
+        }
+
+        let visitorId = localStorage.getItem('salary_visitor_id');
+        if (!visitorId) {
+            visitorId = 'USR_' + generateId();
+            localStorage.setItem('salary_visitor_id', visitorId);
+        }
+        // --------------------------------------------------------------
+
+        // 1. Detekce typu zařízení 
+        let deviceType = "Počítač";
+        if (/Mobi|Android|iPhone/i.test(navigator.userAgent)) {
+            deviceType = "Mobil";
+        } else if (/Tablet|iPad/i.test(navigator.userAgent)) {
+            deviceType = "Tablet";
+        }
+
+        // 2. Základní data z prohlížeče
+        let pagePath = window.location.pathname;
+        let fullUrl = window.location.href;
+        let pageTitle = document.title || "Bez nadpisu";
+        let referrer = document.referrer || "Přímá návštěva";
+        let country = "Neznámá";
+        let city = "Neznámé";
+
+        // 3. ROBUSTNÍ zjištění lokality (Primární API + Záložní API)
+        try {
+            // Pokus 1: Služba ipapi.co
+            let geoResponse = await fetch('https://ipapi.co/json/');
+            if (geoResponse.ok) {
+                let geoData = await geoResponse.json();
+                country = geoData.country_name || "Neznámá";
+                city = geoData.city || "Neznámé";
+            } else {
+                throw new Error("Primární API přetíženo (Status: " + geoResponse.status + ")");
+            }
+        } catch (e) {
+            console.log("Primární Geo IP selhala, zkouším záložní...", e.message);
+            try {
+                // Pokus 2: Záložní služba ipwho.is
+                let backupResponse = await fetch('https://ipwho.is/');
+                if (backupResponse.ok) {
+                    let backupData = await backupResponse.json();
+                    if(backupData.success) {
+                        country = backupData.country || "Neznámá";
+                        city = backupData.city || "Neznámé";
+                    }
+                }
+            } catch (backupError) {
+                console.log("I záložní Geo IP služba je blokována (pravděpodobně AdBlock).");
+            }
+        }
+
+        // 4. Sestavení URL adresy (Doplněn parametr &vid= na konec)
+        const googleAppScriptUrl = "https://script.google.com/macros/s/AKfycby-ATpAR9X3OhgpDNn0Ov9a_z9RyWFEN0X0M5SN631Sc4aoceiRV6Hm6x0NfozTVLaIIg/exec";
+        
+        const trackingUrl = `${googleAppScriptUrl}?page=${encodeURIComponent(pagePath)}&title=${encodeURIComponent(pageTitle)}&fullurl=${encodeURIComponent(fullUrl)}&referrer=${encodeURIComponent(referrer)}&country=${encodeURIComponent(country)}&city=${encodeURIComponent(city)}&device=${encodeURIComponent(deviceType)}&vid=${encodeURIComponent(visitorId)}`;
+
+        // 5. Tiché odeslání dat na pozadí
+        if (navigator.sendBeacon) {
+            navigator.sendBeacon(trackingUrl);
+        } else {
+            fetch(trackingUrl, { mode: 'no-cors' });
+        }
+    }
+
+    // Spustit měření po načtení stránky
+    if (document.readyState === 'complete') {
+        sendAnonymousHit();
+    } else {
+        window.addEventListener('load', sendAnonymousHit);
+    }
+</script>
+
 </body>
 </html>

@@ -1,4 +1,4 @@
-// === Format Configurations for REGZEC + JMHZ ===
+// === Format Configurations for REGZEC + PREZEC + JMHZ ===
 
 function getChildByLocalName(parent, localName) {
   if (!parent) return null;
@@ -552,6 +552,188 @@ const REGZEC_CONFIG = {
       'forinreg': ['juris','state'],
       'taxidrezid': ['type','num','stat','statchang'],
       'proofid': ['type','num','foreigninst','stat']
+    }
+  },
+};
+
+const PREZEC_CONFIG = {
+  name: 'PREZEC',
+  ns: 'http://schemas.cssz.cz/PREZEC/2026',
+  rootElement: 'PREZEC',
+  rowsContainer: 'employees',
+  rowElement: 'employee',
+  rowParentElement: null,
+  fieldMode: 'attributes',
+  hasActions: true,
+  hasForeignerFilter: false,
+  schemasKey: 'PREZEC_SCHEMAS',
+  mainSchema: 'PREZEC26.xsd',
+  sections: [
+    { id: 'employee', label: 'Hlavička předregistrace', element: null },
+    { id: 'client', label: 'Identifikace zaměstnance', element: 'client' },
+    { id: 'client/name', label: 'Jméno a příjmení', element: 'client', child: 'name' },
+    { id: 'client/birth', label: 'Narození', element: 'client', child: 'birth' },
+    { id: 'client/stat', label: 'Občanství', element: 'client', child: 'stat' },
+    { id: 'comp', label: 'Zaměstnavatel', element: 'comp' },
+  ],
+  fields: [
+    { section: 'employee', attr: 'sqnr', csszId: null, ruleId: 'PREZEC_SQNR', label: 'Pořadové číslo věty', type: 'number' },
+    { section: 'employee', attr: 'act', csszId: '10008', label: 'Číslo akce', type: 'number' },
+    { section: 'employee', attr: 'idform', csszId: '10012', label: 'ID formuláře', type: 'text', maxLength: 36 },
+    { section: 'employee', attr: 'dat', csszId: '10005', label: 'Datum vyplnění', type: 'date' },
+    { section: 'employee', attr: 'predat', csszId: '10223', label: 'Předpokládané datum nástupu', type: 'date' },
+    { section: 'client', attr: 'bno', csszId: '10057', label: 'Rodné číslo / EČP', type: 'text', maxLength: 10 },
+    { section: 'client/name', attr: 'sur', csszId: '10053', label: 'Příjmení', type: 'text', maxLength: 50 },
+    { section: 'client/name', attr: 'fir', csszId: '10054', label: 'Jméno', type: 'text', maxLength: 50 },
+    { section: 'client/birth', attr: 'nam', csszId: '10063', label: 'Rodné příjmení', type: 'text', maxLength: 50 },
+    { section: 'client/birth', attr: 'cit', csszId: '10066', label: 'Místo narození', type: 'text', maxLength: 50 },
+    { section: 'client/stat', attr: 'cnt', csszId: '10067', label: 'Státní občanství', type: 'text', maxLength: 2 },
+    { section: 'comp', attr: 'vs', csszId: '10221', label: 'Variabilní symbol zaměstnavatele', type: 'text', maxLength: 10 },
+  ],
+  actionLabels: { '1': 'P1 Předregistrace', '2': 'P2 Zaměstnanec nenastoupil' },
+  actionSections: null,
+  fieldRules: {
+    'PREZEC_SQNR': { '1':'P','2':'P' },
+    '10008': { '1':'P','2':'P' },
+    '10012': { '1':'P','2':'P' },
+    '10005': { '1':'P','2':'P' },
+    '10057': { '1':'P','2':'P' },
+    '10053': { '1':'P','2':'/' },
+    '10054': { '1':'P','2':'/' },
+    '10063': { '1':'P','2':'/' },
+    '10066': { '1':'P','2':'/' },
+    '10067': { '1':'P','2':'/' },
+    '10221': { '1':'P','2':'P' },
+    '10223': { '1':'P','2':'/' },
+  },
+  actionFilterMeta: {
+    rowField: 'employee/act',
+    visibleFields: {
+      '1': null,
+      '2': ['employee/sqnr', 'employee/act', 'employee/idform', 'employee/dat', 'client/bno', 'comp/vs'],
+    },
+  },
+  foreignKeywords: null,
+  getRowLabel: function(fields) {
+    const fullName = ((fields['client/name/sur']?.value || '') + ' ' + (fields['client/name/fir']?.value || '')).trim();
+    return fullName || fields['client/bno']?.value || fields['employee/idform']?.value || fields['employee/sqnr']?.value || '';
+  },
+  rowColumnLabel: 'Zaměstnanec',
+  getRowInfo: [
+    { key: 'client/bno', label: 'RČ' },
+    { key: 'comp/vs', label: 'VS' },
+    { key: 'employee/idform', label: 'ID formuláře' },
+    { key: 'employee/predat', label: 'Nástup' },
+    { key: 'client/stat/cnt', label: 'Občanství' },
+  ],
+  stats: {
+    employer: 'comp/vs',
+    date: 'employee/dat',
+    citizenship: 'client/stat/cnt',
+    action: 'employee/act',
+    partialAccept: true
+  },
+  parseDocumentHeader: function(doc) {
+    if (!doc) return [];
+    const root = doc.documentElement;
+    const fields = [];
+    function attrField(label, key, el, attr) {
+      const v = el.getAttribute(attr) || '';
+      if (v) fields.push({ label, value: v, key, el, attr, _writeBack: 'attribute', modified: false });
+    }
+    attrField('Verze', 'root/version', root, 'version');
+    attrField('Částečné přijetí', 'root/partialAccept', root, 'partialAccept');
+    for (const c of root.children) {
+      if (c.localName === 'VENDOR') {
+        attrField('Software (název)', 'VENDOR/productName', c, 'productName');
+        attrField('Software (verze)', 'VENDOR/productVersion', c, 'productVersion');
+      } else if (c.localName === 'SENDER') {
+        attrField('Verze protokolu', 'SENDER/VerzeProtokolu', c, 'VerzeProtokolu');
+        attrField('E-mail notifikace', 'SENDER/EmailNotifikace', c, 'EmailNotifikace');
+        attrField('ISDS report', 'SENDER/ISDSreport', c, 'ISDSreport');
+      }
+    }
+    return fields;
+  },
+  resolveSection: function(empEl, sec) {
+    if (sec.id === 'employee') return empEl;
+    if (sec.child) { const p = getChildByLocalName(empEl, sec.element); return p ? getChildByLocalName(p, sec.child) : null; }
+    return getChildByLocalName(empEl, sec.element);
+  },
+  ensureSectionPath: function(empEl, sec) {
+    if (sec.id === 'employee') return empEl;
+    const employeeChildOrder = ['client', 'comp'];
+    const clientChildOrder = ['name', 'birth', 'stat'];
+    const parts = sec.child ? [sec.element, sec.child] : [sec.element];
+    let el = empEl;
+    const ns = empEl.namespaceURI || empEl.ownerDocument.documentElement.namespaceURI || null;
+    const prefix = empEl.prefix || empEl.ownerDocument.documentElement.prefix || '';
+    function createLikeSource(doc, localName) {
+      if (!ns) return doc.createElement(localName);
+      return doc.createElementNS(ns, prefix ? prefix + ':' + localName : localName);
+    }
+    function insertByOrder(parent, child, order) {
+      const idx = order.indexOf(child.localName);
+      if (idx === -1) {
+        parent.appendChild(child);
+        return;
+      }
+      let insertBefore = null;
+      for (const sibling of parent.children) {
+        const sibIdx = order.indexOf(sibling.localName);
+        if (sibIdx > idx) { insertBefore = sibling; break; }
+      }
+      parent.insertBefore(child, insertBefore);
+    }
+    for (let i = 0; i < parts.length; i++) {
+      const part = parts[i];
+      let child = getChildByLocalName(el, part);
+      if (!child) {
+        child = createLikeSource(el.ownerDocument, part);
+        if (el === empEl) insertByOrder(el, child, employeeChildOrder);
+        else if (el.localName === 'client') insertByOrder(el, child, clientChildOrder);
+        else el.appendChild(child);
+      }
+      el = child;
+    }
+    return el;
+  },
+  resolveSectionInstances: function() { return null; },
+  createRepeatingInstance: function() { return null; },
+  headerFields: ['sqnr', 'act', 'idform', 'dat', 'predat'],
+  readField: function(targetEl, field) {
+    if (!targetEl) return '';
+    return targetEl.getAttribute(field.attr) || '';
+  },
+  writeField: function(fieldRef, value) {
+    fieldRef.el.setAttribute(fieldRef.attr, value || '');
+  },
+  writeHeaderField: function(headerRef, value) {
+    if (headerRef._writeBack === 'attribute') {
+      if (value) headerRef.el.setAttribute(headerRef.attr, value);
+      else headerRef.el.removeAttribute(headerRef.attr);
+    } else {
+      headerRef.el.textContent = value;
+    }
+  },
+  fieldAttrKey: function(field) { return field.attr; },
+  fieldXpath: function(field) { return field.section + '/@' + field.attr; },
+  determineRowType: function() { return null; },
+  rowElementPattern: /<[a-zA-Z]*:?employee[\s>]/,
+  fieldGroups: [
+    { id: 'personal', label: 'Osoba', query: 'identifikace zamestnance, jmeno a prijmeni, narozeni, obcanstvi' },
+  ],
+  sanitizerMeta: {
+    optionalChildren: {
+      'PREZEC': ['VENDOR','SENDER'],
+      'client': ['name','birth','stat'],
+    },
+    optionalAttrs: {
+      'PREZEC': ['version','partialAccept'],
+      'employee': ['idform','predat'],
+      'name': ['sur','fir'],
+      'birth': ['nam','cit'],
+      'stat': ['cnt'],
     }
   },
 };

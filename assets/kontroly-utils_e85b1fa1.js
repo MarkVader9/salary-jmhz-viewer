@@ -10,7 +10,10 @@
 
   function buildCsszIndex(fields) {
     _csszIdToField = new Map();
-    fields.forEach(function (f) { if (f.csszId) _csszIdToField.set(f.csszId, f); });
+    fields.forEach(function (f) {
+      if (f.csszId) _csszIdToField.set(f.csszId, f);
+      if (f.ruleId) _csszIdToField.set(f.ruleId, f);
+    });
   }
 
   function fieldKeyFor(field, instanceIndex) {

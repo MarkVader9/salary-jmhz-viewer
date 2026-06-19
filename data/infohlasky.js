@@ -847,4 +847,4 @@ window.JMHZ_INFO_DICTIONARY = {
         'evidence mzdy': 'mzda'
     }
 
-}; // <-- TADY JE JEDINÝ A SPRÁVNÝ KONEC CELÉHO OBJEKTU
+}; // <-- TADY JE JEDINÝ A SPRÁVNÝ KONEC CELÉHO OBJEKTU INFOHLÁŠEK.  
