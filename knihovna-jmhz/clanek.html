@@ -26,6 +26,41 @@
     <script src="library-ui.js"></script>
     <script src="kb-video.js"></script> 
     <link rel="stylesheet" href="library-style.css">
+
+    <style>
+        /* Speciální CSS úpravy pro pevné záhlaví a scrollování v TOC panelu POUZE na PC */
+        @media (min-width: 992px) {
+            .toc-aside {
+                display: flex !important;
+                flex-direction: column !important;
+                height: calc(100vh - 120px) !important;
+                position: sticky !important;
+                top: 100px !important;
+                padding-right: 15px !important;
+                overflow: hidden !important; 
+            }
+        }
+        
+        .toc-title {
+            flex-shrink: 0 !important; /* Zabrání scvrknutí hlavičky */
+            margin-bottom: 0 !important; /* Odsazení vyřeší padding uvnitř */
+            padding-bottom: 15px;
+            background: var(--bg-base);
+            z-index: 10;
+        }
+
+        #tocList {
+            flex-grow: 1 !important;
+            overflow-y: auto !important; /* Scrollovatelná oblast */
+            overscroll-behavior: contain !important; /* Zabrání rolování článku na pozadí */
+            scrollbar-width: thin;
+            padding-bottom: 20px;
+        }
+
+        /* Skrytí nativních posuvníků uvnitř TOC (čistší vzhled) */
+        #tocList::-webkit-scrollbar { width: 4px; }
+        #tocList::-webkit-scrollbar-thumb { background-color: var(--border-strong); border-radius: 4px; }
+    </style>
 </head>
 <body>
 
@@ -43,7 +78,17 @@
 
     <div class="layout" id="layoutContainer" style="display: none;">
         <aside class="toc-aside">
-            <div class="toc-title">Obsah Článku</div>
+            <div class="toc-title" style="display:flex; justify-content:space-between; align-items:center;">
+                <span>Obsah Článku</span>
+                <button id="pcTocExpandBtn" class="toc-expand-btn" title="Roztáhnout na celou obrazovku s možností vyhledávání" aria-label="Roztáhnout">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                        <polyline points="15 3 21 3 21 9"></polyline>
+                        <polyline points="9 21 3 21 3 15"></polyline>
+                        <line x1="21" y1="3" x2="14" y2="10"></line>
+                        <line x1="3" y1="21" x2="10" y2="14"></line>
+                    </svg>
+                </button>
+            </div>
             <nav id="tocList"></nav>
         </aside>
 
@@ -69,7 +114,8 @@
             </div>
         </aside>
     </div>
-<button id="mobileTocBtn" class="mobile-toc-btn" aria-label="Obsah článku" title="Obsah článku">
+
+    <button id="mobileTocBtn" class="mobile-toc-btn" aria-label="Obsah článku" title="Obsah článku">
         <span class="toc-icon">☰</span> <span class="toc-label">Obsah</span>
     </button>
 
@@ -84,8 +130,9 @@
         <div class="mobile-toc-body" id="mobileTocList">
             </div>
     </div>
-	<script>
-// ==========================================
+
+    <script>
+    // ==========================================
     // 1. KONFIGURACE A KONSTANTY
     // ==========================================
     const DB_URL = "databaze-knihovny.json"; 
@@ -99,7 +146,6 @@
     // 2. FUNKCE PRO VZHLED A UI
     // ==========================================
     function fixDocumentFormatting(container) {
-        // Automatické zabalení tabulek proti přetékání a bílým místům
         const tables = container.querySelectorAll('table');
         tables.forEach(table => {
             if (!table.parentElement.classList.contains('table-responsive-wrapper')) {
@@ -234,7 +280,7 @@
     }
 
     // ==========================================
-    // 4. GENERACE OBSAHU A SCROLLSPY (Včetně Mobilního TOC)
+    // 4. GENERACE OBSAHU A SCROLLSPY
     // ==========================================
     function generateTOC() {
         const headings = document.getElementById('articleContent').querySelectorAll('h1, h2');
@@ -248,52 +294,55 @@
         });
 
         const mobileBtn = document.getElementById('mobileTocBtn');
+        const pcBtn = document.getElementById('pcTocExpandBtn');
         const mobileList = document.getElementById('mobileTocList');
 
         if (headings.length > 0) {
             document.getElementById('tocList').innerHTML = tocHtml;
             if (mobileList) mobileList.innerHTML = tocHtml; 
             initEnterpriseScrollSpy(headings);
-            
-            // ---> TOTO ZDE CHYBĚLO <--- Zprovoznění mobilního menu!
             initMobileTOC(); 
-            
         } else {
             document.querySelector('.toc-aside').style.display = 'none';
             if (mobileBtn) mobileBtn.style.display = 'none';
+            if (pcBtn) pcBtn.style.display = 'none';
         }
     }
 
-    // ---> TOTO ZDE CHYBĚLO <--- Vlastní funkce oživující vyhledávání a skrytí panelu
     function initMobileTOC() {
-        const btn = document.getElementById('mobileTocBtn');
+        const mobileBtn = document.getElementById('mobileTocBtn');
+        const pcBtn = document.getElementById('pcTocExpandBtn'); 
         const modal = document.getElementById('mobileTocModal');
         const closeBtn = document.getElementById('mobileTocClose');
         const searchInput = document.getElementById('mobileTocSearchInput');
         const listContainer = document.getElementById('mobileTocList');
 
-        // Otevření
-        if (btn) btn.addEventListener('click', () => {
+        // Společná fce pro otevření okna (ať už z mobilu nebo z PC)
+        const openModal = () => {
             modal.classList.add('open');
-            document.body.style.overflow = 'hidden'; // Zamezí scrollování stránky pod oknem
-            if(searchInput) { searchInput.value = ''; searchInput.dispatchEvent(new Event('input')); }
-        });
+            document.body.style.overflow = 'hidden'; 
+            if(searchInput) { 
+                searchInput.value = ''; 
+                searchInput.dispatchEvent(new Event('input')); 
+                // Počkáme na dokončení animace a aktivujeme kurzor do pole vyhledávání
+                setTimeout(() => searchInput.focus(), 300);
+            }
+        };
 
-        // Zavření křížkem
+        // Napojení na obě tlačítka
+        if (mobileBtn) mobileBtn.addEventListener('click', openModal);
+        if (pcBtn) pcBtn.addEventListener('click', openModal);
+
         const closeModal = () => {
             modal.classList.remove('open');
             document.body.style.overflow = '';
         };
         if (closeBtn) closeBtn.addEventListener('click', closeModal);
 
-        // Zavření po kliknutí na konkrétní odkaz v seznamu
         if (listContainer) listContainer.addEventListener('click', (e) => {
-            if (e.target.classList.contains('toc-link')) {
-                closeModal();
-            }
+            if (e.target.classList.contains('toc-link')) closeModal();
         });
 
-        // Inteligentní vyhledávání / filtrace v obsahu
         if (searchInput && listContainer) {
             searchInput.addEventListener('input', (e) => {
                 const term = e.target.value.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, ""); 
@@ -312,14 +361,30 @@
     }
 
     function initEnterpriseScrollSpy(headings) {
-        const tocLinks = document.querySelectorAll('.toc-link');
+        const tocLinks = document.querySelectorAll('.toc-aside .toc-link'); 
+        const tocList = document.getElementById('tocList'); // Správný rolovatelný kontejner panelu
         const observerOptions = { root: null, rootMargin: '-80px 0px -60% 0px', threshold: 0 };
         
         const observer = new IntersectionObserver(entries => {
             entries.forEach(entry => {
                 if (entry.isIntersecting) {
                     tocLinks.forEach(link => {
-                        link.classList.toggle('active', link.getAttribute('data-target') === entry.target.id);
+                        const isActive = link.getAttribute('data-target') === entry.target.id;
+                        link.classList.toggle('active', isActive);
+                        
+                        // CHYTRÉ POSOUVÁNÍ PANELU
+                        if (isActive && tocList) {
+                            const linkTop = link.offsetTop;
+                            const linkBottom = linkTop + link.offsetHeight;
+                            const listScrollTop = tocList.scrollTop;
+                            const listHeight = tocList.clientHeight;
+
+                            if (linkTop < listScrollTop) {
+                                tocList.scrollTo({ top: linkTop - 20, behavior: 'smooth' });
+                            } else if (linkBottom > listScrollTop + listHeight) {
+                                tocList.scrollTo({ top: linkBottom - listHeight + 20, behavior: 'smooth' });
+                            }
+                        }
                     });
                 }
             });
@@ -484,12 +549,9 @@
             const contentContainer = document.getElementById('articleContent');
             contentContainer.innerHTML = rawHtml;
             
-            // Obalení tabulek
             fixDocumentFormatting(contentContainer);
-            // Zarovnání odstavců z MS Word (center / justify / right)
             applyWordAlignment(contentContainer);
 
-            // Zprovoznění Lightboxu pro obrázky a otevírání odkazů na nové kartě
             contentContainer.querySelectorAll('a').forEach(link => {
                 if (link.href && link.href.startsWith('http')) {
                     link.setAttribute('target', '_blank');
@@ -513,11 +575,10 @@
     }
 
     // ==================================================================
-    // 7. EVENT LISTENERY (Spuštění, Progress Bar a Back to Top)
+    // 7. EVENT LISTENERY 
     // ==============================================================
     document.addEventListener('DOMContentLoaded', loadArticle);
 
-    // Registrace Service Workeru (offline režim / PWA)
     if ('serviceWorker' in navigator) {
         window.addEventListener('load', () => {
             navigator.serviceWorker.register('sw.js').catch((err) =>
@@ -526,9 +587,7 @@
         });
     }
 
-    // SLOUČENÝ SENZOR: PROGRESS BAR + TLAČÍTKO ZPĚT NAHORU
     window.addEventListener('scroll', () => {
-        // Kalkulace pro Progress Bar
         const winScroll = window.scrollY || document.documentElement.scrollTop;
         const height = document.documentElement.scrollHeight - document.documentElement.clientHeight;
         const scrolled = height > 0 ? (winScroll / height) * 100 : 0;
@@ -536,12 +595,95 @@
         const pb = document.getElementById('progressBar');
         if (pb) pb.style.width = scrolled + "%";
 
-        // Logika pro zobrazení/skrytí tlačítka "Zpět nahoru" (zobrazí se po 400px)
         const btnTop = document.getElementById('backToTop');
         if (btnTop) btnTop.classList.toggle('visible', window.scrollY > 400);
     }, { passive: true });
-</script>
-<button id="backToTop" class="back-to-top" aria-label="Zpět nahoru" title="Zpět na začátek stránky" onclick="window.scrollTo({top:0,behavior:'smooth'})">↑</button>
+    </script>
+	
+	
+    <button id="backToTop" class="back-to-top" aria-label="Zpět nahoru" title="Zpět na začátek stránky" onclick="window.scrollTo({top:0,behavior:'smooth'})">↑</button>
 
+<script>
+      // ================================================================================================
+	  // SALARY Site Analytics Script (Obohacená včerejší verze)
+	  // ================================================================================================
+
+    async function sendAnonymousHit() {
+        // --- DOPLNĚNO: GENERACE A ULOŽENÍ UNIKÁTNÍHO ID NÁVŠTĚVNÍKA ---
+        function generateId() {
+            return Math.random().toString(36).substring(2) + Date.now().toString(36);
+        }
+
+        let visitorId = localStorage.getItem('salary_visitor_id');
+        if (!visitorId) {
+            visitorId = 'USR_' + generateId();
+            localStorage.setItem('salary_visitor_id', visitorId);
+        }
+        // --------------------------------------------------------------
+
+        // 1. Detekce typu zařízení 
+        let deviceType = "Počítač";
+        if (/Mobi|Android|iPhone/i.test(navigator.userAgent)) {
+            deviceType = "Mobil";
+        } else if (/Tablet|iPad/i.test(navigator.userAgent)) {
+            deviceType = "Tablet";
+        }
+
+        // 2. Základní data z prohlížeče
+        let pagePath = window.location.pathname;
+        let fullUrl = window.location.href;
+        let pageTitle = document.title || "Bez nadpisu";
+        let referrer = document.referrer || "Přímá návštěva";
+        let country = "Neznámá";
+        let city = "Neznámé";
+
+        // 3. ROBUSTNÍ zjištění lokality (Primární API + Záložní API)
+        try {
+            // Pokus 1: Služba ipapi.co
+            let geoResponse = await fetch('https://ipapi.co/json/');
+            if (geoResponse.ok) {
+                let geoData = await geoResponse.json();
+                country = geoData.country_name || "Neznámá";
+                city = geoData.city || "Neznámé";
+            } else {
+                throw new Error("Primární API přetíženo (Status: " + geoResponse.status + ")");
+            }
+        } catch (e) {
+            console.log("Primární Geo IP selhala, zkouším záložní...", e.message);
+            try {
+                // Pokus 2: Záložní služba ipwho.is
+                let backupResponse = await fetch('https://ipwho.is/');
+                if (backupResponse.ok) {
+                    let backupData = await backupResponse.json();
+                    if(backupData.success) {
+                        country = backupData.country || "Neznámá";
+                        city = backupData.city || "Neznámé";
+                    }
+                }
+            } catch (backupError) {
+                console.log("I záložní Geo IP služba je blokována (pravděpodobně AdBlock).");
+            }
+        }
+
+        // 4. Sestavení URL adresy (Doplněn parametr &vid= na konec)
+        const googleAppScriptUrl = "https://script.google.com/macros/s/AKfycby-ATpAR9X3OhgpDNn0Ov9a_z9RyWFEN0X0M5SN631Sc4aoceiRV6Hm6x0NfozTVLaIIg/exec";
+        
+        const trackingUrl = `${googleAppScriptUrl}?page=${encodeURIComponent(pagePath)}&title=${encodeURIComponent(pageTitle)}&fullurl=${encodeURIComponent(fullUrl)}&referrer=${encodeURIComponent(referrer)}&country=${encodeURIComponent(country)}&city=${encodeURIComponent(city)}&device=${encodeURIComponent(deviceType)}&vid=${encodeURIComponent(visitorId)}`;
+
+        // 5. Tiché odeslání dat na pozadí
+        if (navigator.sendBeacon) {
+            navigator.sendBeacon(trackingUrl);
+        } else {
+            fetch(trackingUrl, { mode: 'no-cors' });
+        }
+    }
+
+    // Spustit měření po načtení stránky
+    if (document.readyState === 'complete') {
+        sendAnonymousHit();
+    } else {
+        window.addEventListener('load', sendAnonymousHit);
+    }
+</script>
 </body>
 </html>

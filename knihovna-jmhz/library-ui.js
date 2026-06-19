@@ -25,6 +25,24 @@ document.addEventListener("DOMContentLoaded", () => {
         /* Absolutní vynucení pozice pro Toolbar (Záhlaví) */
         .jmhz-toolbar { display: grid !important; grid-template-columns: auto minmax(0, 1fr) auto !important; align-items: center; width: 100%; box-sizing: border-box; }
         .toolbar-right { display: flex !important; justify-content: flex-end !important; align-items: center !important; }
+		
+		/* === ZVÝRAZNĚNÁ TLAČÍTKA V MENU === */
+        .drawer-body .btn-purple {
+            background: #8A2BE2 !important; /* Výrazná fialová barva */
+            color: #ffffff !important;      /* Bílý text */
+            border-color: #8A2BE2 !important;
+            text-align: center !important;
+            justify-content: center !important;
+            box-shadow: 0 2px 8px rgba(138, 43, 226, 0.2);
+            margin: 4px 0;
+        }
+        .drawer-body .btn-purple:hover {
+            background: #6A1CB7 !important; /* Tmavší fialová při najetí myší */
+            border-color: #6A1CB7 !important;
+            color: #ffffff !important;
+            box-shadow: 0 4px 12px rgba(138, 43, 226, 0.4);
+            transform: translateY(-1px);
+        }
 
         /* ==========================================================
            AUTORITATIVNÍ MOBILNÍ CELOOBRAZOVKOVÉ MENU (Pod 900px)
@@ -158,6 +176,12 @@ document.addEventListener("DOMContentLoaded", () => {
             }
             const btn = document.createElement('button');
             btn.textContent = item.label;
+            
+            // --- NOVÉ: Přenesení CSS třídy nebo barvy z konfigurace ---
+            if (item.className) btn.className = item.className;
+            if (item.style) btn.style.cssText = item.style;
+            // ----------------------------------------------------------
+
             btn.onclick = () => {
                 if (item.action) item.action();
                 if (item.link) window.location.href = item.link;

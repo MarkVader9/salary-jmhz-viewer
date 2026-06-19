@@ -1,0 +1,972 @@
+<!DOCTYPE html>
+<html lang="cs" data-theme="light">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>FAQ a Řešení - SALARY Knihovna Znalostí</title>
+    <meta name="theme-color" content="#0f172a">
+    <link rel="icon" href="../icon.svg" type="image/svg+xml">
+    <link rel="apple-touch-icon" href="../icon.svg">
+    
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&family=Lora:ital,wght@0,400;0,600;1,400&family=Merriweather:ital,wght@0,400;0,700;1,400&family=Montserrat:wght@400;600;700&family=Open+Sans:ital,wght@0,400;0,600;1,400&family=Playfair+Display:ital,wght@0,400;0,700;1,400&family=Roboto:ital,wght@0,400;0,500;0,700;1,400&family=Ubuntu:ital,wght@0,400;0,500;1,400&display=swap" rel="stylesheet">
+    
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/mammoth/1.4.21/mammoth.browser.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/mark.js/8.11.1/mark.min.js"></script> 
+    <script src="kb-core.js"></script>
+    <script src="library-menu.js"></script>
+    <script src="library-ui.js"></script>
+    <link rel="stylesheet" href="library-style.css">
+
+    <style>
+        /* Speciální CSS úpravy pro pevné záhlaví a scrollování v TOC panelu POUZE na PC */
+        @media (min-width: 992px) {
+            .toc-aside {
+                display: flex !important;
+                flex-direction: column !important;
+                height: calc(100vh - 120px) !important;
+                position: sticky !important;
+                top: 100px !important;
+                padding-right: 15px !important;
+                overflow: hidden !important; 
+            }
+        }
+        
+        .toc-title {
+            flex-shrink: 0 !important; 
+            margin-bottom: 0 !important; 
+            padding-bottom: 15px;
+            background: var(--bg-base);
+            z-index: 10;
+        }
+
+        #tocList {
+            flex-grow: 1 !important;
+            overflow-y: auto !important; 
+            overscroll-behavior: contain !important; 
+            scrollbar-width: thin;
+            padding-bottom: 20px;
+        }
+
+        #tocList::-webkit-scrollbar { width: 4px; }
+        #tocList::-webkit-scrollbar-thumb { background-color: var(--border-strong); border-radius: 4px; }
+
+        /* --- SPECIFICKÉ STYLY PRO FAQ MODUL --- */
+        .faq-control-panel {
+            position: sticky;
+            top: 48px;
+            background: color-mix(in oklch, var(--bg-elevated) 85%, transparent);
+            backdrop-filter: blur(16px) saturate(180%);
+            -webkit-backdrop-filter: blur(16px) saturate(180%);
+            z-index: 100;
+            padding: 20px;
+            border-bottom: 1px solid var(--border-strong);
+            box-shadow: 0 4px 15px rgba(0,0,0,0.05);
+            margin-bottom: 30px;
+            border-radius: 0 0 12px 12px;
+        }
+
+        .faq-search-input {
+            width: 100%;
+            padding: 14px 20px;
+            font-size: 1.1rem;
+            border: 2px solid var(--border);
+            border-radius: 8px;
+            background: var(--bg-base);
+            color: var(--text-primary);
+            transition: all 0.3s;
+        }
+        .faq-search-input:focus {
+            border-color: var(--accent);
+            outline: none;
+            box-shadow: 0 0 0 3px var(--accent-focus);
+        }
+
+        /* Zvýrazňovač Mark.js */
+        mark.highlight {
+            background: #fff59d;
+            color: #000;
+            padding: 0 2px;
+            border-radius: 3px;
+        }
+        [data-theme="dark"] mark.highlight {
+            background: rgba(253, 216, 53, 0.4);
+            color: #fff;
+        }
+
+        .faq-pills-container {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            margin-top: 15px;
+        }
+
+        /* Styly pro adaptivní počítadla ve filtračních tlačítkách */
+        .pill-counter {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            background: rgba(0, 0, 0, 0.1);
+            border-radius: 20px;
+            padding: 2px 8px;
+            font-size: 0.8rem;
+            margin-left: 8px;
+            font-weight: 700;
+            transition: all 0.3s ease;
+        }
+        [data-theme="dark"] .pill-counter {
+            background: rgba(255, 255, 255, 0.15);
+        }
+        .cat-pill.active .pill-counter {
+            background: #fff;
+            color: var(--accent, #0d47a1);
+        }
+        [data-theme="dark"] .cat-pill.active .pill-counter {
+            color: #112240;
+        }
+
+        .faq-category-card {
+            background: var(--bg-elevated);
+            border-left: 5px solid var(--accent);
+            padding: 20px 25px;
+            margin: 40px 0 20px 0;
+            border-radius: 0 12px 12px 0;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            scroll-margin-top: 200px; 
+            box-shadow: var(--shadow-sm);
+        }
+        .faq-category-card h1 {
+            margin: 0; font-size: 1.5rem; color: var(--text-primary);
+        }
+
+        .faq-item-card {
+            background: var(--bg-surface);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            margin-bottom: 25px;
+            overflow: hidden;
+            box-shadow: var(--shadow-sm);
+            transition: transform 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275), box-shadow 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+            scroll-margin-top: 200px;
+        }
+        .faq-item-card:hover {
+            box-shadow: var(--shadow-md);
+            transform: translateY(-2px);
+        }
+
+        .faq-item-header {
+            background: #e3f2fd;
+            padding: 12px 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 1px solid #bbdefb;
+        }
+        [data-theme="dark"] .faq-item-header {
+            background: #112240;
+            border-bottom: 1px solid #1e3a6a;
+        }
+        
+        .faq-item-number {
+            font-size: 0.95rem; font-weight: 700; color: #0d47a1; margin: 0; display: flex; align-items: center; gap: 8px;
+        }
+        [data-theme="dark"] .faq-item-number { color: #64b5f6; }
+
+        .faq-header-actions {
+            display: flex;
+            gap: 10px;
+            align-items: center;
+        }
+
+        .share-btn {
+            background: transparent; border: 1px solid rgba(13, 71, 161, 0.3); color: #0d47a1;
+            padding: 4px 12px; border-radius: 6px; font-size: 0.8rem; font-weight: 600; cursor: pointer; transition: all 0.2s;
+        }
+        [data-theme="dark"] .share-btn { border-color: rgba(100, 181, 246, 0.3); color: #64b5f6; }
+        .share-btn:hover { background: rgba(13, 71, 161, 0.1); transform: translateY(-1px); }
+
+        /* --- STYLY PRO HOVER TLAČÍTKA (Sbalit/Rozbalit) --- */
+        .toggle-faq-btn {
+            background: transparent; border: none; color: var(--text-primary); cursor: pointer;
+            padding: 4px 8px; border-radius: 6px; display: flex; align-items: center; justify-content: flex-end;
+            transition: background 0.2s;
+        }
+        .toggle-faq-btn:hover { background: rgba(0,0,0,0.05); }
+        [data-theme="dark"] .toggle-faq-btn:hover { background: rgba(255,255,255,0.05); }
+
+        .toggle-faq-btn .toggle-text, 
+        .intro-toggle-wrap .toggle-text {
+            font-size: 0.85rem; 
+            font-weight: 600; 
+            max-width: 0; 
+            opacity: 0; 
+            overflow: hidden; 
+            white-space: nowrap;
+            transition: max-width 0.3s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.2s ease, margin-right 0.3s;
+        }
+
+        .toggle-faq-btn:hover .toggle-text, 
+        .faq-intro-header:hover .intro-toggle-wrap .toggle-text {
+            max-width: 70px; 
+            opacity: 1; 
+            margin-right: 5px;
+        }
+
+        .toggle-faq-btn .toggle-icon { 
+            transition: transform 0.3s; 
+            display: inline-block; 
+        }
+        
+        .faq-item-body { padding: 45px; font-size: 1.1rem; line-height: 1.6; color: var(--text-secondary); transition: font-family 0.3s ease; }
+        .faq-item-body.collapsed { display: none; }
+        .faq-item-body h1 { font-size: 1.4rem; margin-top: 0; margin-bottom: 10px; color: var(--text-primary); }
+        .faq-item-body h2 { font-size: 1.1rem; color: var(--text-muted); margin-top: 0; margin-bottom: 20px; font-weight: 600; border-bottom: 1px dashed var(--border-subtle); padding-bottom: 10px; }
+        .faq-item-body p { margin-bottom: 15px; }
+
+        /* --- STYLY PRO FAQ INTRO SEKCI --- */
+        .faq-intro-card {
+            background: var(--bg-surface);
+            border: 1px solid var(--border-strong);
+            border-radius: 12px;
+            margin-bottom: 30px;
+            overflow: hidden;
+            box-shadow: var(--shadow-sm);
+        }
+        .faq-intro-header {
+            background: var(--bg-elevated);
+            padding: 18px 25px;
+            cursor: pointer;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 1px solid var(--border-subtle);
+            transition: background 0.2s;
+        }
+        .faq-intro-header:hover {
+            background: color-mix(in oklch, var(--bg-elevated) 95%, var(--accent) 5%);
+        }
+        .faq-intro-header h1 {
+            margin: 0;
+            font-size: 1.25rem;
+            color: var(--text-primary);
+        }
+        .faq-intro-icon {
+            font-size: 1.2rem;
+            transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            color: var(--text-muted);
+        }
+        .faq-intro-body {
+            padding: 30px;
+            font-size: 1.1rem;
+            line-height: 1.6;
+            color: var(--text-secondary);
+        }
+        .faq-intro-body h1 {
+            font-size: 1.6rem;
+            color: var(--text-primary);
+            margin-top: 0;
+            margin-bottom: 10px;
+        }
+        .faq-intro-body h2 {
+            font-size: 1.2rem;
+            color: var(--text-muted);
+            margin-top: 0;
+            margin-bottom: 20px;
+            font-weight: 600;
+            border-bottom: 1px dashed var(--border-subtle);
+            padding-bottom: 10px;
+        }
+        
+        .faq-intro-body.collapsed { display: none; }
+        .faq-intro-card.is-collapsed .faq-intro-icon { transform: rotate(-90deg); }
+        .faq-intro-card.is-collapsed .faq-intro-header { border-bottom: none; }
+
+        .hidden { display: none !important; }
+        .no-results { text-align: center; padding: 40px; color: var(--text-muted); font-size: 1.1rem; }
+    </style>
+</head>
+<body>
+
+    <div class="progress-bar-container"><div class="progress-bar" id="progressBar"></div></div>
+
+    <div id="loader" style="text-align: center; padding: 100px; color: var(--text-muted);">
+        <h2 id="loaderText">Zpracovávám databázi FAQ...</h2>
+        <p style="font-size: 0.9rem;">To může trvat několik vteřin.</p>
+    </div>
+
+    <div class="layout" id="layoutContainer" style="display: none;">
+        <aside class="toc-aside">
+            <div class="toc-title" style="display:flex; justify-content:space-between; align-items:center;">
+                <span>Obsah Dokumentu</span>
+                <button id="pcTocExpandBtn" class="toc-expand-btn" title="Roztáhnout na celou obrazovku s možností vyhledávání" aria-label="Roztáhnout">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                        <polyline points="15 3 21 3 21 9"></polyline>
+                        <polyline points="9 21 3 21 3 15"></polyline>
+                        <line x1="21" y1="3" x2="14" y2="10"></line>
+                        <line x1="3" y1="21" x2="10" y2="14"></line>
+                    </svg>
+                </button>
+            </div>
+            <nav id="tocList"></nav>
+        </aside>
+
+        <main style="min-width: 0; position: relative;">
+            
+            <div class="faq-control-panel">
+                <input type="search" id="faqSearchInput" class="faq-search-input" placeholder="🔍 Hledat v otázkách a odpovědích (např. DNP, PREZEC)...">
+                <div class="faq-pills-container" id="faqPillsContainer"></div>
+            </div>
+
+            <!-- FAQ INTRO SEKCE S ROZBALOVACÍM TEXTEM -->
+ <div id="faqIntroSection" class="faq-intro-card is-collapsed" style="display: none;">
+    <div class="faq-intro-header" onclick="toggleFaqIntro()">
+        <h1>Úvod k Těmto Často Kladeným Otázkám a Odpovědím</h1>
+        <div class="intro-toggle-wrap" style="display:flex; align-items:center;">
+            <span class="toggle-text" id="faqIntroToggleText">Rozbalit</span>
+            <span id="faqIntroToggleIcon" class="faq-intro-icon">▼</span>
+        </div>
+    </div>
+    <div id="faqIntroBody" class="faq-intro-body collapsed">
+        </div>
+</div>
+
+            <div id="faqContentArea"></div>
+            
+            <div id="noResultsMsg" class="no-results hidden">
+                <h3>Zadanému hledání neodpovídá žádný záznam.</h3>
+                <p>Zkuste upravit hledaný výraz, nebo zrušte vybranou kategorii.</p>
+                <button class="btn primary" onclick="document.getElementById('faqSearchInput').value=''; applyFilters();">Vymazat hledání</button>
+                <br><br>
+                <p style="font-size:0.9rem; color:var(--text-muted);">Stále nemůžete najít odpověď? <a href="mailto:podpora@salary.cz" style="color:var(--accent);">Napište nám na podporu</a>.</p>
+            </div>
+        </main>
+
+        <aside class="right-sidebar">
+            <div class="info-box" id="externalControlPanel">
+                <span class="sidebar-label">Ovládací Menu</span>
+                <div id="dynamicButtonsContainer" style="display:flex; flex-direction:column; gap:8px;"></div>
+            </div>
+            <div class="info-box">
+                <span class="sidebar-label">Štítky a Info</span>
+                <div style="font-size: 0.85rem; color: var(--text-secondary); margin-bottom: 15px;" id="docMeta"></div>
+                <div id="docTags"></div>
+            </div>
+        </aside>
+    </div>
+
+    <button id="mobileTocBtn" class="mobile-toc-btn" aria-label="Obsah dokumentu" title="Obsah dokumentu">
+        <span class="toc-icon">☰</span> <span class="toc-label">Obsah</span>
+    </button>
+    <div id="mobileTocModal" class="mobile-toc-modal">
+        <div class="mobile-toc-header">
+            <h2>Obsah dokumentu</h2>
+            <button id="mobileTocClose" class="mobile-toc-close" aria-label="Zavřít">&times;</button>
+        </div>
+        <div class="mobile-toc-search">
+            <input type="text" id="mobileTocSearchInput" placeholder="🔍 Hledat v obsahu...">
+        </div>
+        <div class="mobile-toc-body" id="mobileTocList"></div>
+    </div>
+
+<script>
+    const DB_URL = "databaze-knihovny.json";
+    const DOCX_BASE_URL = "dokumenty/";
+    const urlParams = new URLSearchParams(window.location.search);
+    const documentId = urlParams.get('id');
+
+    let parsedFAQData = [];
+    let availableCategories = new Set();
+    let activeCategoriesFilter = new Set();
+
+    // ==========================================
+    // DEBOUNCE FUNKCE PRO VÝKON VYHLEDÁVÁNÍ
+    // ==========================================
+    function debounce(func, wait) {
+        let timeout;
+        return function(...args) {
+            clearTimeout(timeout);
+            timeout = setTimeout(() => func.apply(this, args), wait);
+        };
+    }
+
+    // ==========================================
+    // PARSOVÁNÍ WORD DOKUMENTU
+    // ==========================================
+    function parseMammothHTML(rawHtml) {
+        window.faqIntroHtml = "";
+        
+        rawHtml = rawHtml.replace(/\[FAQ_INTRO:\s*([\s\S]*?)\]/gi, (match, content) => {
+            window.faqIntroHtml = content;
+            return ""; 
+        });
+
+        const tempDiv = document.createElement('div');
+        tempDiv.innerHTML = rawHtml;
+
+        let currentCategory = "Obecné dotazy";
+        let currentItem = null;
+        let faqList = [];
+        let categorySet = new Set([currentCategory]);
+        
+        let isAwaitingTitle = false; 
+
+        Array.from(tempDiv.children).forEach(node => {
+            const textContent = node.textContent.trim();
+            
+            if (/^KATEGORIE\s*:/i.test(textContent)) {
+                currentCategory = textContent.replace(/^KATEGORIE\s*:/i, '').trim();
+                categorySet.add(currentCategory);
+                faqList.push({ type: 'category-header', title: currentCategory, id: 'kat-' + stringToSlug(currentCategory) });
+                currentItem = null; 
+                return;
+            }
+
+            const qMatch = textContent.match(/Otázka číslo\s*([0-9a-zA-Z]+)/i);
+            if (qMatch) {
+                currentItem = { type: 'faq-item', category: currentCategory, numberLabel: qMatch[0], id: 'otazka-' + qMatch[1], contentHTML: '' };
+                faqList.push(currentItem);
+                isAwaitingTitle = true; 
+                return;
+            }
+
+            if (currentItem) {
+                let nodeHtml = node.outerHTML;
+
+                if (isAwaitingTitle && textContent !== '') {
+                    nodeHtml = `<h1>${node.innerHTML}</h1>`;
+                    isAwaitingTitle = false;
+                } 
+                else if (/^Téma\s*:/i.test(textContent)) {
+                    nodeHtml = `<h2>${node.innerHTML}</h2>`;
+                    isAwaitingTitle = false; 
+                }
+
+                currentItem.contentHTML += nodeHtml;
+            }
+        });
+
+        if (!faqList.find(i => i.type === 'faq-item' && i.category === 'Obecné dotazy')) {
+            categorySet.delete('Obecné dotazy');
+        }
+
+        return { items: faqList, categories: categorySet };
+    }
+
+    function stringToSlug(str) {
+        return str.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/[^a-z0-9]/g, '-').replace(/-+/g, '-').replace(/^-|-$/g, '');
+    }
+
+    // ==========================================
+    // OVLÁDACÍ MENU A FUNKCE VZHLEDU
+    // ==========================================
+    function populateControlPanel() {
+        const container = document.getElementById('dynamicButtonsContainer');
+        if (!container) return;
+        container.innerHTML = `
+            <div style="display:flex; flex-direction:column; gap:4px; margin-bottom:10px; border-bottom:1px solid var(--border-subtle); padding-bottom:10px;">
+                <span style="font-size:0.75rem; color:var(--text-muted); font-weight:600; text-transform:uppercase;">Vzhled</span>
+                <button class="btn" onclick="window.setTheme('light')" style="text-align:left;">☀️ Světlý</button>
+                <button class="btn" onclick="window.setTheme('dark')" style="text-align:left;">🌙 Tmavý</button>
+                <button class="btn" onclick="window.setTheme('auto')" style="text-align:left;">🌓 Automatický</button>
+            </div>
+            <div style="display:flex; flex-direction:column; gap:4px; margin-bottom:10px; border-bottom:1px solid var(--border-subtle); padding-bottom:10px;">
+                <span style="font-size:0.75rem; color:var(--text-muted); font-weight:600; text-transform:uppercase;">Písmo ke čtení</span>
+                <select id="fontSelect" class="sort-select" style="width:100%; padding:8px; font-size:0.9rem;" onchange="window.changeReaderFont(this.value)">
+                    <option value="system-ui, -apple-system, sans-serif">Výchozí Systémové</option>
+                    <option value="'Inter', sans-serif">Inter (Moderní)</option>
+                    <option value="'Roboto', sans-serif">Roboto (Google)</option>
+                    <option value="'Open Sans', sans-serif">Open Sans (Čisté)</option>
+                    <option value="'Montserrat', sans-serif">Montserrat (Geometrické)</option>
+                    <option value="'Ubuntu', sans-serif">Ubuntu (Kulaté)</option>
+                    <option value="'Lora', serif">Lora (Knižní Patkové)</option>
+                    <option value="'Merriweather', serif">Merriweather (Novinové)</option>
+                    <option value="'Playfair Display', serif">Playfair (Elegantní)</option>
+                </select>
+            </div>
+            <button class="btn" onclick="window.copyDocumentLink()" style="text-align:left;">📋 Sdílet dokument</button>
+            <button class="btn" onclick="window.print()" style="text-align:left;">🖨️ Vytisknout dokument</button>
+        `;
+
+        const savedFont = localStorage.getItem('jmhz_article_font');
+        if (savedFont) {
+            document.getElementById('fontSelect').value = savedFont;
+            window.changeReaderFont(savedFont);
+        }
+    }
+
+    window.changeReaderFont = function(fontFamily) {
+        document.getElementById('faqContentArea').style.fontFamily = fontFamily;
+        localStorage.setItem('jmhz_article_font', fontFamily);
+    };
+
+    window.copyDocumentLink = function() {
+        const url = window.location.origin + window.location.pathname + '?id=' + documentId;
+        navigator.clipboard.writeText(url).then(() => {
+            if(window.KB_Toaster) KB_Toaster.show('Zkopírováno', 'Odkaz na FAQ dokument byl zkopírován.', 'success');
+            else alert('Zkopírováno: Odkaz byl zkopírován do schránky.');
+        });
+    };
+
+    // ==========================================
+    // RENDEROVÁNÍ A FILTRACE
+    // ==========================================
+    function renderUI() {
+        // ZMĚNA POŘADÍ VOLÁNÍ OPRAVUJE NULY PŘI STARTU:
+        // Nejdřív musíme vykreslit DOM otázek, až poté tlačítka pills a filtry
+        renderContentItems(); 
+        renderPills();        
+        generateTOC();
+        handleDeepLink();
+        
+        // Vykreslení úvodní intro sekce
+        const introSection = document.getElementById('faqIntroSection');
+        const introBody = document.getElementById('faqIntroBody');
+        
+        if (window.faqIntroHtml && window.faqIntroHtml.trim() !== '') {
+            introBody.innerHTML = window.faqIntroHtml;
+            introSection.style.display = 'block';
+        } else {
+            introSection.style.display = 'none'; 
+        }
+        
+        const savedFont = localStorage.getItem('jmhz_article_font');
+        if (savedFont) window.changeReaderFont(savedFont);
+    }
+
+    // Funkce pro zabalení / rozbalení Intro sekce (vč. textu na hover)
+    window.toggleFaqIntro = function() {
+        const card = document.getElementById('faqIntroSection');
+        const body = document.getElementById('faqIntroBody');
+        const textLabel = document.getElementById('faqIntroToggleText');
+        
+        const isCollapsed = card.classList.toggle('is-collapsed');
+        body.classList.toggle('collapsed');
+        
+        if (textLabel) textLabel.textContent = isCollapsed ? 'Rozbalit' : 'Sbalit';
+    };
+
+    // Funkce pro zabalení / rozbalení FAQ Odpovědi (vč. textu na hover)
+    window.toggleFaqBody = function(btn, itemId) {
+        const body = document.getElementById('body-' + itemId);
+        if (body) {
+            const isCollapsed = body.classList.toggle('collapsed');
+            const icon = btn.querySelector('.toggle-icon');
+            const textLabel = btn.querySelector('.toggle-text');
+            
+            if (icon) icon.style.transform = isCollapsed ? 'rotate(-90deg)' : 'rotate(0deg)';
+            if (textLabel) textLabel.textContent = isCollapsed ? 'Rozbalit' : 'Sbalit';
+        }
+    };
+
+    function renderPills() {
+        const container = document.getElementById('faqPillsContainer');
+        container.innerHTML = '';
+
+        const allBtn = document.createElement('button');
+        allBtn.className = `cat-pill ${activeCategoriesFilter.size === 0 ? 'active' : ''}`;
+        allBtn.innerHTML = `Všechny kategorie <span class="pill-counter" id="pill-count-all">0</span>`;
+        allBtn.onclick = () => { activeCategoriesFilter.clear(); renderPills(); applyFilters(); };
+        container.appendChild(allBtn);
+
+        availableCategories.forEach(cat => {
+            const catSlug = stringToSlug(cat);
+            const btn = document.createElement('button');
+            btn.className = `cat-pill ${activeCategoriesFilter.has(cat) ? 'active' : ''}`;
+            btn.innerHTML = `${cat} <span class="pill-counter" id="pill-count-${catSlug}">0</span>`;
+            
+            btn.style.transition = "opacity 0.3s, order 0.3s"; 
+            
+            btn.onclick = () => {
+                activeCategoriesFilter.has(cat) ? activeCategoriesFilter.delete(cat) : activeCategoriesFilter.add(cat);
+                renderPills(); applyFilters();
+            };
+            container.appendChild(btn);
+        });
+        
+        // Zde dochází k výpočtu čísel, nyní ale už DOM existuje
+        applyFilters();
+    }
+
+    function renderContentItems() {
+        const container = document.getElementById('faqContentArea');
+        container.innerHTML = '';
+
+        parsedFAQData.forEach(item => {
+            if (item.type === 'category-header') {
+                const div = document.createElement('div');
+                div.className = 'faq-category-card item-filterable';
+                div.id = item.id;
+                div.dataset.category = item.title;
+                div.innerHTML = `
+                    <h1>📁 ${item.title}</h1>
+                    <button class="share-btn" onclick="shareLink('${item.id}')" title="Kopírovat odkaz na kategorii">🔗 Sdílet kategorii</button>
+                `;
+                container.appendChild(div);
+            } else if (item.type === 'faq-item') {
+                const div = document.createElement('div');
+                div.className = 'faq-item-card item-filterable';
+                div.id = item.id;
+                div.dataset.category = item.category;
+                const searchCorpus = (item.numberLabel + ' ' + item.category + ' ' + item.contentHTML).toLowerCase().replace(/<[^>]+>/g, ' ');
+                div.dataset.search = searchCorpus;
+                
+                // Přidáno pokročilé tlačítko s hover vysouvacím textem Sbalit/Rozbalit
+                div.innerHTML = `
+                    <div class="faq-item-header">
+                        <h3 class="faq-item-number">📝 ${item.numberLabel}</h3>
+                        <div class="faq-header-actions">
+                            <button class="share-btn" onclick="shareLink('${item.id}')" title="Kopírovat odkaz na otázku">🔗 Sdílet odkaz</button>
+                            <button class="toggle-faq-btn" onclick="toggleFaqBody(this, '${item.id}')" title="Zobrazit/Skrýt text odpovědi">
+                                <span class="toggle-text">Sbalit</span>
+                                <span class="toggle-icon">▼</span>
+                            </button>
+                        </div>
+                    </div>
+                    <div id="body-${item.id}" class="faq-item-body">${item.contentHTML}</div>
+                `;
+                container.appendChild(div);
+            }
+        });
+    }
+
+    function applyFilters() {
+        const searchInput = document.getElementById('faqSearchInput').value.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+        const allItems = document.querySelectorAll('.item-filterable');
+        
+        let visibleCount = 0;
+        let categoryVisibility = {}; 
+        
+        let categoryCounts = {}; 
+        let totalFaqCount = 0;
+
+        availableCategories.forEach(cat => {
+            categoryVisibility[cat] = false;
+            categoryCounts[cat] = 0; 
+        });
+
+        allItems.forEach(el => {
+            const itemCategory = el.dataset.category;
+            const matchesCategory = activeCategoriesFilter.size === 0 || activeCategoriesFilter.has(itemCategory);
+            let matchesSearch = true;
+            
+            if (el.classList.contains('faq-item-card') && searchInput) {
+                const corpus = el.dataset.search.normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+                matchesSearch = corpus.includes(searchInput);
+            }
+
+            if (el.classList.contains('faq-item-card')) {
+                if (matchesSearch) {
+                    categoryCounts[itemCategory]++;
+                    totalFaqCount++;
+                }
+
+                if (matchesCategory && matchesSearch) {
+                    el.classList.remove('hidden'); 
+                    visibleCount++; 
+                    categoryVisibility[itemCategory] = true;
+                } else { 
+                    el.classList.add('hidden'); 
+                }
+            }
+        });
+
+        allItems.forEach(el => {
+            if (el.classList.contains('faq-category-card')) {
+                const catName = el.dataset.category;
+                if ((activeCategoriesFilter.size === 0 || activeCategoriesFilter.has(catName)) && (categoryVisibility[catName] || searchInput === "")) {
+                     el.classList.remove('hidden');
+                } else { 
+                     el.classList.add('hidden'); 
+                }
+            }
+        });
+
+        const allCounter = document.getElementById('pill-count-all');
+        if (allCounter) allCounter.textContent = totalFaqCount;
+
+        availableCategories.forEach(cat => {
+            const catSlug = stringToSlug(cat);
+            const counterEl = document.getElementById('pill-count-' + catSlug);
+            if (counterEl) {
+                counterEl.textContent = categoryCounts[cat];
+                
+                const pillBtn = counterEl.closest('.cat-pill');
+                if (pillBtn) {
+                    if (categoryCounts[cat] === 0 && searchInput !== "") {
+                        pillBtn.style.opacity = '0.4';
+                        pillBtn.style.order = '99';
+                    } else {
+                        pillBtn.style.opacity = '1';
+                        pillBtn.style.order = '0';
+                    }
+                }
+            }
+        });
+
+        const context = document.getElementById('faqContentArea');
+        const instance = new window.Mark(context);
+        
+        instance.unmark({
+            done: function() {
+                if (searchInput) {
+                    instance.mark(document.getElementById('faqSearchInput').value, {
+                        element: "mark",
+                        className: "highlight",
+                        separateWordSearch: false,
+                        diacritics: true
+                    });
+                }
+            }
+        });
+
+        const noResults = document.getElementById('noResultsMsg');
+        if (visibleCount === 0) noResults.classList.remove('hidden'); else noResults.classList.add('hidden');
+    }
+
+    document.getElementById('faqSearchInput').addEventListener('input', debounce(applyFilters, 250));
+    document.getElementById('faqSearchInput').addEventListener('search', applyFilters);
+
+    function generateTOC() {
+        const tocList = document.getElementById('tocList');
+        const mobileTocList = document.getElementById('mobileTocList');
+        let tocHtml = '';
+
+        parsedFAQData.filter(i => i.type === 'category-header').forEach(cat => {
+            tocHtml += `<a href="#${cat.id}" class="toc-link toc-level-1" id="link-${cat.id}" data-target="${cat.id}">📁 ${cat.title}</a>`;
+        });
+
+        tocList.innerHTML = tocHtml;
+        if (mobileTocList) mobileTocList.innerHTML = tocHtml;
+        
+        initEnterpriseScrollSpy(document.querySelectorAll('.faq-category-card'));
+        initMobileTOC();
+    }
+
+    function initMobileTOC() {
+        const mobileBtn = document.getElementById('mobileTocBtn');
+        const pcBtn = document.getElementById('pcTocExpandBtn'); 
+        const modal = document.getElementById('mobileTocModal');
+        const closeBtn = document.getElementById('mobileTocClose');
+        const searchInput = document.getElementById('mobileTocSearchInput');
+        const listContainer = document.getElementById('mobileTocList');
+
+        const openModal = () => {
+            modal.classList.add('open');
+            document.body.style.overflow = 'hidden'; 
+            if(searchInput) { 
+                searchInput.value = ''; 
+                searchInput.dispatchEvent(new Event('input')); 
+                setTimeout(() => searchInput.focus(), 300);
+            }
+        };
+
+        if (mobileBtn) mobileBtn.addEventListener('click', openModal);
+        if (pcBtn) pcBtn.addEventListener('click', openModal);
+
+        const closeModal = () => { modal.classList.remove('open'); document.body.style.overflow = ''; };
+        if (closeBtn) closeBtn.addEventListener('click', closeModal);
+
+        if (listContainer) listContainer.addEventListener('click', (e) => {
+            if (e.target.classList.contains('toc-link')) closeModal();
+        });
+
+        if (searchInput && listContainer) {
+            searchInput.addEventListener('input', (e) => {
+                const term = e.target.value.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, ""); 
+                const links = listContainer.querySelectorAll('.toc-link');
+                links.forEach(link => {
+                    const text = link.textContent.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+                    link.style.display = text.includes(term) ? 'block' : 'none';
+                });
+            });
+        }
+    }
+
+    function initEnterpriseScrollSpy(headings) {
+        const tocLinks = document.querySelectorAll('.toc-aside .toc-link'); 
+        const tocList = document.getElementById('tocList');
+        const observerOptions = { root: null, rootMargin: '-80px 0px -60% 0px', threshold: 0 };
+        
+        const observer = new IntersectionObserver(entries => {
+            entries.forEach(entry => {
+                if (entry.isIntersecting) {
+                    tocLinks.forEach(link => {
+                        const isActive = link.getAttribute('data-target') === entry.target.id;
+                        link.classList.toggle('active', isActive);
+                        
+                        if (isActive && tocList) {
+                            const linkTop = link.offsetTop;
+                            const linkBottom = linkTop + link.offsetHeight;
+                            const listScrollTop = tocList.scrollTop;
+                            const listHeight = tocList.clientHeight;
+
+                            if (linkTop < listScrollTop) {
+                                tocList.scrollTo({ top: linkTop - 20, behavior: 'smooth' });
+                            } else if (linkBottom > listScrollTop + listHeight) {
+                                tocList.scrollTo({ top: linkBottom - listHeight + 20, behavior: 'smooth' });
+                            }
+                        }
+                    });
+                }
+            });
+        }, observerOptions);
+        headings.forEach(h => observer.observe(h));
+    }
+
+    function handleDeepLink() {
+        const hash = window.location.hash;
+        if (hash) {
+            setTimeout(() => {
+                const target = document.querySelector(hash);
+                if (target) target.scrollIntoView({ behavior: 'smooth' });
+                if (hash.startsWith('#otazka')) {
+                    target.style.boxShadow = "0 0 0 4px var(--accent)";
+                    setTimeout(() => target.style.boxShadow = "", 3000);
+                }
+            }, 500); 
+        }
+    }
+
+    window.shareLink = function(id) {
+        const url = window.location.origin + window.location.pathname + '?id=' + documentId + '#' + id;
+        navigator.clipboard.writeText(url).then(() => {
+            if(window.KB_Toaster) KB_Toaster.show('Odkaz zkopírován', 'Můžete jej sdílet s kolegy.', 'success');
+            else alert('Odkaz byl zkopírován do schránky.');
+        });
+    };
+
+    // ==========================================
+    // NAČTENÍ DOKUMENTU A INICIALIZACE MENU
+    // ==========================================
+    async function loadDocument() {
+        if (!documentId) return location.href = 'index.html';
+        try {
+            const res = await fetch(DB_URL + "?t=" + Date.now());
+            if (!res.ok) throw new Error("Nelze načíst databázi");
+            const db = await res.json();
+            
+            const allItems = [...(db.articles || []), ...(db.lms || [])];
+            const docDef = allItems.find(a => a.id === documentId);
+            
+            if (!docDef || !docDef.docxFile) throw new Error("FAQ Dokument nenalezen.");
+
+            document.title = `${docDef.title} - SALARY Knihovna Znalostí`;
+            
+            const dateObj = new Date(docDef.lastUpdated);
+            document.getElementById('docMeta').innerHTML = `Aktualizace: <strong>${dateObj.toLocaleDateString('cs-CZ')}</strong><br>Očekávaná doba čtení: <strong>${docDef.readingTimeMin || 1} min</strong>`;
+            
+            document.getElementById('docTags').innerHTML = (docDef.tags || []).map(t => `<span class="tag-pill">${t}</span>`).join('');
+            
+            populateControlPanel();
+
+            if (window.trackRecentVisit) window.trackRecentVisit(docDef.title, location.href, '💬');
+
+            const docxUrl = DOCX_BASE_URL + encodeURIComponent(docDef.docxFile);
+            const docRes = await fetch(docxUrl);
+            if (!docRes.ok) throw new Error(`Soubor "${docDef.docxFile}" na serveru neexistuje.`);
+            
+            const arrayBuffer = await docRes.arrayBuffer();
+            const result = await mammoth.convertToHtml({ arrayBuffer: arrayBuffer });
+            
+            const parsed = parseMammothHTML(result.value);
+            parsedFAQData = parsed.items;
+            availableCategories = parsed.categories;
+
+            document.getElementById('loader').style.display = 'none';
+            document.getElementById('layoutContainer').style.display = 'grid';
+            
+            renderUI();
+
+        } catch (e) {
+            document.getElementById('loader').innerHTML = `<h2 style="color:var(--error)">Chyba načítání</h2><p>${e.message}</p><br><a href="index.html" class="btn primary">Zpět na hlavní stranu</a>`;
+        }
+    }
+
+    document.addEventListener('DOMContentLoaded', loadDocument);
+
+    window.addEventListener('scroll', () => {
+        const winScroll = window.scrollY || document.documentElement.scrollTop;
+        const height = document.documentElement.scrollHeight - document.documentElement.clientHeight;
+        const pb = document.getElementById('progressBar');
+        if (pb) pb.style.width = (height > 0 ? (winScroll / height) * 100 : 0) + "%";
+
+        const btnTop = document.getElementById('backToTop');
+        if (btnTop) btnTop.classList.toggle('visible', window.scrollY > 400);
+    }, { passive: true });
+
+</script>
+
+<button id="backToTop" class="back-to-top" aria-label="Zpět nahoru" onclick="window.scrollTo({top:0,behavior:'smooth'})">↑</button>
+
+<script>
+      // ================================================================================================
+      // SALARY Site Analytics Script
+      // ================================================================================================
+    async function sendAnonymousHit() {
+        function generateId() {
+            return Math.random().toString(36).substring(2) + Date.now().toString(36);
+        }
+
+        let visitorId = localStorage.getItem('salary_visitor_id');
+        if (!visitorId) {
+            visitorId = 'USR_' + generateId();
+            localStorage.setItem('salary_visitor_id', visitorId);
+        }
+
+        let deviceType = "Počítač";
+        if (/Mobi|Android|iPhone/i.test(navigator.userAgent)) {
+            deviceType = "Mobil";
+        } else if (/Tablet|iPad/i.test(navigator.userAgent)) {
+            deviceType = "Tablet";
+        }
+
+        let pagePath = window.location.pathname;
+        let fullUrl = window.location.href;
+        let pageTitle = document.title || "Bez nadpisu";
+        let referrer = document.referrer || "Přímá návštěva";
+        let country = "Neznámá";
+        let city = "Neznámé";
+
+        try {
+            let geoResponse = await fetch('https://ipapi.co/json/');
+            if (geoResponse.ok) {
+                let geoData = await geoResponse.json();
+                country = geoData.country_name || "Neznámá";
+                city = geoData.city || "Neznámé";
+            } else {
+                throw new Error("Primární API přetíženo");
+            }
+        } catch (e) {
+            try {
+                let backupResponse = await fetch('https://ipwho.is/');
+                if (backupResponse.ok) {
+                    let backupData = await backupResponse.json();
+                    if(backupData.success) {
+                        country = backupData.country || "Neznámá";
+                        city = backupData.city || "Neznámé";
+                    }
+                }
+            } catch (backupError) {}
+        }
+
+        const googleAppScriptUrl = "https://script.google.com/macros/s/AKfycby-ATpAR9X3OhgpDNn0Ov9a_z9RyWFEN0X0M5SN631Sc4aoceiRV6Hm6x0NfozTVLaIIg/exec";
+        const trackingUrl = `${googleAppScriptUrl}?page=${encodeURIComponent(pagePath)}&title=${encodeURIComponent(pageTitle)}&fullurl=${encodeURIComponent(fullUrl)}&referrer=${encodeURIComponent(referrer)}&country=${encodeURIComponent(country)}&city=${encodeURIComponent(city)}&device=${encodeURIComponent(deviceType)}&vid=${encodeURIComponent(visitorId)}`;
+
+        if (navigator.sendBeacon) {
+            navigator.sendBeacon(trackingUrl);
+        } else {
+            fetch(trackingUrl, { mode: 'no-cors' });
+        }
+    }
+
+    if (document.readyState === 'complete') {
+        sendAnonymousHit();
+    } else {
+        window.addEventListener('load', sendAnonymousHit);
+    }
+</script>
+</body>
+</html>

@@ -1,0 +1,814 @@
+<!DOCTYPE html>
+<html lang="cs">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SALARY Site Analytics</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        :root {
+            --primary: #2563eb;
+            --secondary: #475569;
+            --bg-light: #f8fafc;
+            --card-bg: #ffffff;
+            --border: #e2e8f0;
+            --text-main: #0f172a;
+            --text-muted: #64748b;
+            --success: #22c55e;
+            
+            --bg-elevated: #ffffff;
+            --text-primary: #0f172a;
+            --text-secondary: #475569;
+            --border-subtle: #f1f5f9;
+            --logo-color: #1e293b;
+            --accent: #2563eb;
+            --duration: 0.2s;
+            --ease: ease-in-out;
+            --sp-1: 0.25rem;
+            --sp-2: 0.5rem;
+            --sp-3: 0.75rem;
+            --sp-4: 1rem;
+            --sp-6: 1.5rem;
+            --sp-8: 2rem;
+            --sp-12: 3rem;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            background-color: var(--bg-light);
+            color: var(--text-main);
+            margin: 0;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            line-height: 1.6;
+        }
+
+        body.modal-open {
+            overflow: hidden;
+        }
+
+        .main-content {
+            padding: 20px;
+            flex-grow: 1; 
+            max-width: 1400px;
+            margin: 0 auto;
+            width: 100%;
+            box-sizing: border-box;
+        }
+
+        header {
+            margin-bottom: 30px;
+            padding-bottom: 20px;
+            border-bottom: 2px solid var(--border);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 20px;
+        }
+
+        .brand-header-title {
+            margin: 0; 
+            color: var(--logo-color);
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            font-size: 1.8rem;
+            font-weight: 800;
+            letter-spacing: -0.02em;
+        }
+
+        .brand-header-title span {
+            color: var(--primary);
+            font-weight: 600;
+        }
+
+        @media (max-width: 640px) {
+            header {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 15px;
+            }
+            .brand-header-title {
+                font-size: 1.5rem;
+                gap: 8px;
+            }
+            header > div:last-child {
+                text-align: left !important;
+                width: 100%;
+                padding-top: 15px;
+                border-top: 1px dashed var(--border);
+            }
+        }
+
+        h2 { font-size: 1.25rem; margin-top: 0; color: var(--text-main); }
+        h3 { font-size: 1.1rem; color: var(--secondary); margin-bottom: 5px; }
+        p { color: var(--text-muted); font-size: 0.95rem; margin-top: 0; }
+
+        .dashboard-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+            gap: 20px;
+        }
+
+        .card {
+            background-color: var(--card-bg);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            padding: 20px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+            transition: transform 0.2s ease;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .metric {
+            font-size: 2.5rem;
+            font-weight: bold;
+            color: var(--primary);
+            margin: 10px 0;
+        }
+
+        .live-indicator {
+            display: inline-block;
+            width: 10px;
+            height: 10px;
+            background-color: var(--success);
+            border-radius: 50%;
+            margin-right: 8px;
+            animation: pulse 1.5s infinite;
+        }
+
+        @keyframes pulse {
+            0% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(34, 197, 94, 0.7); }
+            70% { transform: scale(1); box-shadow: 0 0 0 10px rgba(34, 197, 94, 0); }
+            100% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(34, 197, 94, 0); }
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 15px;
+            font-size: 0.9rem;
+        }
+
+        th, td {
+            text-align: left;
+            padding: 10px 8px;
+            border-bottom: 1px solid var(--border);
+        }
+
+        th { color: var(--secondary); background-color: var(--bg-light); }
+
+        .section-title {
+            grid-column: 1 / -1;
+            margin-top: 30px;
+            margin-bottom: 10px;
+            padding-bottom: 10px;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .chart-container {
+            position: relative;
+            height: 250px;
+            width: 100%;
+            margin-top: auto;
+        }
+
+        .modal {
+            display: none; 
+            position: fixed; 
+            z-index: 1000; 
+            left: 0;
+            top: 0;
+            width: 100%; 
+            height: 100%; 
+            background-color: rgba(0,0,0,0.5); 
+            backdrop-filter: blur(3px);
+        }
+
+        .modal-content {
+            background-color: var(--card-bg);
+            margin: 5% auto; 
+            padding: 25px;
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            width: 80%; 
+            max-width: 600px;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.1);
+            position: relative;
+            box-sizing: border-box;
+        }
+
+        .modal-content.wide {
+            max-width: 1000px;
+            height: 80vh;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+        
+        .modal-scrollable-area {
+            overflow-y: auto;
+            flex-grow: 1;
+            margin-top: 15px;
+            padding-right: 10px;
+            overscroll-behavior: contain;
+        }
+
+        #full-history-table tr:not(:first-child) {
+            transition: background-color 0.2s ease;
+            cursor: pointer;
+        }
+
+        #full-history-table tr:not(:first-child):hover {
+            background-color: #e0f2fe; 
+        }
+
+        .close-btn {
+            color: var(--text-muted);
+            position: absolute;
+            top: 15px;
+            right: 20px;
+            font-size: 28px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: color 0.2s;
+            z-index: 10;
+        }
+
+        .close-btn:hover { color: var(--text-main); }
+
+        .btn-history {
+            padding: 12px 24px;
+            background-color: var(--primary);
+            color: white;
+            border: none;
+            border-radius: 6px;
+            font-size: 1rem;
+            font-weight: bold;
+            cursor: pointer;
+            transition: background-color 0.2s;
+            margin-top: 10px;
+        }
+        
+        .btn-history:hover { background-color: #1e40af; }
+
+        .modal-data-row { margin-bottom: 15px; padding-bottom: 10px; border-bottom: 1px solid var(--bg-light); }
+        .modal-data-row:last-child { border-bottom: none; }
+        .modal-label { font-size: 0.85rem; color: var(--secondary); text-transform: uppercase; margin-bottom: 3px; display: block; }
+        .modal-value { font-size: 1.1rem; color: var(--text-main); word-break: break-all; }
+        
+        .modal-countries-list { list-style: none; padding: 0; margin: 0; display: flex; flex-wrap: wrap; gap: 10px; }
+        .modal-countries-list li { background-color: var(--bg-light); padding: 5px 12px; border-radius: 15px; font-size: 0.9rem; border: 1px solid var(--border); }
+        
+        .footer {
+            background: var(--bg-elevated);
+            border-top: 1px solid var(--border);
+            padding: var(--sp-12) var(--sp-6) var(--sp-6) var(--sp-6);
+            margin-top: auto; 
+            box-shadow: 0 -2px 12px color-mix(in oklch, var(--text-primary) 2%, transparent);
+            box-sizing: border-box;
+            width: 100%;
+        }
+
+        .footer-inner {
+            max-width: 1280px;
+            margin: 0 auto;
+            width: 100%;
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+            gap: var(--sp-8);
+            padding-bottom: var(--sp-8);
+            border-bottom: 1px solid var(--border-subtle);
+        }
+
+        .footer-col {
+            display: flex;
+            flex-direction: column;
+            gap: var(--sp-3);
+        }
+
+        .footer-col-brand { grid-column: span 1; }
+        
+        @media (min-width: 64rem) { .footer-inner { grid-template-columns: 2fr 1fr 1fr; } }
+
+        .footer-brand-title {
+            font-weight: 800;
+            color: var(--logo-color);
+            font-size: 1.1rem;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            letter-spacing: -0.02em;
+            margin-bottom: var(--sp-2);
+        }
+        
+        .footer-brand-title span { color: var(--accent); font-weight: 600; }
+
+        .footer-credit-text {
+            font-size: 0.9rem;
+            color: var(--text-secondary);
+            line-height: 1.6;
+            max-width: 420px;
+            margin: 0;
+        }
+
+        .footer-col-title {
+            font-size: 0.75rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: var(--text-muted);
+            margin: 0 0 var(--sp-1) 0;
+        }
+
+        .footer-links {
+            list-style: none;
+            display: flex;
+            flex-direction: column;
+            gap: var(--sp-2);
+            padding: 0;
+            margin: 0;
+        }
+
+        .footer-links a {
+            font-size: 0.9rem;
+            color: var(--text-secondary);
+            transition: color var(--duration) var(--ease);
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            text-decoration: none;
+            word-break: break-all;
+            overflow-wrap: anywhere;
+        }
+
+        .footer-links a:hover { color: var(--accent); }
+
+        .footer-bottom {
+            max-width: 1280px;
+            margin: 0 auto;
+            width: 100%;
+            padding-top: var(--sp-6);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: var(--sp-4);
+            font-size: 0.8rem;
+            color: var(--text-muted);
+        }
+
+        .footer-bottom-links { display: flex; gap: var(--sp-4); }
+
+        @media (max-width: 22.5rem) {
+            .footer { padding: var(--sp-8) var(--sp-4) var(--sp-4) var(--sp-4); }
+            .footer-inner { gap: var(--sp-6); }
+            .footer-bottom { flex-direction: column; align-items: flex-start; gap: var(--sp-2); }
+        }
+    </style>
+</head>
+<body>
+
+    <div class="main-content">
+        <header>
+            <div>
+                <h1 class="brand-header-title">
+                    <svg width="34" height="34" viewBox="0 0 24 24" fill="none" stroke="var(--primary)" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                        <line x1="18" y1="20" x2="18" y2="10"></line>
+                        <line x1="12" y1="20" x2="12" y2="4"></line>
+                        <line x1="6" y1="20" x2="6" y2="14"></line>
+                        <path d="M3 20h18"></path>
+                    </svg>
+                    SALARY <span>Site Analytics</span>
+                </h1>
+                <p style="margin-top: 8px;">Dynamický přehled statistik v reálném čase.</p>
+            </div>
+            <div style="text-align: right;">
+                <p>Celkový počet zaznamenaných aktivit:</p>
+                <h2 id="total-visits" style="color: var(--primary);">...</h2>
+            </div>
+        </header>
+
+        <div class="dashboard-grid">
+
+            <h2 class="section-title">Návštěvnost právě teď</h2>
+
+            <div class="card">
+                <h2><span class="live-indicator"></span>Počet aktivit živě</h2>
+                <p>Zobrazuje celkový počet zhlédnutí a interakcí napříč aplikacemi za posledních 5 minut.</p>
+                <div class="metric" id="live-activities">...</div>
+            </div>
+
+            <div class="card">
+                <h2><span class="live-indicator"></span>Počet unikátních lidí online</h2>
+                <p>Skutečný fyzický počet lidí, kteří v tento moment provádějí dané aktivity.</p>
+                <div class="metric" id="live-unique-users">...</div>
+            </div>
+
+            <div class="card">
+                <h2>Aktuálně prohlížené stránky</h2>
+                <table id="active-pages-table">
+                    <tr><th>Stránka</th><th>Aktivit teď</th></tr>
+                    <tr><td colspan="2" style="text-align:center; color: var(--text-muted);">Načítám živá data...</td></tr>
+                </table>
+            </div>
+
+            <div class="card" style="grid-column: 1 / -1;">
+                <h2>Živý přenos událostí (Feed)</h2>
+                <p>Přesný seznam toho, odkud přicházejí čtenáři a jaké aktivity provádějí v posledních 5 minutách.</p>
+                <div style="overflow-x: auto;">
+                    <table id="live-feed-table">
+                        </table>
+                </div>
+            </div>
+
+            <h2 class="section-title">Dlouhodobé historické statistiky</h2>
+
+            <div class="card">
+                <h2>Podíl zařízení</h2>
+                <p>Odkud k vám uživatelé nejčastěji přistupují.</p>
+                <div class="chart-container">
+                    <canvas id="deviceChart"></canvas>
+                </div>
+            </div>
+
+            <div class="card">
+                <h2>Top Země</h2>
+                <p>Geografické rozložení celkového počtu přístupů.</p>
+                <div class="chart-container">
+                    <canvas id="countryChart"></canvas>
+                </div>
+            </div>
+
+            <div class="card" style="grid-column: 1 / -1;">
+                <h2>Historicky nejnavštěvovanější stránky</h2>
+                <p>Kliknutím (nebo tapnutím) na libovolný sloupec zobrazíte detailní informace o stránce.</p>
+                <div class="chart-container" style="height: 300px; cursor: pointer;">
+                    <canvas id="pagesChart"></canvas>
+                </div>
+            </div>
+
+            <div class="card" style="grid-column: 1 / -1; align-items: center; text-align: center;">
+                <h2>Kompletní databáze událostí</h2>
+                <p>Podívejte se na kompletní, izolovaný archiv všech přístupů a událostí na webu od počátku měření.</p>
+                <button class="btn-history" id="openHistoryBtn">Zobrazit celou historii</button>
+            </div>
+
+        </div>
+    </div>
+
+    <div id="pageModal" class="modal">
+        <div class="modal-content">
+            <span class="close-btn" id="closePageModal">&times;</span>
+            <h2 style="color: var(--primary); margin-bottom: 25px; border-bottom: 2px solid var(--border); padding-bottom: 10px;">Detail stránky</h2>
+            
+            <div class="modal-data-row">
+                <span class="modal-label">Nadpis Stránky / Aplikace</span>
+                <strong class="modal-value" id="modal-title">...</strong>
+            </div>
+            <div class="modal-data-row">
+                <span class="modal-label">Kompletní URL Adresa</span>
+                <a href="#" target="_blank" class="modal-value" id="modal-url" style="color: var(--primary); text-decoration: none;">...</a>
+            </div>
+            <div class="modal-data-row">
+                <span class="modal-label">Celkový Počet Aktivit</span>
+                <strong class="modal-value" id="modal-views" style="font-size: 1.5rem; color: var(--success);">...</strong>
+            </div>
+            <div class="modal-data-row" style="border-bottom: none;">
+                <span class="modal-label" style="margin-bottom: 10px;">Aktivity Pochází z Následujících Zemí:</span>
+                <ul class="modal-countries-list" id="modal-countries"></ul>
+            </div>
+        </div>
+    </div>
+
+    <div id="historyModal" class="modal">
+        <div class="modal-content wide">
+            <span class="close-btn" id="closeHistoryModal">&times;</span>
+            <h2 style="color: var(--primary); margin-bottom: 0px;">Archiv historie událostí</h2>
+            <p style="color: var(--text-muted); border-bottom: 2px solid var(--border); padding-bottom: 15px;">Seřazeno od nejnovějších aktivit.</p>
+            
+            <div class="modal-scrollable-area">
+                <table id="full-history-table">
+                    </table>
+            </div>
+        </div>
+    </div>
+
+    <footer class="footer">
+        <div class="footer-inner">
+            <div class="footer-col footer-col-brand">
+                <div class="footer-brand-title">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                        <rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect>
+                        <line x1="3" y1="9" x2="21" y2="9"></line>
+                        <line x1="9" y1="21" x2="9" y2="9"></line>
+                    </svg>
+                    SALARY <span>Workspace</span>
+                </div>
+                <p class="footer-credit-text">
+                    Pro <strong>Salary s.r.o.</strong> vytvořila s ❤️ k vám všem společnost <strong>Artemis Unity® London</strong>. Tento prostor sjednocuje mzdové a analytické nástroje nové generace.
+                </p>
+            </div>
+
+            <div class="footer-col">
+                <h4 class="footer-col-title">Salary s.r.o.</h4>
+                <ul class="footer-links">
+                    <li><a href="https://www.salary.cz" target="_blank">🌐 Web Salary s.r.o.</a></li>
+                    <li><a href="mailto:slavek@salary.cz">✉️ Technická Podpora Salary s.r.o.</a></li>
+                </ul>
+            </div>
+
+            <div class="footer-col">
+                <h4 class="footer-col-title">Artemis Unity®</h4>
+                <ul class="footer-links">
+                    <li><a href="#" onclick="return false;">📍 London, United Kingdom</a></li>
+                    <li><a href="mailto:m.dvorak@artemisunity.com">✉️ Technická Podpora Artemis Unity®</a></li>
+                </ul>
+            </div>
+        </div>
+
+        <div class="footer-bottom">
+            <div>
+                &copy; <script>document.write(new Date().getFullYear());</script> <strong>Salary s.r.o.</strong> &amp; <strong>Artemis Unity® London</strong>. Všechna práva vyhrazena.
+            </div>
+            <div class="footer-bottom-links">
+                <span>Verze ekosystému: 2026.1.0</span>
+                <span>|</span>
+                <span>Šifrováno lokálně (100% Client-Side)</span>
+            </div>
+        </div>
+    </footer>
+
+<script>
+    const googleScriptUrl = "https://script.google.com/macros/s/AKfycby-ATpAR9X3OhgpDNn0Ov9a_z9RyWFEN0X0M5SN631Sc4aoceiRV6Hm6x0NfozTVLaIIg/exec"; 
+
+    let deviceChart, countryChart, pagesChart;
+    const colors = ['#2563eb', '#22c55e', '#f59e0b', '#ef4444', '#8b5cf6', '#06b6d4', '#f97316'];
+    let currentTopPagesData = [];
+
+    const pageModal = document.getElementById("pageModal");
+    const historyModal = document.getElementById("historyModal");
+    
+    function openModal(modalEl) {
+        modalEl.style.display = "block";
+        document.body.classList.add('modal-open');
+    }
+
+    function closeModal(modalEl) {
+        modalEl.style.display = "none";
+        document.body.classList.remove('modal-open');
+    }
+
+    document.getElementById("closePageModal").onclick = () => closeModal(pageModal);
+    document.getElementById("closeHistoryModal").onclick = () => closeModal(historyModal);
+    document.getElementById("openHistoryBtn").onclick = () => openModal(historyModal);
+
+    window.onclick = function(event) {
+        if (event.target == pageModal) closeModal(pageModal);
+        if (event.target == historyModal) closeModal(historyModal);
+    }
+
+    function formatTime(isoString) {
+        const d = new Date(isoString);
+        if (isNaN(d)) return isoString; 
+        return d.toLocaleTimeString('cs-CZ') + '<br><span style="font-size:0.8rem; color:gray;">' + d.toLocaleDateString('cs-CZ') + '</span>';
+    }
+
+    async function fetchDashboardData() {
+        const fetchUrl = `${googleScriptUrl}?action=read`;
+
+        try {
+            const response = await fetch(fetchUrl);
+            const data = await response.json();
+            
+            document.getElementById('total-visits').textContent = data.totalVisits || 0;
+            
+            const recentHits = data.recentHits || [];
+            const fullHistory = data.fullHistory || [];
+
+            // =========================================================================
+            // CHYTRÁ LOGIKA PRO PŘEJMENOVÁNÍ UŽIVATELŮ NA FORMÁT "Město_1", "Město_2"
+            // =========================================================================
+            let cityCounters = {};
+            let vidToNameMap = {};
+
+            // Projdeme historii od nejstaršího (konec pole) po nejnovější (začátek pole)
+            for (let i = fullHistory.length - 1; i >= 0; i--) {
+                let hit = fullHistory[i];
+                let vid = hit.vid;
+                let city = hit.city || "Neznámé";
+
+                // Pokud má návštěvník platné ID a ještě nemá přidělené jméno
+                if (vid && vid !== "Neznámý" && vid !== "Neznámý uživatel") {
+                    if (!vidToNameMap[vid]) {
+                        if (!cityCounters[city]) cityCounters[city] = 0;
+                        cityCounters[city]++; // Zvýšíme počítadlo pro dané město
+                        vidToNameMap[vid] = `${city}_${cityCounters[city]}`; // např. "Kolín_1"
+                    }
+                }
+            }
+
+            // Pomocná funkce pro tabulky
+            function getFriendlyName(hit) {
+                if (!hit.vid || hit.vid === "Neznámý" || hit.vid === "Neznámý uživatel") return "Neznámý";
+                return vidToNameMap[hit.vid] || "Neznámý";
+            }
+
+            // Výpočet skutečně unikátních lidí online (za posledních 5 min)
+            let uniqueOnlineUsers = new Set();
+            recentHits.forEach(hit => {
+                if (hit.vid && hit.vid !== "Neznámý" && hit.vid !== "Neznámý uživatel") {
+                    uniqueOnlineUsers.add(hit.vid);
+                }
+            });
+            let uniqueOnlineCount = uniqueOnlineUsers.size;
+
+            // =========================================================================
+            // VYKRESLOVÁNÍ DLAŽDIC
+            // =========================================================================
+            const liveActivitiesElement = document.getElementById('live-activities');
+            if (liveActivitiesElement) {
+                // Počet všech aktivit za 5 min (kliknutí, načtení)
+                liveActivitiesElement.textContent = data.liveVisitors || recentHits.length;
+            }
+
+            const liveUniqueUsersElement = document.getElementById('live-unique-users');
+            if (liveUniqueUsersElement) {
+                // Skutečný počet lidí (Set size)
+                liveUniqueUsersElement.textContent = uniqueOnlineCount;
+            }
+
+            const tableElement = document.getElementById('active-pages-table');
+            if (tableElement) {
+                let tableHTML = '<tr><th>Stránka</th><th>Aktivit teď</th></tr>';
+                const activePagesObj = data.activePages || {};
+                const sortedActivePages = Object.entries(activePagesObj).sort((a, b) => b[1] - a[1]);
+
+                if (sortedActivePages.length === 0) {
+                    tableHTML += '<tr><td colspan="2" style="text-align:center; color: var(--text-muted);">Žádná aktivita za posledních 5 minut</td></tr>';
+                } else {
+                    for (const [page, count] of sortedActivePages) {
+                        tableHTML += `<tr><td>${page}</td><td>${count}</td></tr>`;
+                    }
+                }
+                tableElement.innerHTML = tableHTML;
+            }
+
+            // ŽIVÝ FEED
+            const liveFeedTable = document.getElementById('live-feed-table');
+            if (liveFeedTable) {
+                let feedHTML = '<tr><th>Čas aktivity</th><th>Uživatel</th><th>Stránka (Nadpis)</th><th>Město</th><th>Stát</th><th>Zařízení</th></tr>';
+                
+                if (recentHits.length === 0) {
+                    feedHTML += '<tr><td colspan="6" style="text-align:center; color: var(--text-muted);">V posledních 5 minutách nedošlo k žádné aktivitě.</td></tr>';
+                } else {
+                    recentHits.forEach(hit => {
+                        let friendlyName = getFriendlyName(hit);
+                        let nameHtml = friendlyName === "Neznámý" ? 
+                            `<span style="color: var(--text-muted); font-size: 0.8rem;">Neznámý</span>` : 
+                            `<span style="font-family: monospace; font-weight: bold; background: var(--bg-active); padding: 2px 8px; border-radius: 4px; font-size: 0.85rem; color: var(--primary);">${friendlyName}</span>`;
+
+                        feedHTML += `<tr>
+                            <td>${formatTime(hit.time)}</td>
+                            <td>${nameHtml}</td>
+                            <td><strong style="color:var(--primary);">${hit.title}</strong></td>
+                            <td>${hit.city}</td>
+                            <td>${hit.country}</td>
+                            <td>${hit.device}</td>
+                        </tr>`;
+                    });
+                }
+                liveFeedTable.innerHTML = feedHTML;
+            }
+
+            // KOMPLETNÍ HISTORIE
+            const historyTable = document.getElementById('full-history-table');
+            if (historyTable) {
+                let histHTML = '<tr><th>Čas aktivity</th><th>Uživatel</th><th>Stránka (Nadpis)</th><th>Město</th><th>Stát</th><th>Zařízení</th></tr>';
+                
+                if (fullHistory.length === 0) {
+                    histHTML += '<tr><td colspan="6" style="text-align:center; color: var(--text-muted);">Tabulka je prázdná.</td></tr>';
+                } else {
+                    fullHistory.forEach(hit => {
+                        let friendlyName = getFriendlyName(hit);
+                        let nameHtml = friendlyName === "Neznámý" ? 
+                            `<span style="color: var(--text-muted); font-size: 0.8rem;">Neznámý</span>` : 
+                            `<span style="font-family: monospace; font-weight: bold; background: var(--bg-active); padding: 2px 8px; border-radius: 4px; font-size: 0.85rem; color: var(--primary);">${friendlyName}</span>`;
+
+                        histHTML += `<tr>
+                            <td>${formatTime(hit.time)}</td>
+                            <td>${nameHtml}</td>
+                            <td><strong>${hit.title}</strong></td>
+                            <td>${hit.city}</td>
+                            <td>${hit.country}</td>
+                            <td>${hit.device}</td>
+                        </tr>`;
+                    });
+                }
+                historyTable.innerHTML = histHTML;
+            }
+
+            // --- VYKRESLENÍ GRAFŮ ---
+            const deviceStatsObj = data.deviceStats || {};
+            const deviceLabels = Object.keys(deviceStatsObj);
+            const deviceValues = Object.values(deviceStatsObj);
+            
+            if (deviceLabels.length > 0) {
+                if (deviceChart) {
+                    deviceChart.data.labels = deviceLabels;
+                    deviceChart.data.datasets[0].data = deviceValues;
+                    deviceChart.update();
+                } else {
+                    const ctxDevice = document.getElementById('deviceChart').getContext('2d');
+                    deviceChart = new Chart(ctxDevice, {
+                        type: 'doughnut',
+                        data: { labels: deviceLabels, datasets: [{ data: deviceValues, backgroundColor: colors }] },
+                        options: { responsive: true, maintainAspectRatio: false }
+                    });
+                }
+            }
+
+            const countryStatsObj = data.countryStats || {};
+            const sortedCountries = Object.entries(countryStatsObj).sort((a, b) => b[1] - a[1]);
+            const countryLabels = sortedCountries.map(item => item[0]);
+            const countryValues = sortedCountries.map(item => item[1]);
+
+            if (countryLabels.length > 0) {
+                if (countryChart) {
+                    countryChart.data.labels = countryLabels;
+                    countryChart.data.datasets[0].data = countryValues;
+                    countryChart.update();
+                } else {
+                    const ctxCountry = document.getElementById('countryChart').getContext('2d');
+                    countryChart = new Chart(ctxCountry, {
+                        type: 'bar',
+                        data: { labels: countryLabels, datasets: [{ label: 'Počet aktivit', data: countryValues, backgroundColor: '#2563eb' }] },
+                        options: { indexAxis: 'y', responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } } }
+                    });
+                }
+            }
+
+            const allTimePagesObj = data.allTimePages || {};
+            const sortedPages = Object.entries(allTimePagesObj)
+                .map(([path, info]) => ({ path: path, count: info.count, title: info.title, url: info.url, countries: info.countries }))
+                .sort((a, b) => b.count - a.count)
+                .slice(0, 10);
+            
+            currentTopPagesData = sortedPages;
+            const pageLabels = sortedPages.map((item, index) => `${index + 1}. Místo`);
+            const pageValues = sortedPages.map(item => item.count);
+
+            if (pageLabels.length > 0) {
+                if (pagesChart) {
+                    pagesChart.data.labels = pageLabels;
+                    pagesChart.data.datasets[0].data = pageValues;
+                    pagesChart.update();
+                } else {
+                    const ctxPages = document.getElementById('pagesChart').getContext('2d');
+                    pagesChart = new Chart(ctxPages, {
+                        type: 'bar',
+                        data: { labels: pageLabels, datasets: [{ label: 'Celkem aktivit', data: pageValues, backgroundColor: '#22c55e', hoverBackgroundColor: '#16a34a' }] },
+                        options: { 
+                            responsive: true, 
+                            maintainAspectRatio: false,
+                            plugins: { legend: { display: false } },
+                            onClick: (event, elements) => {
+                                if (elements.length > 0) {
+                                    const index = elements[0].index;
+                                    const pageData = currentTopPagesData[index];
+                                    
+                                    document.getElementById('modal-title').textContent = pageData.title;
+                                    document.getElementById('modal-url').textContent = pageData.url;
+                                    document.getElementById('modal-url').href = pageData.url;
+                                    document.getElementById('modal-views').textContent = pageData.count;
+                                    
+                                    const countriesList = document.getElementById('modal-countries');
+                                    countriesList.innerHTML = '';
+                                    Object.entries(pageData.countries)
+                                        .sort((a,b) => b[1] - a[1])
+                                        .forEach(([country, count]) => {
+                                            const li = document.createElement('li');
+                                            li.innerHTML = `<strong>${country}</strong> (${count}x)`;
+                                            countriesList.appendChild(li);
+                                        });
+
+                                    openModal(pageModal);
+                                }
+                            }
+                        }
+                    });
+                }
+            }
+
+        } catch (error) {
+            console.error("Chyba při načítání dat:", error);
+        }
+    }
+
+    fetchDashboardData();
+    setInterval(fetchDashboardData, 10000);
+</script>
+</body>
+</html>

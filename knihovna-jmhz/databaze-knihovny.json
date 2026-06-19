@@ -1,6 +1,6 @@
 {
   "categories": [
-    { "id": "cat_1", "name": "Měsíční hlášení", "parentId": null },
+    { "id": "cat_1", "name": "Měsíční Hlášení", "parentId": null },
     { "id": "cat_2", "name": "REGZEC", "parentId": null },
     { "id": "cat_3", "name": "Školení", "parentId": null },
     { "id": "cat_4", "name": "Používání Prohlížeče JMHZ Formulářů", "parentId": "cat_3" },
@@ -16,7 +16,7 @@
       "id": "art_regzec_mapa",
       "title": "Kompletní Topologická Mapa Podprojektu JMHZ  •  REGZEC",
       "tags": ["Pro Vývojáře", "REGZEC", "Topologie", "JMHZ", "Mapa"],
-      "categoryId": "cat_5",
+      "categoryId": "cat_2",
       "readingTimeMin": 26,
       "lastUpdated": "2026-05-23T11:47:00Z",
       "docxFile": "(23-KVĚTNA-2026-_-REVIZE_008)---Kompletní topologická mapa podprojektu JMHZ - Registrace Zaměstnance (REGZEC).docx"
@@ -180,8 +180,8 @@
       "tags": ["Pro Mzdové Účetní", "JMHZ", "Otázky a Odpovědi Salary"],
       "categoryId": "cat_8",
       "readingTimeMin": 13,
-      "lastUpdated": "2026-06-06T00:53:00Z",
-      "docxFile": "dotazy_smerem_k_salary_rev_006.docx"
+      "lastUpdated": "2026-06-18T06:10:00Z",
+      "docxFile": "dotazy_smerem_k_salary_rev_009.docx"
     },
 	{
       "id": "dotazy_smerem_k_cssz_a_mpsv",
@@ -189,8 +189,8 @@
       "tags": ["Pro Mzdové Účetní", "JMHZ", "Otázky a Odpovědi ČSSZ a MPSV"],
       "categoryId": "cat_9",
       "readingTimeMin": 122,
-      "lastUpdated": "2026-05-29T16:18:36Z",
-      "docxFile": "dotazy_smerem_k_cssz_a_mpsv.docx"
+      "lastUpdated": "2026-06-18T06:04:00Z",
+      "docxFile": "dotazy_smerem_k_cssz_a_mpsv_005.docx"
     },
 	{
       "id": "jmhz_ciselnik_klasifikace_zamestnani_cz-isco",

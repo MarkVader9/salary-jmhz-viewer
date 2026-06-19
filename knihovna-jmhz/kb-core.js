@@ -112,7 +112,7 @@ const MOCK_NOTIFICATIONS = [
         id: "notif_015",
         date: "2026-06-05T14:41:00Z",
         title: "Rozšíření Otázek a Odpovědí K SALARY: Extrémní scénáře JMHZ a IT validace",
-        content: `Vážení kolegové, v návaznosti na včerejší aktualizaci jsme do SALARY Znalostní Knihovny přidali další expertní obsah. <br><br>Článek 'Otázky a Odpovědi K SALARY' byl právě rozšířen o ucelenou sadu 10 nových detailně zpracovaných dotazů z praxe, které se zaměřují na úskalí Jednotného měsíčního hlášení (JMHZ). <br><br>Tento nový blok jsme koncipovali pro dvě úrovně uživatelů: Pokrýváme běžnou mzdovou praxi (vykazování odměn studentů na praxi, rozlišení fondů pracovní doby u DPP či technické závislosti u uplatňování slev na děti), ale zároveň jdeme do hloubky pro seniorní účetní. Extrémně podrobně se věnujeme střetu účetní metodiky s tvrdými XML validacemi – například jak vyřešit paradox záporného čistého příjmu a smrtící chybu ePortálu 20267 u naturálního benefitu 1 % za auto při nulové peněžní mzdě. <br><br>Pro vaši snadnou a bleskovou orientaci jsme všechny nově přidané dotazy opatřili intuitivními tematickými nadpisy, abyste na první pohled poznali, zda daný scénář řeší legislativu pro Úřad práce, nebo čistě strukturu datové věty. To vše <a href="https://www.salary.cz/jmhz2026/knihovna-jmhz/clanek.html?id=dotazy_smerem_k_salary"> v naší knihovně na tomto odkaze zde.</a><br><br>`,
+        content: `Vážení kolegové, v návaznosti na včerejší aktualizaci jsme do SALARY Znalostní Knihovny přidali další expertní obsah. <br><br>Článek 'Otázky a Odpovědi K SALARY' byl právě rozšířen o ucelenou sadu 10 nových detailně zpracovaných dotazů z praxe, které se zaměřují na úskalí Jednotného měsíčního hlášení (JMHZ). <br><br>Tento nový blok jsme koncipovali pro dvě úrovně uživatelů: Pokrýváme běžnou mzdovou praxi (vykazování odměn studentů na praxi, rozlišení fondů pracovní doby u DPP či technické závislosti u uplatňování slev na děti), ale zároveň jdeme do hloubky pro seniorní účetní. Extrémně podrobně se věnujeme střetu účetní metodiky s tvrdými XML validacemi – například jak vyřešit paradox záporného čistého příjmu a smrtící chybu ePortálu 20267 u naturálního benefitu 1 % za auto při nulové peněžní mzdě. <br><br>Pro vaši snadnou a bleskovou orientaci jsme všechny nově přidané dotazy opatřili intuitivními tematickými nadpisy, abyste na první pohled poznali, zda daný scénář řeší legislativu pro Úřad práce, nebo čistě strukturu datové věty. To vše <a href="https://www.salary.cz/jmhz2026/knihovna-jmhz/faq.html?id=dotazy_smerem_k_salary"> v naší knihovně na tomto odkaze zde.</a><br><br>`,
         tags: ["Aktualizace Znalostní Knihovny", "Nový Obsah", "JMHZ", "Otázky a Odpovědi K SALARY", "Důležité"]
     },
     {
@@ -121,7 +121,14 @@ const MOCK_NOTIFICATIONS = [
         title: "Přidání Nového Číselníku JMHZ - Druh Činnosti ID 10239",
         content: `Zdravím vás všechny opět z Londýna, Vydali jsme nový praktický článek zaměřený na číselník JMHZ „Druh činnosti“ (ID 10239). Dozvíte se v něm, jak tento přemosťovací údaj správně využívat pro zaměstnance bez ustavených identifikátorů a vyhnout se chybám při XML validaci. <br><br>Upozorňujeme na hlavní účetní pasti, jako je striktní požadavek na vykazování nulové pracovní doby u kódů činnosti K–S. Zkušení účetní ocení návod na řešení tzv. „mrtvých duší“ – znovuregistraci bývalých zaměstnanců při vyplácení odložených příjmů pod kódem 9. <br><br>Detailně rozebíráme i specifika vykazování náhrad, plnění důchodcům po více než roce od konce zaměstnání a záludnosti při zúčtování svědečného v režimu zaměstnání malého rozsahu.<br><br>Tento nový číselník JMHZ naleznete [PRILOHA: https://www.salary.cz/jmhz2026/knihovna-jmhz/clanek.html?id=jmhz_ciselnik_druh_cinnosti_id_10239 | v naší knihovně na tomto odkaze zde.]<br><br><br><br>`,
         tags: ["Číselníky JMHZ", "Důležité"]
-    }
+    },
+	{
+    id: "notif_017",
+    date: "2026-06-09T17:05:00Z",
+    title: "Audio Podcast • Proč Jednotné měsíční hlášení nerozumí pytli brambor",
+    content: `Zdravím vás všechny opět z Londýna! Vydali jsme nový audio podcast o JMHZ, ve kterém se podíváme na specifika a zajímavosti tohoto systému.<br><br>[AUDIO: Proč_Jednotné_měsíční_hlášení_nerozumí_pytli_brambor.m4a]<br><br>Přejeme příjemný poslech!<br><br>`,
+    tags: ["Audio Podcast", "JMHZ", "Důležité"]
+}
 ];
 
 const KB_Notifications = {
@@ -287,7 +294,7 @@ const KB_Notifications = {
         return d.toLocaleDateString('cs-CZ') + ' ' + d.toLocaleTimeString('cs-CZ', {hour: '2-digit', minute:'2-digit'});
     },
 
-    parseContentHtml(text) {
+parseContentHtml(text) {
         let html = text;
         const mediaBase = "media/";
         const docxBase = "dokumenty/";
@@ -296,6 +303,13 @@ const KB_Notifications = {
             src = src.trim(); if(!src.startsWith('http')) src = mediaBase + src;
             return `<div class="media-wrapper" style="margin:15px 0;"><video controls style="max-width:100%; border-radius:6px;"><source src="${src}"></video></div>`;
         });
+        
+        // PŘIDÁNO: Podpora pro audio nahrávky v notifikacích
+        html = html.replace(/\[AUDIO:\s*(.+?)\]/gi, (m, src) => {
+            src = src.trim(); if(!src.startsWith('http')) src = mediaBase + src;
+            return `<div class="media-wrapper" style="margin:15px 0;"><audio controls style="width:100%; outline: none;"><source src="${src}"></audio></div>`;
+        });
+
         html = html.replace(/\[OBRAZEK:\s*(.+?)\]/gi, (m, src) => {
             src = src.trim(); if(!src.startsWith('http')) src = mediaBase + src;
             return `<div class="media-wrapper" style="margin:15px 0;"><img src="${src}" style="max-width:100%; border-radius:6px;"></div>`;

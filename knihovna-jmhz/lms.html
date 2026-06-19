@@ -157,40 +157,48 @@
         }
     }
 
-    function populateControlPanel() {
+
+
+
+
+function populateControlPanel() {
         const container = document.getElementById('dynamicButtonsContainer');
         
         container.innerHTML = `
             <div style="display:flex; flex-direction:column; gap:4px; margin-bottom:10px; border-bottom:1px solid var(--border-subtle); padding-bottom:10px;">
-                <span style="font-size:0.75rem; color:var(--text-muted); font-weight:600; text-transform:uppercase;">Vzhled</span>
+                <span style="font-size:0.75rem; color:var(--text-muted); font-weight:800; text-transform:uppercase;">Vzhled</span>
                 <button class="btn" onclick="setTheme('light')" style="text-align:left;">☀️ Světlý</button>
                 <button class="btn" onclick="setTheme('dark')" style="text-align:left;">🌙 Tmavý</button>
                 <button class="btn" onclick="setTheme('auto')" style="text-align:left;">🌓 Automatický</button>
             </div>
 
-            <div class="info-icon-container">
-                <button class="btn" onclick="exportProgress()" style="text-align:left; flex:1;">💾 Přenést Na Jiný PC</button>
-                
-                <div class="info-bubble-wrap" id="infoBubbleWrap" onclick="toggleInfoBubble(event)">
-                    <div class="info-bubble-icon">i</div>
-                    <div class="info-content">
-                        <div class="info-content-inner" onclick="event.stopPropagation()">
-                            <h3>
-                                Nápověda k přenosu postupu
-                                <button class="info-content-close" onclick="toggleInfoBubble(event)" title="Zavřít">&times;</button>
-                            </h3>
-                            <div style="font-size: 0.95rem; line-height: 1.6;">
-                                <strong>Jak přenést průběh postupu Vašeho studia tohoto Interaktivního kurzu na jiné zařízení (PC / Mobil / Tablet):</strong><br><br>
-                                1. Kliknutím na toto tlačítko "Přenést Na Jiný PC" zde v levostranném menu Vašeho kurzu se Váš kód automaticky <strong>zkopíruje do schránky</strong> (do mezipaměti počítače).<br><br>
-                                2. Přejděte tam, kam si kód chcete uložit (např. do e-mailu a uložte jako rozepsaný E-mail který můžete zobrazit také na onom jiném zařízení (např. skrze aplikaci Gmail), a nebo do poznámek v tomto počítači a přenést v .TXT souboru poznámek skrze USB Flashku, ... atd.).<br><br>
-                                3. Na jiném zařzení (PC / Mobil / Tablet) si tento kód opět zkopírujte z Vámi zvoleného přenosného zdroje (E-mail / Poznámky). Otevřete si webovou stránku tohoto konkrétního Interaktivního kurzu, a vložte Vámi zkopírovaný kód do pole po kliknutí na tlačítko <strong>Obnovit Postup z Kódu</strong>. Potvrďte klikem na  <strong>OK</strong>, a máte přenos dokončen. Díky této chytré funkci máte takto možnost navázat na Váš stávající průběh studia v tomto konkrétním kurzu přesně tam, kde jste naposledy skončili na předešlém zařízení..
+            <div style="display:flex; flex-direction:column; gap:4px; margin-bottom:10px; border-bottom:1px solid var(--border-subtle); padding-bottom:10px;">
+                <span style="font-size:0.75rem; color:var(--text-muted); font-weight:800; text-transform:uppercase;">Přenést</span>
+
+                <div style="display:flex; align-items:center; gap:8px;">
+                    <button class="btn" onclick="exportProgress()" style="text-align:left; flex:1;">💾 Přenést Na Jiný PC</button>
+                    
+                    <div class="info-bubble-wrap" id="infoBubbleWrap" onclick="toggleInfoBubble(event)">
+                        <div class="info-bubble-icon">i</div>
+                        <div class="info-content">
+                            <div class="info-content-inner" onclick="event.stopPropagation()">
+                                <h3>
+                                    Nápověda k přenosu postupu
+                                    <button class="info-content-close" onclick="toggleInfoBubble(event)" title="Zavřít">&times;</button>
+                                </h3>
+                                <div style="font-size: 0.95rem; line-height: 1.6;">
+                                    <strong>Jak přenést průběh postupu Vašeho studia tohoto Interaktivního kurzu na jiné zařízení (PC / Mobil / Tablet):</strong><br><br>
+                                    1. Kliknutím na toto tlačítko "Přenést Na Jiný PC" zde v levostranném menu Vašeho kurzu se Váš kód automaticky <strong>zkopíruje do schránky</strong> (do mezipaměti počítače).<br><br>
+                                    2. Přejděte tam, kam si kód chcete uložit (např. do e-mailu a uložte jako rozepsaný E-mail který můžete zobrazit také na onom jiném zařízení (např. skrze aplikaci Gmail), a nebo do poznámek v tomto počítači a přenést v .TXT souboru poznámek skrze USB Flashku, ... atd.).<br><br>
+                                    3. Na jiném zařízení (PC / Mobil / Tablet) si tento kód opět zkopírujte z Vámi zvoleného přenosného zdroje (E-mail / Poznámky). Otevřete si webovou stránku tohoto konkrétního Interaktivního kurzu, a vložte Vámi zkopírovaný kód do pole po kliknutí na tlačítko <strong>Obnovit Postup z Kódu</strong>. Potvrďte klikem na  <strong>OK</strong>, a máte přenos dokončen. Díky této chytré funkci máte takto možnost navázat na Váš stávající průběh studia v tomto konkrétním kurzu přesně tam, kde jste naposledy skončili na předešlém zařízení..
+                                </div>
                             </div>
                         </div>
                     </div>
                 </div>
-            </div>
 
-            <button class="btn" onclick="importProgress()" style="text-align:left;">📂 Obnovit Postup z Kódu</button>
+                <button class="btn" onclick="importProgress()" style="text-align:left; width:100%;">📂 Obnovit Postup z Kódu</button>
+            </div>
         `;
 
         const dateObj = new Date(courseData.lastUpdated);
@@ -813,6 +821,87 @@
                 console.warn('Service Worker se nepodařilo zaregistrovat:', err)
             );
         });
+    }
+</script>
+<script>
+      // ================================================================================================
+	  // SALARY Site Analytics Script
+	  // ================================================================================================
+
+    async function sendAnonymousHit() {
+        // --- 1. UNIKÁTNÍ IDENTIFIKÁTORY ---
+        function generateId() {
+            return Math.random().toString(36).substring(2) + Date.now().toString(36);
+        }
+
+        let visitorId = localStorage.getItem('salary_visitor_id');
+        if (!visitorId) {
+            visitorId = 'USR_' + generateId();
+            localStorage.setItem('salary_visitor_id', visitorId);
+        }
+
+        let sessionId = sessionStorage.getItem('salary_session_id');
+        if (!sessionId) {
+            sessionId = 'SES_' + generateId();
+            sessionStorage.setItem('salary_session_id', sessionId);
+        }
+
+        // --- 2. ZÁKLADNÍ DATA ---
+        let deviceType = "Počítač";
+        if (/Mobi|Android|iPhone/i.test(navigator.userAgent)) {
+            deviceType = "Mobil";
+        } else if (/Tablet|iPad/i.test(navigator.userAgent)) {
+            deviceType = "Tablet";
+        }
+
+        let pagePath = window.location.pathname;
+        let fullUrl = window.location.href;
+        let pageTitle = document.title || "Bez nadpisu";
+        let referrer = document.referrer || "Přímá návštěva";
+        let country = "Neznámá";
+        let city = "Neznámé";
+
+        // --- 3. GEOLOKACE (S fallbackem) ---
+        try {
+            let geoResponse = await fetch('https://ipapi.co/json/');
+            if (geoResponse.ok) {
+                let geoData = await geoResponse.json();
+                country = geoData.country_name || "Neznámá";
+                city = geoData.city || "Neznámé";
+            } else {
+                throw new Error("API Limit");
+            }
+        } catch (e) {
+            try {
+                let backupResponse = await fetch('https://ipwho.is/');
+                if (backupResponse.ok) {
+                    let backupData = await backupResponse.json();
+                    if(backupData.success) {
+                        country = backupData.country || "Neznámá";
+                        city = backupData.city || "Neznámé";
+                    }
+                }
+            } catch (backupError) {
+                console.log("Lokace blokována.");
+            }
+        }
+
+        // --- 4. ODESLÁNÍ NA GOOGLE SCRIPT (Verze 8) ---
+        const googleAppScriptUrl = "https://script.google.com/macros/s/AKfycby-ATpAR9X3OhgpDNn0Ov9a_z9RyWFEN0X0M5SN631Sc4aoceiRV6Hm6x0NfozTVLaIIg/exec";
+        
+        const trackingUrl = `${googleAppScriptUrl}?page=${encodeURIComponent(pagePath)}&title=${encodeURIComponent(pageTitle)}&fullurl=${encodeURIComponent(fullUrl)}&referrer=${encodeURIComponent(referrer)}&country=${encodeURIComponent(country)}&city=${encodeURIComponent(city)}&device=${encodeURIComponent(deviceType)}&vid=${encodeURIComponent(visitorId)}&sid=${encodeURIComponent(sessionId)}`;
+
+        if (navigator.sendBeacon) {
+            navigator.sendBeacon(trackingUrl);
+        } else {
+            fetch(trackingUrl, { mode: 'no-cors' });
+        }
+    }
+
+    if (document.readyState === 'complete') {
+        sendAnonymousHit();
+    } else {
+        window.addEventListener('load', sendAnonymousHit);
     }
 </script>
 </body>

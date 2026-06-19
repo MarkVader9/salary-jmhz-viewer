@@ -29,11 +29,11 @@
         <h1 class="header-title">SALARY Znalostní Knihovna</h1>
         <p class="header-subtitle">Znalostní báze pro metodiky a uživatele k implementaci legislativy JMHZ</p>
         <div class="hard-refresh-wrap">
-            <button class="hard-refresh-btn" id="hardRefreshBtn"
-                onclick="this.disabled=true; this.innerHTML='<span class=\'hr-spinner\'>⟳</span> Oživuji…'; window.hardRefreshKnihovna && window.hardRefreshKnihovna();"
-                title="Smaže mezipaměť a načte nové informace — záložky a studijní poznámky zůstanou zachovány (ekvivalent Ctrl+Shift+R)">
-                🔄 Oživit Knihovnu a načíst nové informace
-            </button>
+<button class="hard-refresh-btn" id="hardRefreshBtn"
+    onclick="this.disabled=true; this.innerHTML='<span class=\'btn-spinner\'></span> Oživuji…'; window.hardRefreshKnihovna && window.hardRefreshKnihovna();"
+    title="Smaže mezipaměť a načte nové informace — záložky a studijní poznámky zůstanou zachovány (ekvivalent Ctrl+Shift+R)">
+    🔄 Oživit Knihovnu a načíst nové informace
+</button>
         </div>
 
         <div class="controls-container">
@@ -149,15 +149,28 @@ function renderGrid(articles, query) {
             return;
         }
 
-        const bm = getBookmarks();
+const bm = getBookmarks();
         articles.forEach((item, index) => {
-            const url = item.isLms ? `lms.html?course=${item.id}` : `clanek.html?id=${item.id}`;
+            // ---> NOVÁ CHYTRÁ LOGIKA SMĚROVÁNÍ PRO FAQ, LMS A ČLÁNKY <---
+            // Pozná FAQ podle kategorie (8 nebo 9) nebo pokud štítek obsahuje "FAQ" či "Otázky"
+            const isFaq = item.categoryId === 'cat_8' || item.categoryId === 'cat_9' || (item.tags && item.tags.some(t => t.includes('Otázky') || t.includes('FAQ')));
+            
+            let url = `clanek.html?id=${item.id}`;
+            let typeBadge = `<span>📅 ${new Date(item.lastUpdated).toLocaleDateString('cs-CZ')}</span>`;
+            let btnText = 'Přečíst článek →';
+
+            if (item.isLms) {
+                url = `lms.html?course=${item.id}`;
+                typeBadge = `<span style="color:var(--accent); font-weight:800; font-size:0.8rem;">🎓 INTERAKTIVNÍ KURZ</span>`;
+                btnText = 'Spustit kurz →';
+            } else if (isFaq) {
+                url = `faq.html?id=${item.id}`;
+                typeBadge = `<span style="color:var(--accent); font-weight:800; font-size:0.8rem;">💬 FAQ & ŘEŠENÍ</span>`;
+                btnText = 'Otevřít FAQ →';
+            }
+
             const fUrl = window.location.origin + window.location.pathname.replace('index.html', '') + url;
-            const date = new Date(item.lastUpdated).toLocaleDateString('cs-CZ');
             const tags = (item.tags || []).map(t => `<span class="tag-pill">${t}</span>`).join('');
-            const typeBadge = item.isLms
-                ? `<span style="color:var(--accent); font-weight:800; font-size:0.8rem;">🎓 INTERAKTIVNÍ KURZ</span>`
-                : `<span>📅 ${date}</span>`;
             const excerpt = item.description || 'Klikněte pro zobrazení obsahu...';
             const isBookmarked = bm.has(String(item.id));
 
@@ -170,7 +183,7 @@ function renderGrid(articles, query) {
                 <div class="card-tags">${tags}</div>
                 <p class="card-excerpt">${excerpt}</p>
                 <div class="card-footer">
-                    <a href="${url}" class="btn primary">${item.isLms ? 'Spustit kurz →' : 'Přečíst článek →'}</a>
+                    <a href="${url}" class="btn primary">${btnText}</a>
                     <button class="btn bookmark-btn${isBookmarked ? ' bookmarked' : ''}"
                         onclick="toggleBookmark('${item.id}', this)"
                         title="${isBookmarked ? 'Odebrat ze záložek' : 'Přidat do záložek'}">${isBookmarked ? '★' : '☆'}</button>
@@ -362,6 +375,88 @@ function renderGrid(articles, query) {
                 console.warn('Service Worker se nepodařilo zaregistrovat:', err)
             );
         });
+    }
+</script>
+<script>
+      // ================================================================================================
+	  // SALARY Site Analytics Script (Obohacená včerejší verze)
+	  // ================================================================================================
+
+    async function sendAnonymousHit() {
+        // --- DOPLNĚNO: GENERACE A ULOŽENÍ UNIKÁTNÍHO ID NÁVŠTĚVNÍKA ---
+        function generateId() {
+            return Math.random().toString(36).substring(2) + Date.now().toString(36);
+        }
+
+        let visitorId = localStorage.getItem('salary_visitor_id');
+        if (!visitorId) {
+            visitorId = 'USR_' + generateId();
+            localStorage.setItem('salary_visitor_id', visitorId);
+        }
+        // --------------------------------------------------------------
+
+        // 1. Detekce typu zařízení 
+        let deviceType = "Počítač";
+        if (/Mobi|Android|iPhone/i.test(navigator.userAgent)) {
+            deviceType = "Mobil";
+        } else if (/Tablet|iPad/i.test(navigator.userAgent)) {
+            deviceType = "Tablet";
+        }
+
+        // 2. Základní data z prohlížeče
+        let pagePath = window.location.pathname;
+        let fullUrl = window.location.href;
+        let pageTitle = document.title || "Bez nadpisu";
+        let referrer = document.referrer || "Přímá návštěva";
+        let country = "Neznámá";
+        let city = "Neznámé";
+
+        // 3. ROBUSTNÍ zjištění lokality (Primární API + Záložní API)
+        try {
+            // Pokus 1: Služba ipapi.co
+            let geoResponse = await fetch('https://ipapi.co/json/');
+            if (geoResponse.ok) {
+                let geoData = await geoResponse.json();
+                country = geoData.country_name || "Neznámá";
+                city = geoData.city || "Neznámé";
+            } else {
+                throw new Error("Primární API přetíženo (Status: " + geoResponse.status + ")");
+            }
+        } catch (e) {
+            console.log("Primární Geo IP selhala, zkouším záložní...", e.message);
+            try {
+                // Pokus 2: Záložní služba ipwho.is
+                let backupResponse = await fetch('https://ipwho.is/');
+                if (backupResponse.ok) {
+                    let backupData = await backupResponse.json();
+                    if(backupData.success) {
+                        country = backupData.country || "Neznámá";
+                        city = backupData.city || "Neznámé";
+                    }
+                }
+            } catch (backupError) {
+                console.log("I záložní Geo IP služba je blokována (pravděpodobně AdBlock).");
+            }
+        }
+
+        // 4. Sestavení URL adresy (Doplněn parametr &vid= na konec)
+        const googleAppScriptUrl = "https://script.google.com/macros/s/AKfycby-ATpAR9X3OhgpDNn0Ov9a_z9RyWFEN0X0M5SN631Sc4aoceiRV6Hm6x0NfozTVLaIIg/exec";
+        
+        const trackingUrl = `${googleAppScriptUrl}?page=${encodeURIComponent(pagePath)}&title=${encodeURIComponent(pageTitle)}&fullurl=${encodeURIComponent(fullUrl)}&referrer=${encodeURIComponent(referrer)}&country=${encodeURIComponent(country)}&city=${encodeURIComponent(city)}&device=${encodeURIComponent(deviceType)}&vid=${encodeURIComponent(visitorId)}`;
+
+        // 5. Tiché odeslání dat na pozadí
+        if (navigator.sendBeacon) {
+            navigator.sendBeacon(trackingUrl);
+        } else {
+            fetch(trackingUrl, { mode: 'no-cors' });
+        }
+    }
+
+    // Spustit měření po načtení stránky
+    if (document.readyState === 'complete') {
+        sendAnonymousHit();
+    } else {
+        window.addEventListener('load', sendAnonymousHit);
     }
 </script>
 <button id="backToTop" class="back-to-top" aria-label="Zpět nahoru" title="Zpět na začátek stránky" onclick="window.scrollTo({top:0,behavior:'smooth'})">↑</button>
